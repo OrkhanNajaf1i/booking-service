@@ -1,0 +1,45 @@
+# Go build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Go build dirs
+bin/
+build/
+dist/
+coverage.out
+
+# Module cache (əgər lokal saxlayırsansa)
+pkg/
+
+# IDE / Editor faylları
+.vscode/
+.idea/
+*.iml
+*.swp
+*.swo
+
+# OS spesifik fayllar
+.DS_Store
+Thumbs.db
+
+# Environment və gizli konfiqurasiya faylları
+.env
+.env.local
+.env.development
+.env.production
+.env.staging
+*.env
+
+# Lokal konfiqurasiya nümunələri (istəyə görə track edə bilərsən)
+# Əgər .env.example-i repository-də saxlamaq istəyirsənsə, bu sətri sil
+.env.example
+
+# Log və temp fayllar
+logs/
+*.log
+tmp/
