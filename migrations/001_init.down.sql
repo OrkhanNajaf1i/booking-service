@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS bookings;
+DROP TABLE IF EXISTS businesses;
+DROP TABLE IF EXISTS users;

@@ -1,0 +1,9 @@
+.git
+.vscode
+.idea
+*.md
+.env
+.env.local
+docker-compose.yml
+Dockerfile
+.dockerignore
