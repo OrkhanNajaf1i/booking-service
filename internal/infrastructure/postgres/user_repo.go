@@ -2,7 +2,7 @@ package postgres
 
 import (
 	// domainuser "booking-service/internal/domain/user"
-	domainuser "booking-service/internal/domain/user"
+	domainuser "github.com/OrkhanNajaf1i/booking-service/internal/domain/user"
 
 	"context"
 	"database/sql"
