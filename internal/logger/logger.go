@@ -14,11 +14,12 @@ type Field struct {
 	Value any
 }
 type Logger interface {
-	Info(msg string, field ...Field)
-	Error(msg string, field ...Field)
-
-	WithField(key string, value any) Logger
+	Info(msg string, fields ...Field)
+	Debug(msg string, fields ...Field)
+	Error(msg string, fields ...Field)
+	Warn(msg string, fields ...Field)
 }
+
 type slogLogger struct {
 	l *slog.Logger
 }
@@ -37,6 +38,7 @@ func New(config *config.AppConfig) (Logger, error) {
 	})
 	base := slog.New(handler)
 	var result Logger = &slogLogger{l: base}
+
 	return result, nil
 
 }
@@ -44,8 +46,14 @@ func New(config *config.AppConfig) (Logger, error) {
 func (s *slogLogger) Info(msg string, fields ...Field) {
 	s.l.Info(msg, toArgs(fields)...)
 }
+func (s *slogLogger) Debug(msg string, fields ...Field) {
+	s.l.Debug(msg, toArgs(fields)...)
+}
 func (s *slogLogger) Error(msg string, fields ...Field) {
 	s.l.Error(msg, toArgs(fields)...)
+}
+func (s *slogLogger) Warn(msg string, fields ...Field) {
+	s.l.Warn(msg, toArgs(fields)...)
 }
 
 func (s *slogLogger) WithField(key string, value any) Logger {

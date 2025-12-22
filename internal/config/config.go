@@ -54,6 +54,11 @@ func LoadServerConfig(cfg *AppConfig) error {
 		cfg.Host = "localhost"
 	}
 	cfg.DbDsn = os.Getenv("APP_DB_DSN")
+
+	cfg.LogLevel = os.Getenv("APP_LOG_LEVEL")
+	if cfg.LogLevel == "" {
+		cfg.LogLevel = "info"
+	}
 	return nil
 }
 func LoadSecurityConfig(cfg *AppConfig) error {
