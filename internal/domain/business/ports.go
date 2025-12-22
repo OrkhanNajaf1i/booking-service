@@ -8,5 +8,5 @@ import (
 
 type Repository interface {
 	CreateBusiness(ctx context.Context, business *Business) error
-	GetByID(ctx context.Context, id uuid.UUID) (*Business, error)
+	GetBusinessByID(ctx context.Context, id uuid.UUID) (*Business, error)
 }

@@ -16,6 +16,18 @@ type UserRepo struct {
 func NewUserRepo(db *sql.DB) *UserRepo {
 	return &UserRepo{db: db}
 }
+func (r *UserRepo) CreateUser(ctx context.Context, u *domainuser.User) error {
+	query := `
+        INSERT INTO users (id, business_id, name, phone, created_at)
+        VALUES ($1, $2, $3, $4, $5)
+    `
+	_, err := r.db.ExecContext(ctx, query, u.ID, u.BusinessID, u.Name, u.Phone, u.CreatedAt)
+	if err != nil {
+		// Burada mütləq error-u return etmək lazımdır
+		return fmt.Errorf("postgres: failed to create user: %w", err)
+	}
+	return nil
+}
 func (r *UserRepo) GetUserByPhone(ctx context.Context, phone string) (*domainuser.User, error) {
 	query := `
 		SELECT id, business_id, name, phone, created_at
@@ -28,7 +40,7 @@ func (r *UserRepo) GetUserByPhone(ctx context.Context, phone string) (*domainuse
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("postgress: failed to get user by phone: %w", err)
+		return nil, fmt.Errorf("postgres: failed to get user by phone: %w", err)
 	}
 	return &u, nil
 }
