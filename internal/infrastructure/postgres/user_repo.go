@@ -2,7 +2,10 @@ package postgres
 
 import (
 	// domainuser "booking-service/internal/domain/user"
-	domainuser "github.com/OrkhanNajaf1i/booking-service/internal/domain/user"
+	"errors"
+
+	"github.com/OrkhanNajaf1i/booking-service/internal/domain/auth"
+	"github.com/google/uuid"
 
 	"context"
 	"database/sql"
@@ -16,31 +19,70 @@ type UserRepo struct {
 func NewUserRepo(db *sql.DB) *UserRepo {
 	return &UserRepo{db: db}
 }
-func (r *UserRepo) CreateUser(ctx context.Context, u *domainuser.User) error {
+func (r *UserRepo) CreateUser(ctx context.Context, user *auth.User) error {
 	query := `
-        INSERT INTO users (id, business_id, name, phone, created_at)
-        VALUES ($1, $2, $3, $4, $5)
+        INSERT INTO users (
+            id, email, password_hash, role, business_id, is_active, created_at, updated_at
+        ) VALUES (
+            $1, $2, $3, $4, $5, $6, $7, $8
+        )
     `
-	_, err := r.db.ExecContext(ctx, query, u.ID, u.BusinessID, u.Name, u.Phone, u.CreatedAt)
+	_, err := r.db.ExecContext(ctx, query,
+		user.ID,
+		user.Email,
+		user.PasswordHash,
+		user.Role,
+		user.BusinessID,
+		user.IsActive,
+		user.CreatedAt,
+		user.UpdatedAt,
+	)
 	if err != nil {
-		// Burada mütləq error-u return etmək lazımdır
-		return fmt.Errorf("postgres: failed to create user: %w", err)
+		return fmt.Errorf("failed to create to user: %w", err)
 	}
 	return nil
 }
-func (r *UserRepo) GetUserByPhone(ctx context.Context, phone string) (*domainuser.User, error) {
+func (r *UserRepo) GetUserByEmail(ctx context.Context, email string) (*auth.User, error) {
 	query := `
-		SELECT id, business_id, name, phone, created_at
-		FROM users
-		WHERE phone = $1
-	`
-	row := r.db.QueryRowContext(ctx, query, phone)
-	var u domainuser.User
-	if err := row.Scan(&u.ID, &u.BusinessID, &u.Name, &u.Phone, &u.CreatedAt); err != nil {
+        SELECT id, email, password_hash, role, business_id, is_active, created_at, updated_at
+        FROM users
+        WHERE email = $1
+        LIMIT 1
+    `
+	var user auth.User
+	err := r.db.QueryRowContext(ctx, query, email).Scan(
+		&user.ID,
+		&user.Email,
+		&user.PasswordHash,
+		&user.Role,
+		&user.BusinessID,
+		&user.IsActive,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to query user: %w", err)
+	}
+	return &user, nil
+}
+func (r *UserRepo) GetUserByID(ctx context.Context, userID uuid.UUID) (*auth.User, error) {
+	query := `
+        SELECT id, email, password_hash, role, business_id, is_active, created_at, updated_at
+        FROM users
+        WHERE id = $1
+        LIMIT 1
+    `
+	var user auth.User
+	row := r.db.QueryRowContext(ctx, query, userID)
+	if err := row.Scan(&user.ID, &user.Email, &user.PasswordHash, &user.Role, &user.BusinessID, &user.IsActive, &user.CreatedAt, &user.UpdatedAt); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("postgres: failed to get user by phone: %w", err)
+		return nil, fmt.Errorf("failed to get user by ID: %w", err)
 	}
-	return &u, nil
+	return &user, nil
 }
