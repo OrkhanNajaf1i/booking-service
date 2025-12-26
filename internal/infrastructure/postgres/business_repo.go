@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/OrkhanNajaf1i/booking-service/internal/domain/business"
-	"github.com/gofrs/uuid"
+	"github.com/google/uuid"
 )
 
 type BusinessRepo struct {
@@ -23,7 +23,7 @@ func (r *BusinessRepo) CreateBusiness(ctx context.Context, b *business.Business)
 	`
 	_, err := r.db.ExecContext(ctx, query, b.ID, b.Name, b.Phone, b.CreatedAt)
 	if err != nil {
-		fmt.Errorf("postgress: failed to create business: %w", err)
+		return fmt.Errorf("postgres: failed to create business: %w", err)
 	}
 	return nil
 }
