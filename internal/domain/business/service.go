@@ -30,7 +30,7 @@ func (s *Service) CreateBusiness(ctx context.Context, name, phone string) (*Busi
 }
 
 func (s *Service) GetBusinessByID(ctx context.Context, id uuid.UUID) (*Business, error) {
-	b, err := s.repo.GetByID(ctx, id)
+	b, err := s.repo.GetBusinessByID(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get business: %w", err)
 	}
