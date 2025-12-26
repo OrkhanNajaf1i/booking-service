@@ -7,6 +7,6 @@ import (
 )
 
 func RegisterBusinessRoutes(mux *http.ServeMux, h *handlers.BusinessHandler) {
-	mux.HandleFunc("POST /businesses", h.Create)
-	mux.HandleFunc("GET /businesses", h.GetBusinessByID)
+	mux.HandleFunc("POST /businesses", h.CreateBusiness)
+	mux.HandleFunc("GET /businesses/{id}", h.GetBusinessByID)
 }
