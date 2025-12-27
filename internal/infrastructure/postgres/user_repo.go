@@ -12,14 +12,14 @@ import (
 	"fmt"
 )
 
-type UserRepo struct {
+type UserRepository struct {
 	db *sql.DB
 }
 
-func NewUserRepo(db *sql.DB) *UserRepo {
-	return &UserRepo{db: db}
+func NewUserRepository(db *sql.DB) *UserRepository {
+	return &UserRepository{db: db}
 }
-func (r *UserRepo) CreateUser(ctx context.Context, user *auth.User) error {
+func (r *UserRepository) CreateUser(ctx context.Context, user *auth.User) error {
 	query := `
         INSERT INTO users (
             id, email, password_hash, role, business_id, is_active, created_at, updated_at
@@ -42,7 +42,7 @@ func (r *UserRepo) CreateUser(ctx context.Context, user *auth.User) error {
 	}
 	return nil
 }
-func (r *UserRepo) GetUserByEmail(ctx context.Context, email string) (*auth.User, error) {
+func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (*auth.User, error) {
 	query := `
         SELECT id, email, password_hash, role, business_id, is_active, created_at, updated_at
         FROM users
@@ -69,7 +69,7 @@ func (r *UserRepo) GetUserByEmail(ctx context.Context, email string) (*auth.User
 	}
 	return &user, nil
 }
-func (r *UserRepo) GetUserByID(ctx context.Context, userID uuid.UUID) (*auth.User, error) {
+func (r *UserRepository) GetUserByID(ctx context.Context, userID uuid.UUID) (*auth.User, error) {
 	query := `
         SELECT id, email, password_hash, role, business_id, is_active, created_at, updated_at
         FROM users
