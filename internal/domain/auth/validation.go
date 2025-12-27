@@ -1,8 +1,44 @@
 package auth
 
-import "regexp"
+import (
+	"errors"
+	"regexp"
+)
 
-func (s *service) validateEmail(email string) error {
+var (
+	emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
+)
+
+func (s *Service) validateRegisterRequest(req *RegisterRequest) error {
+	if err := s.validateEmail(req.Email); err != nil {
+		return err
+	}
+	if err := s.validatePassword(req.Password); err != nil {
+		return err
+	}
+	if err := s.validateFullName(req.FullName); err != nil {
+		return err
+	}
+	switch req.Role {
+	case UserTypeSoloPractitioner:
+		if req.BusinessName == "" {
+			return errors.New("business_name required for solo_practitioner")
+		}
+		if req.ServiceCategory == "" {
+			return errors.New("service_category required for solo_practitioner")
+		}
+
+	case UserTypeOwner:
+		if req.BusinessName == "" {
+			return errors.New("business_name required for provider_owner")
+		}
+		if req.Industry == "" {
+			return errors.New("industry required for provider_owner")
+		}
+	}
+	return nil
+}
+func (s *Service) validateEmail(email string) error {
 	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 	if email == "" {
 		return &RegistrationError{
@@ -24,7 +60,7 @@ func (s *service) validateEmail(email string) error {
 	}
 	return nil
 }
-func (s *service) validatePassword(password string) error {
+func (s *Service) validatePassword(password string) error {
 	if password == "" {
 		return &RegistrationError{
 			Code:    "PASSWORD_REQUIRED",
@@ -71,7 +107,7 @@ func (s *service) validatePassword(password string) error {
 	return nil
 }
 
-func (s *service) validateBusinessName(businessName string) error {
+func (s *Service) validateBusinessName(businessName string) error {
 	if businessName == "" {
 		return &RegistrationError{
 			Code:    "BUSINESS_NAME_REQUIRED",
@@ -93,7 +129,29 @@ func (s *service) validateBusinessName(businessName string) error {
 	return nil
 }
 
-func (s *service) validateLocationName(name string) error {
+func (s *Service) validateFullName(fullName string) error {
+	if fullName == "" {
+		return &RegistrationError{
+			Code:    "FULLNAME_REQUIRED",
+			Message: "fullname is required",
+		}
+	}
+	if len(fullName) < 2 {
+		return &RegistrationError{
+			Code:    "FULLNAME_TOO_SHORT",
+			Message: "fullname must be at least 2 characters long",
+		}
+	}
+	if len(fullName) > 255 {
+		return &RegistrationError{
+			Code:    "FULLNAME_TOO_LONG",
+			Message: "fullname must not exceed 255 characters",
+		}
+	}
+	return nil
+}
+
+func (s *Service) validateLocationName(name string) error {
 	if name == "" {
 		return &RegistrationError{
 			Code:    "LOCATION_NAME_REQUIRED",

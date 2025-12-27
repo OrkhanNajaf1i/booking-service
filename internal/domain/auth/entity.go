@@ -9,72 +9,120 @@ import (
 type BusinessType string
 
 const (
-	BusinessTypeSolo  BusinessType = "solo"
-	BusinessTypeMulti BusinessType = "multi"
+	BusinessTypeSolo  BusinessType = "solo_practitioner"
+	BusinessTypeMulti BusinessType = "multi_staff_business"
 )
-
-func (bt BusinessType) IsValid() bool {
-	return bt == BusinessTypeMulti || bt == BusinessTypeSolo
-}
 
 type UserRole string
 
 const (
-	RoleSoloPractitioner UserRole = "solo_practitioner"
-	RoleProviderOwner    UserRole = "provider_owner"
-	RoleStaff            UserRole = "staff"
-	RoleCustomer         UserRole = "customer"
+	UserTypeCustomer         UserRole = "customer"
+	UserTypeOwner            UserRole = "provider_owner"
+	UserTypeStaff            UserRole = "staff"
+	UserTypeSoloPractitioner UserRole = "solo_practitioner"
 )
 
-func (ur UserRole) IsValid() bool {
-	switch ur {
-	case RoleSoloPractitioner, RoleProviderOwner, RoleStaff, RoleCustomer:
-		return true
-	default:
-		return false
-	}
-}
+type StaffRole string
+
+const (
+	StaffRoleManager       StaffRole = "manager"
+	StaffRoleStaff         StaffRole = "staff"
+	StaffRoleAdministrator StaffRole = "admin"
+)
+
+// func (ur UserRole) String() string {
+//  return string(ur)
+// }
 
 type User struct {
-	ID           uuid.UUID `db:"id" json:"id"`
-	Email        string    `db:"email" json:"email"`
-	PasswordHash string    `db:"password_hash" json:"-"`
-	Role         UserRole  `db:"role" json:"role"`
-	BusinessID   uuid.UUID `db:"business_id" json:"business_id"`
-	IsActive     bool      `db:"is_active" json:"is_active"`
-	CreatedAt    time.Time `db:"created_at" json:"created_at"`
-	UpdatedAt    time.Time `db:"updated_at" json:"updated_at"`
+	ID            uuid.UUID `db:"id" json:"id"`
+	Email         string    `db:"email" json:"email"`
+	FullName      string    `db:"full_name" json:"full_name"`
+	Phone         string    `db:"phone" json:"phone"`
+	PasswordHash  string    `db:"password_hash" json:"-"`
+	Role          UserRole  `db:"role" json:"role"`
+	BusinessID    uuid.UUID `db:"business_id" json:"business_id"`
+	Avatar        string    `db:"avatar" json:"avatar"`
+	IsActive      bool      `db:"is_active" json:"is_active"`
+	IsOwner       bool      `db:"is_owner" json:"is_owner"`
+	EmailVerified bool      `db:"email_verified" json:"email_verified"`
+	CreatedAt     time.Time `db:"created_at" json:"created_at"`
+	UpdatedAt     time.Time `db:"updated_at" json:"updated_at"`
 }
-
-type Business struct {
-	ID           uuid.UUID    `db:"id" json:"id"`
-	Name         string       `db:"name" json:"name"`
-	OwnerID      uuid.UUID    `db:"owner_id" json:"owner_id"`
-	BusinessType BusinessType `db:"business_type" json:"business_type"`
-	IsActive     bool         `db:"is_active" json:"is_active"`
-	CreatedAt    time.Time    `db:"created_at" json:"created_at"`
-	UpdatedAt    time.Time    `db:"updated_at" json:"updated_at"`
+type RefreshToken struct {
+	ID        uuid.UUID `db:"id" json:"id"`
+	UserID    uuid.UUID `db:"user_id" json:"user_id"`
+	Token     string    `db:"token" json:"token"`
+	ExpiresAt time.Time `db:"expires_at" json:"expires_at"`
+	CreatedAt time.Time `db:"created_at" json:"created_at"`
+	Revoked   bool      `db:"revoked" json:"revoked"`
 }
-
-type Location struct {
+type PasswordReset struct {
+	ID        uuid.UUID `db:"id" json:"id"`
+	Email     string    `db:"email" json:"email"`
+	Token     string    `db:"token" json:"token"`
+	ExpiresAt time.Time `db:"expires_at" json:"expires_at"`
+	Used      bool      `db:"used" json:"used"`
+	CreatedAt time.Time `db:"created_at" json:"created_at"`
+	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`
+}
+type StaffProfile struct {
 	ID         uuid.UUID `db:"id" json:"id"`
-	BusinessID uuid.UUID `db:"business_id" json:"business_id"`
-	Name       string    `db:"name" json:"name"`
-	Address    *string   `db:"address" json:"address"`
-	City       *string   `db:"city" json:"city"`
-	IsActive   bool      `db:"is_active" json:"is_active"`
-	CreatedAt  time.Time `db:"created_at" json:"created_at"`
-}
-
-type Staff struct {
-	ID         uuid.UUID `db:"id" json:"id"`
-	BusinessID uuid.UUID `db:"business_id" json:"business_id"`
 	UserID     uuid.UUID `db:"user_id" json:"user_id"`
-	Position   string    `db:"position" josn:"position"`
-	IsActive   bool      `db:"is_active" json:"is_active"`
-	CreatedAt  time.Time `db:"created_at" json:"created_at"`
+	BusinessID uuid.UUID `db:"business_id"`
+	LocationID *string   `db:"location_id"`
+	Role       StaffRole `db:"role"`
+	Title      string    `db:"title"`
+	Department string    `db:"department"`
+	Bio        string    `db:"bio"`
+	HourlyRate float64   `db:"hourly_rate"`
+	Status     string    `db:"status"`
+	JoinedAt   time.Time `db:"joined_at"`
+	CreatedAt  time.Time `db:"created_at"`
+	UpdatedAt  time.Time `db:"updated_at"`
+}
+type JWTClaims struct {
+	UserID     uuid.UUID `db:"user_id" json:"user_id"`
+	Email      string    `db:"email" json:"email"`
+	Role       UserRole  `db:"role" json:"role"`
+	BusinessID uuid.UUID `db:"business_id" json:"business_id"`
+	IsOwner    bool      `db:"is_owner" json:"is_owner"`
+	ExpiresAt  int64     `db:"expires_at" json:"expires_at"`
+}
+type RegisterRequest struct {
+	Email           string       `db:"email" json:"email"`
+	Password        string       `db:"password" json:"password"`
+	FullName        string       `db:"full_name" json:"full_name"`
+	Phone           string       `db:"phone" json:"phone"`
+	Role            UserRole     `db:"role" json:"role"`
+	BusinessType    BusinessType `db:"business_type" json:"business_type"`
+	BusinessName    string       `db:"business_name" json:"business_name"`
+	Industry        string       `db:"industry" json:"industry"`
+	ServiceCategory string       `db:"service_category" json:"service_category"`
 }
 
+type LoginRequest struct {
+	Email    string `db:"email" json:"email"`
+	Password string `db:"password" json:"password"`
+}
+type RefreshTokenRequest struct {
+	RefreshToken string `db:"refresh_token" json:"refresh_token"`
+}
+type ForgotPasswordRequest struct {
+	Email string `db:"email" json:"email"`
+}
+type ResetPasswordRequest struct {
+	Token    string `db:"token" json:"token"`
+	Password string `db:"password" json:"password"`
+}
+
+type AuthResponse struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	User         *User  `json:"user"`
+	ExpiresIn    int    `json:"expires_in"`
+	TokenType    string `json:"token_type"`
+}
 type RegistrationError struct {
 	Code    string `db:"code" json:"code"`
 	Message string `db:"message" json:"message"`
