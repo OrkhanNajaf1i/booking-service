@@ -28,11 +28,11 @@ func New(cfg *config.AppConfig) (*App, error) {
 	if err != nil {
 		return nil, err
 	}
-	businessRepo := postgres.NewBusinessRepo(db)
-	userRepo := postgres.NewUserRepo(db)
+	businessRepository := postgres.NewBusinessRepository(db)
+	userRepository := postgres.NewUserRepository(db)
 
-	businessSvc := business.NewService(businessRepo)
-	userSvc := user.NewService(userRepo)
+	businessSvc := business.NewService(businessRepository)
+	userSvc := user.NewService(userRepository)
 
 	businessHandler := handlers.NewBusinessHandler(businessSvc)
 	userHandler := handlers.NewUserHandler(userSvc)
