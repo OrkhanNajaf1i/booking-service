@@ -16,7 +16,7 @@ type UserRepository struct {
 	db *sql.DB
 }
 
-func NewUserRepo(db *sql.DB) *UserRepository {
+func NewUserRepository(db *sql.DB) *UserRepository {
 	return &UserRepository{db: db}
 }
 func (r *UserRepository) CreateUser(ctx context.Context, user *auth.User) error {
