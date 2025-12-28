@@ -23,18 +23,6 @@ type Repository interface {
 	UpdateStaffProfile(ctx context.Context, staffID string, profile *StaffProfile) error
 }
 
-// type BusinessRepository interface {
-// 	CreateBusiness(ctx context.Context, business *Business) error
-// 	GetBusinessByID(ctx context.Context, id uuid.UUID) (*Business, error)
-// }
-
-// type LocationRepository interface {
-// 	CreateLocation(ctx context.Context, location *Location) error
-// }
-
-//	type StaffRepository interface {
-//		CreateStaff(ctx context.Context, staff *Staff) error
-//	}
 type PasswordHasher interface {
 	HashPassword(password string) (string, error)
 	VerifyPassword(hash, password string) error
@@ -62,3 +50,15 @@ type BusinessService interface {
 // 	Register(ctx context.Context, email, password, businessName, locationName string, flowType BusinessType) (*User, error)
 // 	GetUserRole(ctx context.Context, UserID uuid.UUID) (string, error)
 // }
+// type BusinessRepository interface {
+// 	CreateBusiness(ctx context.Context, business *Business) error
+// 	GetBusinessByID(ctx context.Context, id uuid.UUID) (*Business, error)
+// }
+
+// type LocationRepository interface {
+// 	CreateLocation(ctx context.Context, location *Location) error
+// }
+
+//	type StaffRepository interface {
+//		CreateStaff(ctx context.Context, staff *Staff) error
+//	}

@@ -67,19 +67,19 @@ type PasswordReset struct {
 	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`
 }
 type StaffProfile struct {
-	ID         uuid.UUID `db:"id" json:"id"`
-	UserID     uuid.UUID `db:"user_id" json:"user_id"`
-	BusinessID uuid.UUID `db:"business_id"`
-	LocationID *string   `db:"location_id"`
-	Role       StaffRole `db:"role"`
-	Title      string    `db:"title"`
-	Department string    `db:"department"`
-	Bio        string    `db:"bio"`
-	HourlyRate float64   `db:"hourly_rate"`
-	Status     string    `db:"status"`
-	JoinedAt   time.Time `db:"joined_at"`
-	CreatedAt  time.Time `db:"created_at"`
-	UpdatedAt  time.Time `db:"updated_at"`
+	ID         uuid.UUID  `db:"id" json:"id"`
+	UserID     uuid.UUID  `db:"user_id" json:"user_id"`
+	BusinessID uuid.UUID  `db:"business_id"`
+	LocationID *uuid.UUID `db:"location_id"`
+	Role       StaffRole  `db:"role"`
+	Title      string     `db:"title"`
+	Department string     `db:"department"`
+	Bio        string     `db:"bio"`
+	HourlyRate float64    `db:"hourly_rate"`
+	Status     string     `db:"status"`
+	JoinedAt   time.Time  `db:"joined_at"`
+	CreatedAt  time.Time  `db:"created_at"`
+	UpdatedAt  time.Time  `db:"updated_at"`
 }
 type JWTClaims struct {
 	UserID     uuid.UUID `db:"user_id" json:"user_id"`
