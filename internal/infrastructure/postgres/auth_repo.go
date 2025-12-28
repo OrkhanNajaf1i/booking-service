@@ -120,7 +120,7 @@ func (r *AuthRepository) GetPasswordReset(ctx context.Context, token string) (*a
 	return pr, nil
 }
 
-func (r *AuthRepository) UpdatePassword(ctx context.Context, userID uuid.UUID, hashedPassword string) error {
+func (r *AuthRepository) UpdatePassword(ctx context.Context, userID string, hashedPassword string) error {
 	query := `UPDATE users SET password_hash = $1, updated_at = $2 WHERE id = $3`
 	_, err := r.db.ExecContext(ctx, query, hashedPassword, time.Now(), userID)
 	if err != nil {

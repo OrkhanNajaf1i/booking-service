@@ -5,10 +5,13 @@ import (
 	"net/http"
 
 	"github.com/OrkhanNajaf1i/booking-service/internal/config"
+	"github.com/OrkhanNajaf1i/booking-service/internal/domain/auth"
 	"github.com/OrkhanNajaf1i/booking-service/internal/domain/business"
-	"github.com/OrkhanNajaf1i/booking-service/internal/domain/user"
 	httpapi "github.com/OrkhanNajaf1i/booking-service/internal/http"
 	"github.com/OrkhanNajaf1i/booking-service/internal/http/handlers"
+	authHandler "github.com/OrkhanNajaf1i/booking-service/internal/http/handlers/auth"
+	"github.com/OrkhanNajaf1i/booking-service/internal/infrastructure/crypto"
+	"github.com/OrkhanNajaf1i/booking-service/internal/infrastructure/email"
 	"github.com/OrkhanNajaf1i/booking-service/internal/infrastructure/postgres"
 	"github.com/OrkhanNajaf1i/booking-service/internal/logger"
 )
@@ -19,7 +22,7 @@ type App struct {
 	server *http.Server
 }
 
-func New(cfg *config.AppConfig) (*App, error) {
+func New(cfg *config.AppConfig, appLogger logger.Logger) (*App, error) {
 	appLogger, err := logger.New(cfg)
 	if err != nil {
 		return nil, err
@@ -29,17 +32,30 @@ func New(cfg *config.AppConfig) (*App, error) {
 		return nil, err
 	}
 	businessRepository := postgres.NewBusinessRepository(db)
-	userRepository := postgres.NewUserRepository(db)
+	// userRepository := postgres.NewUserRepository(db)
+	authRepo := postgres.NewAuthRepository(db)
+
+	passwordHasher := crypto.NewBcryptPasswordHasher()
+	tokenManager := crypto.NewJWTSigner(cfg.JWTSecret)
+	emailService := email.NewDummyEmailService()
 
 	businessSvc := business.NewService(businessRepository)
-	userSvc := user.NewService(userRepository)
+
+	authSvc := auth.NewAuthService(
+		authRepo,
+		passwordHasher,
+		emailService,
+		tokenManager,
+		businessSvc,
+	)
 
 	businessHandler := handlers.NewBusinessHandler(businessSvc)
-	userHandler := handlers.NewUserHandler(userSvc)
-
+	// userHandler := handlers.NewUserHandler(userSvc)
+	authHandlers := authHandler.NewAuthHandler(authSvc)
 	router := httpapi.NewRouter(httpapi.Handlers{
 		Business: businessHandler,
-		User:     userHandler,
+		// User:     userHandler,
+		Auth: authHandlers,
 	})
 
 	addr := fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)

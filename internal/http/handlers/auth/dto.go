@@ -49,7 +49,6 @@
 package auth
 
 import (
-	"errors"
 	"strings"
 	"time"
 
@@ -63,10 +62,10 @@ type RegisterHTTPRequest struct {
 	FullName        string        `json:"full_name"`
 	Phone           string        `json:"phone"`
 	Role            auth.UserRole `json:"role"`
-	BusinessType    string        `json:"business_type,omitempty"`
-	BusinessName    string        `json:"business_name,omitempty"`
-	Industry        string        `json:"industry,omitempty"`
-	ServiceCategory string        `json:"service_category,omitempty"`
+	BusinessType    string        `json:"business_type"`
+	BusinessName    string        `json:"business_name"`
+	Industry        string        `json:"industry"`
+	ServiceCategory string        `json:"service_category"`
 }
 
 type LoginHTTPRequest struct {
@@ -98,7 +97,7 @@ type UserResponseDTO struct {
 	IsActive      bool          `json:"is_active"`
 	IsOwner       bool          `json:"is_owner"`
 	EmailVerified bool          `json:"email_verified"`
-	CreatedAt     time.Time     `json:"created_at"` // time.Time → ISO string
+	CreatedAt     time.Time     `json:"created_at"`
 }
 
 type AuthResponseDTO struct {
@@ -121,9 +120,7 @@ type ErrorResponseDTO struct {
 	Message string `json:"message"`
 }
 
-// dto.go - ToDomainRegister düzəlişi
 func ToDomainRegister(httpReq *RegisterHTTPRequest) *auth.RegisterRequest {
-	// Validation SİLİNDİ (service-də var)
 	return &auth.RegisterRequest{
 		Email:           strings.TrimSpace(httpReq.Email),
 		Password:        httpReq.Password,
