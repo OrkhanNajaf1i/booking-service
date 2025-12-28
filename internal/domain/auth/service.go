@@ -41,102 +41,116 @@ func (s *Service) Register(ctx context.Context, req *RegisterRequest) (*AuthResp
 		return nil, err
 	}
 	exists, err := s.repo.EmailExists(ctx, req.Email)
-	if err != nil || exists {
-		if exists {
-			return nil, &RegistrationError{
-				Code:    "EMAIL_EXISTS",
-				Message: "email exists",
-			}
+	if err != nil {
+		return nil, fmt.Errorf("email exists check failed: %w", err)
+	}
+	if exists {
+		return nil, &RegistrationError{
+			Code:    "EMAIL_EXISTS",
+			Message: "Email already registered",
 		}
-		return nil, err
 	}
 	hashedPassword, err := s.passwordHasher.HashPassword(req.Password)
 	if err != nil {
 		return nil, &RegistrationError{
 			Code:    "PASSWORD_HASHING_FAILED",
-			Message: "password hashing failed",
+			Message: "Failed to process password",
 		}
 	}
-	uID := uuid.New()
-	var bID uuid.UUID
+	userID := uuid.New()
+	var businessID uuid.UUID
+	var locationID uuid.UUID
+
 	switch req.Role {
 	case UserTypeSoloPractitioner:
 		businessIDStr, err := s.businessService.CreateSoloPractitionerBusiness(
 			ctx,
-			uID.String(),
+			userID.String(),
 			req.BusinessName,
 			req.ServiceCategory,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create solo business: %w", err)
 		}
-		bID, _ = uuid.Parse(businessIDStr)
-
-		_, err = s.businessService.CreateDefaultLocation(ctx, bID)
+		businessID, _ = uuid.Parse(businessIDStr)
+		locationIDStr, err := s.businessService.CreateDefaultLocation(ctx, businessID)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create location: %w", err)
+			return nil, fmt.Errorf("failed to create solo location: %w", err)
 		}
+		locationID, _ = uuid.Parse(locationIDStr)
 
 	case UserTypeOwner:
-		bidStr, err := s.businessService.CreateMultiStaffBusiness(ctx, uID.String(), req.BusinessName, req.Industry)
+		businessIDStr, err := s.businessService.CreateMultiStaffBusiness(
+			ctx,
+			userID.String(),
+			req.BusinessName,
+			req.Industry,
+		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create multi business: %w", err)
 		}
-		bID, _ = uuid.Parse(bidStr)
-		_, err = s.businessService.CreateDefaultLocation(ctx, bID)
+		businessID, _ = uuid.Parse(businessIDStr)
+
+		locationIDStr, err := s.businessService.CreateDefaultLocation(ctx, businessID)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create location: %w", err)
+			return nil, fmt.Errorf("failed to create multi location: %w", err)
 		}
+		locationID, _ = uuid.Parse(locationIDStr)
+
 	case UserTypeCustomer:
-		bID = uuid.Nil
+		businessID = uuid.Nil
+		locationID = uuid.Nil
+
 	default:
-		return nil, &RegistrationError{Code: "INVALID_ROLE", Message: "Invalid role"}
+		return nil, &RegistrationError{
+			Code:    "INVALID_ROLE",
+			Message: "Invalid user role",
+		}
 	}
+
+	now := time.Now()
 	user := &User{
-		ID:            uID,
-		Email:         req.Email,
+		ID:            userID,
+		Email:         strings.ToLower(strings.TrimSpace(req.Email)),
 		PasswordHash:  hashedPassword,
 		FullName:      req.FullName,
 		Phone:         req.Phone,
 		Role:          req.Role,
-		BusinessID:    bID,
+		BusinessID:    businessID,
 		IsActive:      true,
 		IsOwner:       req.Role == UserTypeSoloPractitioner || req.Role == UserTypeOwner,
 		EmailVerified: false,
-		CreatedAt:     time.Now(),
-		UpdatedAt:     time.Now(),
+		CreatedAt:     now,
+		UpdatedAt:     now,
 	}
+
 	if err := s.repo.CreateUser(ctx, user); err != nil {
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
-	locationIDStr, err := s.businessService.CreateDefaultLocation(ctx, bID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create location: %w", err)
-	}
-
 	if user.Role == UserTypeSoloPractitioner || user.Role == UserTypeOwner {
 		profile := &StaffProfile{
 			ID:         uuid.New(),
 			UserID:     user.ID,
 			BusinessID: user.BusinessID,
-			LocationID: &locationIDStr,
+			LocationID: &locationID,
 			Role:       StaffRoleAdministrator,
 			Title:      "",
 			Department: "",
 			Bio:        "",
 			HourlyRate: 0,
 			Status:     "active",
-			JoinedAt:   time.Now(),
-			CreatedAt:  time.Now(),
-			UpdatedAt:  time.Now(),
+			JoinedAt:   now,
+			CreatedAt:  now,
+			UpdatedAt:  now,
 		}
 
 		if err := s.repo.CreateStaffProfile(ctx, profile); err != nil {
-			return nil, fmt.Errorf("create staff profile failed: %w", err)
+			return nil, fmt.Errorf("failed to create staff profile: %w", err)
 		}
 	}
 	return s.generateAuthResponse(ctx, user)
 }
+
 func (s *Service) Login(ctx context.Context, req *LoginRequest) (*AuthResponse, error) {
 	email := strings.ToLower(strings.TrimSpace(req.Email))
 	user, err := s.repo.GetUserByEmail(ctx, email)
@@ -228,7 +242,7 @@ func (s *Service) generateAuthResponse(ctx context.Context, user *User) (*AuthRe
 		ID:        uuid.New(),
 		UserID:    user.ID,
 		Token:     hashToken(refreshTokenString),
-		ExpiresAt: time.Now(),
+		ExpiresAt: time.Now().Add(7 * 24 * time.Hour),
 		CreatedAt: time.Now(),
 		Revoked:   false,
 	}
