@@ -9,8 +9,8 @@ import (
 type BusinessType string
 
 const (
-	BusinessTypeSolo  BusinessType = "solo"
-	BusinessTypeMulti BusinessType = "multi"
+	BusinessTypeSolo  BusinessType = "solo_practitioner"    // ✅ auth ilə uyğun
+	BusinessTypeMulti BusinessType = "multi_staff_business" // ✅ auth ilə uyğun
 )
 
 func (bt BusinessType) IsValid() bool {
@@ -20,10 +20,10 @@ func (bt BusinessType) IsValid() bool {
 type UserRole string
 
 const (
-	RoleSoloPractitioner UserRole = "solo_practitioner"
-	RoleProviderOwner    UserRole = "provider_owner"
-	RoleStaff            UserRole = "staff"
-	RoleCustomer         UserRole = "customer"
+	RoleSoloPractitioner UserRole = "solo_practitioner" // ✅ auth ilə eyni
+	RoleProviderOwner    UserRole = "provider_owner"    // ✅ auth ilə eyni
+	RoleStaff            UserRole = "staff"             // ✅ auth ilə eyni
+	RoleCustomer         UserRole = "customer"          // ✅ auth ilə eyni
 )
 
 func (ur UserRole) IsValid() bool {
@@ -65,15 +65,16 @@ func New(name, phone string) *Business {
 // 	UpdatedAt    time.Time    `db:"updated_at" json:"updated_at"`
 // }
 
-// type Location struct {
-// 	ID         uuid.UUID `db:"id" json:"id"`
-// 	BusinessID uuid.UUID `db:"business_id" json:"business_id"`
-// 	Name       string    `db:"name" json:"name"`
-// 	Address    *string   `db:"address" json:"address"`
-// 	City       *string   `db:"city" json:"city"`
-// 	IsActive   bool      `db:"is_active" json:"is_active"`
-// 	CreatedAt  time.Time `db:"created_at" json:"created_at"`
-// }
+type Location struct {
+	ID         uuid.UUID `db:"id" json:"id"`
+	BusinessID uuid.UUID `db:"business_id" json:"business_id"`
+	Name       string    `db:"name" json:"name"`
+	Address    *string   `db:"address" json:"address"`
+	City       *string   `db:"city" json:"city"`
+	IsActive   bool      `db:"is_active" json:"is_active"`
+	CreatedAt  time.Time `db:"created_at" json:"created_at"`
+	UpdatedAt  time.Time `db:"updated_at" json:"updated_at"`
+}
 
 // type Staff struct {
 // 	ID         uuid.UUID `db:"id" json:"id"`

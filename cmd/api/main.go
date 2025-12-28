@@ -26,10 +26,11 @@ func main() {
 		log.Fatalf("Failled no initialize logger: %v", err)
 	}
 
-	if err := postgres.RunMigrations(*cfg); err != nil {
+	if err := postgres.RunMigrations(*cfg, appLogger); err != nil {
 		log.Fatalf("migrations failed: %v", err)
 	}
-	app, err := api.New(cfg)
+	// app, err := api.New(cfg)
+	app, err := api.New(cfg, appLogger)
 	if err != nil {
 		log.Fatalf("failed to init api app: %v", err)
 	}

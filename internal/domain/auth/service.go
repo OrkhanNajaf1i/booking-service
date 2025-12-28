@@ -13,7 +13,7 @@ import (
 )
 
 type Service struct {
-	repo            Repository
+	repo            AuthRepository
 	passwordHasher  PasswordHasher
 	emailService    EmailService
 	tokenManager    TokenManager
@@ -21,7 +21,7 @@ type Service struct {
 }
 
 func NewAuthService(
-	repo Repository,
+	repo AuthRepository,
 	hasher PasswordHasher,
 	email EmailService,
 	token TokenManager,

@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type Repository interface {
+type AuthRepository interface {
 	CreateUser(ctx context.Context, user *User) error
 	GetUserByEmail(ctx context.Context, email string) (*User, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (*User, error)
@@ -17,7 +17,7 @@ type Repository interface {
 	GetPasswordReset(ctx context.Context, token string) (*PasswordReset, error)
 	UpdatePassword(ctx context.Context, userID string, hashedPassword string) error
 	EmailExists(ctx context.Context, email string) (bool, error)
-	UpdateUserStatus(ctx context.Context, userID string, status string) error
+	UpdateUserStatus(ctx context.Context, userID uuid.UUID, status string) error
 	CreateStaffProfile(ctx context.Context, profile *StaffProfile) error
 	GetStaffProfile(ctx context.Context, userID string) (*StaffProfile, error)
 	UpdateStaffProfile(ctx context.Context, staffID string, profile *StaffProfile) error
