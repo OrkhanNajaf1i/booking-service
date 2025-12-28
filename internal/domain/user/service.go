@@ -3,7 +3,6 @@ package user
 import (
 	"context"
 	"fmt"
-	"os/user"
 
 	"github.com/google/uuid"
 )
