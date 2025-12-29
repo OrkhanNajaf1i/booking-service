@@ -21,12 +21,13 @@ func main() {
 	if err != nil {
 		log.Fatal("Failed to load config: %v", err)
 	}
-	if err := postgres.RunMigrations(*cfg); err != nil {
-		log.Fatalf("migrations failed: %v", err)
-	}
+
 	appLogger, err := logger.New(cfg)
 	if err != nil {
 		log.Fatal("Failed to initialize logger: %v", err)
+	}
+	if err := postgres.RunMigrations(*cfg, appLogger); err != nil {
+		log.Fatalf("migrations failed: %v", err)
 	}
 	appLogger.Info("Worker starting")
 	stop := make(chan os.Signal, 1)

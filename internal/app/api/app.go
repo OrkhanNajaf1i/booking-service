@@ -1,3 +1,4 @@
+// File: internal/api/app.go
 package api
 
 import (
@@ -8,8 +9,11 @@ import (
 	"github.com/OrkhanNajaf1i/booking-service/internal/domain/auth"
 	"github.com/OrkhanNajaf1i/booking-service/internal/domain/business"
 	httpapi "github.com/OrkhanNajaf1i/booking-service/internal/http"
-	"github.com/OrkhanNajaf1i/booking-service/internal/http/handlers"
+
+	// DÜZƏLİŞ 1: Köhnə "handlers" paketini silib, yeni "business" handler paketini əlavə edirik
 	authHandler "github.com/OrkhanNajaf1i/booking-service/internal/http/handlers/auth"
+	businessHandler "github.com/OrkhanNajaf1i/booking-service/internal/http/handlers/business"
+
 	"github.com/OrkhanNajaf1i/booking-service/internal/infrastructure/crypto"
 	"github.com/OrkhanNajaf1i/booking-service/internal/infrastructure/email"
 	"github.com/OrkhanNajaf1i/booking-service/internal/infrastructure/postgres"
@@ -24,13 +28,12 @@ type App struct {
 
 func New(cfg *config.AppConfig, appLogger logger.Logger) (*App, error) {
 	appLogger, err := logger.New(cfg)
-	if err != nil {
-		return nil, err
-	}
+
 	db, err := postgres.New(*cfg)
 	if err != nil {
 		return nil, err
 	}
+
 	businessRepository := postgres.NewBusinessRepository(db)
 	// userRepository := postgres.NewUserRepository(db)
 	authRepo := postgres.NewAuthRepository(db)
@@ -49,13 +52,14 @@ func New(cfg *config.AppConfig, appLogger logger.Logger) (*App, error) {
 		businessSvc,
 	)
 
-	businessHandler := handlers.NewBusinessHandler(businessSvc)
-	// userHandler := handlers.NewUserHandler(userSvc)
-	authHandlers := authHandler.NewAuthHandler(authSvc)
+	businessH := businessHandler.NewHandler(businessSvc)
+
+	authH := authHandler.NewAuthHandler(authSvc)
+
 	router := httpapi.NewRouter(httpapi.Handlers{
-		Business: businessHandler,
+		Business: businessH,
 		// User:     userHandler,
-		Auth: authHandlers,
+		Auth: authH,
 	})
 
 	addr := fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
@@ -69,6 +73,7 @@ func New(cfg *config.AppConfig, appLogger logger.Logger) (*App, error) {
 		server: server,
 	}, nil
 }
+
 func (a *App) Run() error {
 	a.logger.Info("API server starting", logger.Field{Key: "addr", Value: a.server.Addr})
 	return a.server.ListenAndServe()
