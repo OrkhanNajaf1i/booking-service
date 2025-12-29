@@ -123,7 +123,7 @@ func (h *Handler) RefreshAccessToken(w http.ResponseWriter, r *http.Request) {
 }
 func (h *Handler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	var httpReq ForgotPasswordHTTPRequest
-	if err := json.NewDecoder(r.Body).Decode(httpReq); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&httpReq); err != nil {
 		h.sendError(w, http.StatusBadRequest, "VALIDATION_ERROR")
 		return
 	}
@@ -145,7 +145,7 @@ func (h *Handler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	var httpReq ResetPasswordHTTPRequest
-	if err := json.NewDecoder(r.Body).Decode(httpReq); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&httpReq); err != nil {
 		h.sendError(w, http.StatusBadRequest, "VALIDATION_ERROR")
 		return
 	}

@@ -21,6 +21,11 @@ type AppConfig struct {
 	EncryptionKey  string
 	EnableDebug    bool
 	MaxConcurrency int
+	SMTPHost       string
+	SMTPPort       int
+	SMTPUser       string
+	SMTPPass       string
+	SMTPFrom       string
 }
 
 func Load() (*AppConfig, error) {
@@ -34,6 +39,9 @@ func Load() (*AppConfig, error) {
 	}
 	if err = LoadDatabaseConfig(cfg); err != nil {
 		return nil, fmt.Errorf("database config error: %w", err)
+	}
+	if err = LoadEmailConfig(cfg); err != nil {
+		return nil, fmt.Errorf("email config error: %w", err)
 	}
 	return cfg, nil
 }
@@ -87,5 +95,27 @@ func LoadDatabaseConfig(cfg *AppConfig) error {
 	if cfg.DBPort == "" {
 		cfg.DBPort = "5432"
 	}
+	return nil
+}
+func LoadEmailConfig(cfg *AppConfig) error {
+	cfg.SMTPHost = os.Getenv("SMTP_HOST")
+	cfg.SMTPUser = os.Getenv("SMTP_USER")
+	cfg.SMTPPass = os.Getenv("SMTP_PASS")
+	cfg.SMTPFrom = os.Getenv("SMTP_FROM")
+
+	portStr := os.Getenv("SMTP_PORT")
+	if portStr == "" {
+		cfg.SMTPPort = 587
+	} else {
+		port, err := strconv.Atoi(portStr)
+		if err != nil {
+			return fmt.Errorf("SMTP_PORT must be a number: %w", err)
+		}
+		cfg.SMTPPort = port
+	}
+	if cfg.SMTPHost == "" || cfg.SMTPUser == "" || cfg.SMTPPass == "" {
+		return errors.New("missing required SMTP environment variables")
+	}
+
 	return nil
 }
