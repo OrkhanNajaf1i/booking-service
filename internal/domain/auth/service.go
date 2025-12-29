@@ -13,7 +13,7 @@ import (
 )
 
 type Service struct {
-	repo            Repository
+	repo            AuthRepository
 	passwordHasher  PasswordHasher
 	emailService    EmailService
 	tokenManager    TokenManager
@@ -21,7 +21,7 @@ type Service struct {
 }
 
 func NewAuthService(
-	repo Repository,
+	repo AuthRepository,
 	hasher PasswordHasher,
 	email EmailService,
 	token TokenManager,
@@ -65,7 +65,8 @@ func (s *Service) Register(ctx context.Context, req *RegisterRequest) (*AuthResp
 	case UserTypeSoloPractitioner:
 		businessIDStr, err := s.businessService.CreateSoloPractitionerBusiness(
 			ctx,
-			userID.String(),
+			// userID.String(),
+			uuid.Nil.String(),
 			req.BusinessName,
 			req.ServiceCategory,
 		)
@@ -82,7 +83,8 @@ func (s *Service) Register(ctx context.Context, req *RegisterRequest) (*AuthResp
 	case UserTypeOwner:
 		businessIDStr, err := s.businessService.CreateMultiStaffBusiness(
 			ctx,
-			userID.String(),
+			// userID.String(),
+			uuid.Nil.String(),
 			req.BusinessName,
 			req.Industry,
 		)
@@ -127,6 +129,12 @@ func (s *Service) Register(ctx context.Context, req *RegisterRequest) (*AuthResp
 	if err := s.repo.CreateUser(ctx, user); err != nil {
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
+	if (user.Role == UserTypeSoloPractitioner || user.Role == UserTypeOwner) && businessID != uuid.Nil {
+		if err := s.businessService.AssignOwner(ctx, businessID, userID); err != nil {
+			fmt.Printf("Failed to update business owner: %v\n", err)
+			return nil, fmt.Errorf("failed to assign owner to business: %w", err)
+		}
+	}
 	if user.Role == UserTypeSoloPractitioner || user.Role == UserTypeOwner {
 		profile := &StaffProfile{
 			ID:         uuid.New(),
@@ -148,6 +156,7 @@ func (s *Service) Register(ctx context.Context, req *RegisterRequest) (*AuthResp
 			return nil, fmt.Errorf("failed to create staff profile: %w", err)
 		}
 	}
+
 	return s.generateAuthResponse(ctx, user)
 }
 
