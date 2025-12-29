@@ -40,25 +40,5 @@ type BusinessService interface {
 	CreateSoloPractitionerBusiness(ctx context.Context, ownerID string, name string, industry string) (businessID string, err error)
 	CreateMultiStaffBusiness(ctx context.Context, ownerID string, name string, industry string) (businessID string, err error)
 	CreateDefaultLocation(ctx context.Context, businessID uuid.UUID) (locationID string, err error)
+	AssignOwner(ctx context.Context, businessID uuid.UUID, ownerID uuid.UUID) error
 }
-
-// type IDGenerator interface {
-// 	Generate() uuid.UUID
-// }
-
-// type AuthService interface {
-// 	Register(ctx context.Context, email, password, businessName, locationName string, flowType BusinessType) (*User, error)
-// 	GetUserRole(ctx context.Context, UserID uuid.UUID) (string, error)
-// }
-// type BusinessRepository interface {
-// 	CreateBusiness(ctx context.Context, business *Business) error
-// 	GetBusinessByID(ctx context.Context, id uuid.UUID) (*Business, error)
-// }
-
-// type LocationRepository interface {
-// 	CreateLocation(ctx context.Context, location *Location) error
-// }
-
-//	type StaffRepository interface {
-//		CreateStaff(ctx context.Context, staff *Staff) error
-//	}
