@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/OrkhanNajaf1i/booking-service/internal/domain/business"
+	"github.com/OrkhanNajaf1i/booking-service/internal/http/middleware"
 	"github.com/google/uuid"
 )
 
@@ -39,15 +40,13 @@ func writeJSONError(w http.ResponseWriter, status int, message string, details i
 	}
 	writeJSON(w, status, response)
 }
-func getUserIDFromContext(r *http.Request) (uuid.UUID, error) {
-	userIDStr, ok := r.Context().Value("user_id").(string)
-	if !ok || userIDStr == "" {
-		return uuid.Nil, fmt.Errorf("user_id missing in context (JWT required)")
-	}
 
-	userID, err := uuid.Parse(userIDStr)
-	if err != nil {
-		return uuid.Nil, fmt.Errorf("invalid user_id format: %w", err)
+func getUserIDFromContext(r *http.Request) (uuid.UUID, error) {
+	v := r.Context().Value(middleware.UserIDKey)
+
+	userID, ok := v.(uuid.UUID)
+	if !ok || userID == uuid.Nil {
+		return uuid.Nil, fmt.Errorf("user_id missing in context (JWT required)")
 	}
 
 	return userID, nil
