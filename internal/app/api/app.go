@@ -69,7 +69,7 @@ func New(cfg *config.AppConfig, appLogger logger.Logger) (*App, error) {
 	router := httpapi.NewRouter(httpapi.Handlers{
 		Business: businessH,
 		Auth:     authH,
-	})
+	}, tokenManager)
 
 	addr := fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
 	server := &http.Server{
