@@ -28,9 +28,13 @@ func RunMigrations(cfg config.AppConfig, appLogger logger.Logger) error {
 
 	migrationsPath := "file://" + filepath.ToSlash(migrationsDir)
 
+	// ✅ DÜZƏLİŞ: x-schema=public silindi
+	// search_path istifadə edə bilərsən, amma default public schema-dır
 	dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
 		cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName,
 	)
+
+	appLogger.Info("Migration DSN", logger.Field{Key: "dsn", Value: dsn})
 
 	m, err := migrate.New(migrationsPath, dsn)
 	if err != nil {
