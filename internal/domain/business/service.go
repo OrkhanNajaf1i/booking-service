@@ -103,9 +103,6 @@ func (s *Service) CreateMultiBusiness(ctx context.Context, ownerID uuid.UUID, re
 	if err := s.repo.CreateBusiness(ctx, business); err != nil {
 		return uuid.Nil, fmt.Errorf("failed to create business in DB: %w", err)
 	}
-	if err := s.repo.CreateBusiness(ctx, business); err != nil {
-		return uuid.Nil, fmt.Errorf("failed to create business in DB: %w", err)
-	}
 	if err := s.userService.UpdateUserBusinessID(ctx, ownerID, business.ID, true); err != nil {
 		return uuid.Nil, fmt.Errorf("failed to assign owner to business: %w", err)
 	}
