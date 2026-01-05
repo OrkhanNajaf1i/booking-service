@@ -68,7 +68,25 @@ func (s *SMTPService) SendPasswordResetEmail(to string, resetLink string) error 
 		log.Printf("❌ [SMTP ERROR] %v", err)
 		return fmt.Errorf("failed to send email: %w", err)
 	}
+	log.Printf("[DEBUG-EMAIL] Dialing %s...", addr)
+	conn, err := smtp.Dial(addr)
+	if err != nil {
+		log.Printf("[DEBUG-EMAIL] ❌ Bağlantı qurula bilmədi: %v", err)
+		return err
+	}
+	defer conn.Close()
 
+	log.Printf("[DEBUG-EMAIL] 🔍 EHLO/HELO yoxlanılır...")
+	if err = conn.Hello("localhost"); err != nil {
+		log.Printf("[DEBUG-EMAIL] ❌ Hello xətası: %v", err)
+		return err
+	}
+
+	log.Printf("[DEBUG-EMAIL] 🔐 Autentifikasiya yoxlanılır...")
+	if err = conn.Auth(auth); err != nil {
+		log.Printf("[DEBUG-EMAIL] ❌ Şifrə/User xətası: %v", err)
+		return err
+	}
 	log.Printf("✅ [SMTP SUCCESS] Mail göndərildi!")
 	return nil
 }
