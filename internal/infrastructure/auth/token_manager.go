@@ -24,11 +24,16 @@ func NewJWTTokenManager(secretKey string) *JWTTokenManager {
 }
 
 func (m *JWTTokenManager) GenerateAccessToken(claims *auth.JWTClaims) (string, error) {
+	var bidStr string
+	if claims.BusinessID != nil {
+		bidStr = claims.BusinessID.String()
+	}
+
 	tk := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id":     claims.UserID.String(),
 		"email":       claims.Email,
 		"role":        string(claims.Role),
-		"business_id": claims.BusinessID.String(),
+		"business_id": bidStr,
 		"is_owner":    claims.IsOwner,
 		"exp":         time.Now().Add(m.accessExpiry).Unix(),
 		"iat":         time.Now().Unix(),
@@ -51,12 +56,20 @@ func (m *JWTTokenManager) ValidateAccessToken(tokenString string) (*auth.JWTClai
 		return nil, fmt.Errorf("invalid claims")
 	}
 	userID, _ := uuid.Parse((*claimsMap)["user_id"].(string))
-	businessID, _ := uuid.Parse((*claimsMap)["business_id"].(string))
+	// businessID, _ := uuid.Parse((*claimsMap)["business_id"].(string))
+	var bIDPtr *uuid.UUID
+	bidStr, _ := (*claimsMap)["business_id"].(string)
+	if bidStr != "" {
+		parsedBID, err := uuid.Parse(bidStr)
+		if err == nil && parsedBID != uuid.Nil {
+			bIDPtr = &parsedBID
+		}
+	}
 	return &auth.JWTClaims{
 		UserID:     userID,
 		Email:      (*claimsMap)["email"].(string),
 		Role:       auth.UserRole((*claimsMap)["role"].(string)),
-		BusinessID: businessID,
+		BusinessID: bIDPtr,
 		IsOwner:    (*claimsMap)["is_owner"].(bool),
 		ExpiresAt:  int64((*claimsMap)["exp"].(float64)),
 	}, nil

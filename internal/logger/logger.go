@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"os"
@@ -60,7 +61,18 @@ func (s *slogLogger) WithField(key string, value any) Logger {
 	nl := s.l.With(key, value)
 	return &slogLogger{l: nl}
 }
+func (s *slogLogger) WithFields(fields ...Field) Logger {
+	args := toArgs(fields)
+	nl := s.l.With(args...)
+	return &slogLogger{l: nl}
+}
 
+func (s *slogLogger) WithContext(ctx context.Context) Logger {
+	if requestID := ctx.Value("request_id"); requestID != nil {
+		return s.WithFields(Field{Key: "request_id", Value: requestID})
+	}
+	return s
+}
 func parseLevel(s string) (slog.Level, error) {
 	lvl := strings.ToLower(strings.TrimSpace(s))
 
