@@ -18,9 +18,6 @@ type AuthRepository interface {
 	UpdatePassword(ctx context.Context, userID string, hashedPassword string) error
 	EmailExists(ctx context.Context, email string) (bool, error)
 	UpdateUserStatus(ctx context.Context, userID uuid.UUID, status string) error
-	CreateStaffProfile(ctx context.Context, profile *StaffProfile) error
-	GetStaffProfile(ctx context.Context, userID string) (*StaffProfile, error)
-	UpdateStaffProfile(ctx context.Context, staffID string, profile *StaffProfile) error
 }
 
 type PasswordHasher interface {
@@ -34,11 +31,4 @@ type TokenManager interface {
 	GenerateAccessToken(claims *JWTClaims) (string, error)
 	GenerateRefreshToken() (string, error)
 	ValidateAccessToken(token string) (*JWTClaims, error)
-}
-
-type BusinessService interface {
-	CreateSoloPractitionerBusiness(ctx context.Context, ownerID string, name string, industry string) (businessID string, err error)
-	CreateMultiStaffBusiness(ctx context.Context, ownerID string, name string, industry string) (businessID string, err error)
-	CreateDefaultLocation(ctx context.Context, businessID uuid.UUID) (locationID string, err error)
-	AssignOwner(ctx context.Context, businessID uuid.UUID, ownerID uuid.UUID) error
 }

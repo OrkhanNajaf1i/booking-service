@@ -13,11 +13,10 @@ import (
 )
 
 type Service struct {
-	repo            AuthRepository
-	passwordHasher  PasswordHasher
-	emailService    EmailService
-	tokenManager    TokenManager
-	businessService BusinessService
+	repo           AuthRepository
+	passwordHasher PasswordHasher
+	emailService   EmailService
+	tokenManager   TokenManager
 }
 
 func NewAuthService(
@@ -25,14 +24,12 @@ func NewAuthService(
 	hasher PasswordHasher,
 	email EmailService,
 	token TokenManager,
-	business BusinessService,
 ) *Service {
 	return &Service{
-		repo:            repo,
-		passwordHasher:  hasher,
-		emailService:    email,
-		tokenManager:    token,
-		businessService: business,
+		repo:           repo,
+		passwordHasher: hasher,
+		emailService:   email,
+		tokenManager:   token,
 	}
 }
 
@@ -57,71 +54,21 @@ func (s *Service) Register(ctx context.Context, req *RegisterRequest) (*AuthResp
 			Message: "Failed to process password",
 		}
 	}
-	userID := uuid.New()
-	var businessID uuid.UUID
-	var locationID uuid.UUID
-
-	switch req.Role {
-	case UserTypeSoloPractitioner:
-		businessIDStr, err := s.businessService.CreateSoloPractitionerBusiness(
-			ctx,
-			// userID.String(),
-			uuid.Nil.String(),
-			req.BusinessName,
-			req.ServiceCategory,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create solo business: %w", err)
-		}
-		businessID, _ = uuid.Parse(businessIDStr)
-		locationIDStr, err := s.businessService.CreateDefaultLocation(ctx, businessID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create solo location: %w", err)
-		}
-		locationID, _ = uuid.Parse(locationIDStr)
-
-	case UserTypeOwner:
-		businessIDStr, err := s.businessService.CreateMultiStaffBusiness(
-			ctx,
-			// userID.String(),
-			uuid.Nil.String(),
-			req.BusinessName,
-			req.Industry,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create multi business: %w", err)
-		}
-		businessID, _ = uuid.Parse(businessIDStr)
-
-		locationIDStr, err := s.businessService.CreateDefaultLocation(ctx, businessID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create multi location: %w", err)
-		}
-		locationID, _ = uuid.Parse(locationIDStr)
-
-	case UserTypeCustomer:
-		businessID = uuid.Nil
-		locationID = uuid.Nil
-
-	default:
-		return nil, &RegistrationError{
-			Code:    "INVALID_ROLE",
-			Message: "Invalid user role",
-		}
-	}
-
 	now := time.Now()
+	userID := uuid.New()
+
 	user := &User{
 		ID:            userID,
-		Email:         strings.ToLower(strings.TrimSpace(req.Email)),
+		Email:         strings.ToLower(strings.TrimSpace(req.Email)), // Email normalize
 		PasswordHash:  hashedPassword,
-		FullName:      req.FullName,
-		Phone:         req.Phone,
-		Role:          req.Role,
-		BusinessID:    businessID,
+		FullName:      strings.TrimSpace(req.FullName),
+		Phone:         strings.TrimSpace(req.Phone),
+		Role:          UserTypeCustomer,
+		BusinessID:    nil,
 		IsActive:      true,
-		IsOwner:       req.Role == UserTypeSoloPractitioner || req.Role == UserTypeOwner,
+		IsOwner:       false,
 		EmailVerified: false,
+		Avatar:        nil,
 		CreatedAt:     now,
 		UpdatedAt:     now,
 	}
@@ -129,34 +76,6 @@ func (s *Service) Register(ctx context.Context, req *RegisterRequest) (*AuthResp
 	if err := s.repo.CreateUser(ctx, user); err != nil {
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
-	if (user.Role == UserTypeSoloPractitioner || user.Role == UserTypeOwner) && businessID != uuid.Nil {
-		if err := s.businessService.AssignOwner(ctx, businessID, userID); err != nil {
-			fmt.Printf("Failed to update business owner: %v\n", err)
-			return nil, fmt.Errorf("failed to assign owner to business: %w", err)
-		}
-	}
-	if user.Role == UserTypeSoloPractitioner || user.Role == UserTypeOwner {
-		profile := &StaffProfile{
-			ID:         uuid.New(),
-			UserID:     user.ID,
-			BusinessID: user.BusinessID,
-			LocationID: &locationID,
-			Role:       StaffRoleAdministrator,
-			Title:      "",
-			Department: "",
-			Bio:        "",
-			HourlyRate: 0,
-			Status:     "active",
-			JoinedAt:   now,
-			CreatedAt:  now,
-			UpdatedAt:  now,
-		}
-
-		if err := s.repo.CreateStaffProfile(ctx, profile); err != nil {
-			return nil, fmt.Errorf("failed to create staff profile: %w", err)
-		}
-	}
-
 	return s.generateAuthResponse(ctx, user)
 }
 
@@ -189,10 +108,12 @@ func (s *Service) RefreshAccessToken(ctx context.Context, plainToken string) (st
 	if rt.Revoked {
 		return "", &RegistrationError{Code: "REFRESH_TOKEN_REVOKED", Message: "Refresh token revoked"}
 	}
+
 	user, err := s.repo.GetUserByID(ctx, rt.UserID)
 	if err != nil || user == nil {
 		return "", &RegistrationError{Code: "USER_NOT_FOUND", Message: "User not found"}
 	}
+
 	claims := &JWTClaims{
 		UserID:     user.ID,
 		Email:      user.Email,
@@ -201,9 +122,15 @@ func (s *Service) RefreshAccessToken(ctx context.Context, plainToken string) (st
 		IsOwner:    user.IsOwner,
 		ExpiresAt:  time.Now().Add(15 * time.Minute).Unix(),
 	}
+
 	accessToken, err := s.tokenManager.GenerateAccessToken(claims)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate access token: %w", err)
+	}
+
 	return accessToken, nil
 }
+
 func (s *Service) ForgotPassword(ctx context.Context, req *ForgotPasswordRequest) error {
 	email := strings.ToLower(strings.TrimSpace(req.Email))
 	user, err := s.repo.GetUserByEmail(ctx, email)
@@ -237,16 +164,20 @@ func (s *Service) generateAuthResponse(ctx context.Context, user *User) (*AuthRe
 		Email:      user.Email,
 		Role:       user.Role,
 		BusinessID: user.BusinessID,
+		IsOwner:    user.IsOwner,
 		ExpiresAt:  time.Now().Add(15 * time.Minute).Unix(),
 	}
+
 	accessToken, err := s.tokenManager.GenerateAccessToken(accesClaims)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate access token: %w", err)
 	}
+
 	refreshTokenString, err := s.tokenManager.GenerateRefreshToken()
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate refresh token: %w", err)
 	}
+
 	refreshToken := &RefreshToken{
 		ID:        uuid.New(),
 		UserID:    user.ID,
@@ -255,9 +186,11 @@ func (s *Service) generateAuthResponse(ctx context.Context, user *User) (*AuthRe
 		CreatedAt: time.Now(),
 		Revoked:   false,
 	}
+
 	if err := s.repo.SaveRefreshToken(ctx, refreshToken); err != nil {
 		return nil, fmt.Errorf("failed to save refresh token: %w", err)
 	}
+
 	return &AuthResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshTokenString,
@@ -266,6 +199,7 @@ func (s *Service) generateAuthResponse(ctx context.Context, user *User) (*AuthRe
 		TokenType:    "Bearer",
 	}, nil
 }
+
 func (s *Service) ResetPassword(ctx context.Context, req *ResetPasswordRequest) error {
 	hashedToken := hashToken(req.Token)
 	reset, err := s.repo.GetPasswordReset(ctx, hashedToken)
@@ -297,10 +231,34 @@ func (s *Service) ResetPassword(ctx context.Context, req *ResetPasswordRequest) 
 	}
 	return nil
 }
+func (s *Service) RevokeRefreshToken(ctx context.Context, plainToken string) error {
+	if plainToken == "" {
+		return &RegistrationError{
+			Code:    "INVALID_REFRESH_TOKEN",
+			Message: "Invalid refresh token",
+		}
+	}
 
-func generateRandomToken(length int) string {
-	return uuid.New().String() + uuid.New().String()
+	hashedToken := hashToken(plainToken)
+
+	rt, err := s.repo.GetRefreshToken(ctx, hashedToken)
+	if err != nil || rt == nil {
+		return &RegistrationError{
+			Code:    "INVALID_REFRESH_TOKEN",
+			Message: "Invalid refresh token",
+		}
+	}
+
+	if err := s.repo.RevokeRefreshToken(ctx, rt.ID); err != nil {
+		return fmt.Errorf("failed to revoke refresh token: %w", err)
+	}
+
+	return nil
 }
+
+//	func generateRandomToken(length int) string {
+//		return uuid.New().String() + uuid.New().String()
+//	}
 func generateSecureRandomToken(length int) (string, error) {
 	bytes := make([]byte, length)
 	if _, err := rand.Read(bytes); err != nil {
@@ -313,142 +271,3 @@ func hashToken(token string) string {
 	h.Write([]byte(token))
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
-
-// func (s *Service) handleSoloRegistration(ctx context.Context, req *RegisterRequest) (*AuthResponse, error) {
-// 	bID := uuid.New()
-// 	uID := uuid.New()
-// }
-
-// func (s *service) registerSoloPractitioner(ctx context.Context, email, password, businessName, locationName string, locationAddress *string, locationCity *string) (*User, error) {
-// 	businessID := s.idGenerator.Generate()
-// 	userID := s.idGenerator.Generate()
-// 	locationID := s.idGenerator.Generate()
-// 	staffID := s.idGenerator.Generate()
-
-// 	passwordHash, err := s.passwordHasher.Hash(password)
-// 	if err != nil {
-// 		return nil, &RegistrationError{
-// 			Code:    "PASSWORD_HASH_FAILED",
-// 			Message: "Failed to process password. Please to try again",
-// 		}
-// 	}
-// 	business := &Business{
-// 		ID:           businessID,
-// 		Name:         businessName,
-// 		OwnerID:      userID,
-// 		BusinessType: BusinessTypeSolo,
-// 		IsActive:     true,
-// 		CreatedAt:    timeNow(),
-// 		UpdatedAt:    timeNow(),
-// 	}
-// 	user := &User{
-// 		ID:           userID,
-// 		Email:        email,
-// 		PasswordHash: passwordHash,
-// 		Role:         RoleSoloPractitioner,
-// 		BusinessID:   businessID,
-// 		IsActive:     true,
-// 		UpdatedAt:    timeNow(),
-// 		CreatedAt:    timeNow(),
-// 	}
-// 	location := &Location{
-// 		ID:         locationID,
-// 		BusinessID: businessID,
-// 		Name:       locationName,
-// 		Address:    locationAddress,
-// 		City:       locationCity,
-// 		IsActive:   true,
-// 		CreatedAt:  timeNow(),
-// 	}
-// 	staff := &Staff{
-// 		ID:         staffID,
-// 		BusinessID: businessID,
-// 		UserID:     userID,
-// 		Position:   "Owner",
-// 		IsActive:   true,
-// 		CreatedAt:  timeNow(),
-// 	}
-// 	if err := s.businessRepo.CreateBusiness(ctx, business); err != nil {
-// 		return nil, &RegistrationError{
-// 			Code:    "BUSINESS_CREATE_FAILED",
-// 			Message: "Failed to create business. Please try again.",
-// 		}
-// 	}
-
-// 	if err := s.userRepo.CreateUser(ctx, user); err != nil {
-// 		return nil, &RegistrationError{
-// 			Code:    "USER_CREATE_FAILED",
-// 			Message: "Failed to create user account. Please try again",
-// 		}
-// 	}
-// 	if err := s.locationRepo.CreateLocation(ctx, location); err != nil {
-// 		return nil, &RegistrationError{
-// 			Code:    "LOCATION_CREATE_FAILED",
-// 			Message: "Failed to create location. Please try again",
-// 		}
-// 	}
-// 	if err := s.staffRepo.CreateStaff(ctx, staff); err != nil {
-// 		return nil, &RegistrationError{
-// 			Code:    "STAFF_CREATE_FAILED",
-// 			Message: "Failed to set up staff record. Please try again",
-// 		}
-// 	}
-// 	return user, nil
-// }
-// func (s *service) registerBusinessOwner(ctx context.Context, email, password, businessName string) (*User, error) {
-// 	businessID := s.idGenerator.Generate()
-// 	userID := s.idGenerator.Generate()
-
-// 	passwordHash, err := s.passwordHasher.Hash(password)
-// 	if err != nil {
-// 		return nil, &RegistrationError{
-// 			Code:    "PASSWORD_HASH_FAILED",
-// 			Message: "Failed to process password. Please try again",
-// 		}
-// 	}
-// 	business := &Business{
-// 		ID:           businessID,
-// 		Name:         businessName,
-// 		OwnerID:      userID,
-// 		BusinessType: BusinessTypeMulti,
-// 		IsActive:     true,
-// 		CreatedAt:    timeNow(),
-// 		UpdatedAt:    timeNow(),
-// 	}
-// 	user := &User{
-// 		ID:           userID,
-// 		Email:        email,
-// 		PasswordHash: passwordHash,
-// 		Role:         RoleProviderOwner,
-// 		BusinessID:   businessID,
-// 		IsActive:     true,
-// 		CreatedAt:    timeNow(),
-// 		UpdatedAt:    timeNow(),
-// 	}
-
-// 	if err := s.businessRepo.CreateBusiness(ctx, business); err != nil {
-// 		return nil, &RegistrationError{
-// 			Code:    "BUSINESS_CREATE_FAILED",
-// 			Message: "Failed to create business. Please try again",
-// 		}
-// 	}
-
-// 	if err := s.userRepo.CreateUser(ctx, user); err != nil {
-// 		return nil, &RegistrationError{
-// 			Code:    "USER_CREATE_FAILED",
-// 			Message: "Failed to create user account. Please try again",
-// 		}
-// 	}
-// 	return user, nil
-// }
-
-// func (s *service) GetUserRole(ctx context.Context, userID uuid.UUID) (string, error) {
-// 	user, err := s.userRepo.GetUserByID(ctx, userID)
-// 	if err != nil {
-// 		return "", err
-// 	}
-// 	return string(user.Role), nil
-// }
-// func timeNow() time.Time {
-// 	return time.Now().UTC()
-// }

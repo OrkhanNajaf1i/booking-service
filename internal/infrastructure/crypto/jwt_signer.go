@@ -1,3 +1,4 @@
+// File: internal/infrastructure/crypto/jwt_signer.go
 package crypto
 
 import (
@@ -21,11 +22,16 @@ func NewJWTSigner(secret string) *JWTSigner {
 }
 
 func (j *JWTSigner) GenerateAccessToken(claims *auth.JWTClaims) (string, error) {
+	var businessIDStr string
+	if claims.BusinessID != nil {
+		businessIDStr = claims.BusinessID.String()
+	}
+
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id":     claims.UserID.String(),
 		"email":       claims.Email,
 		"role":        string(claims.Role),
-		"business_id": claims.BusinessID.String(),
+		"business_id": businessIDStr,
 		"is_owner":    claims.IsOwner,
 		"exp":         claims.ExpiresAt,
 		"iat":         time.Now().Unix(),
@@ -55,9 +61,11 @@ func (j *JWTSigner) ValidateAccessToken(tokenString string) (*auth.JWTClaims, er
 	}
 
 	if claimsMap, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		userIDStr, _ := claimsMap["sub"].(string)
+		userIDStr, _ := claimsMap["user_id"].(string)
 		roleStr, _ := claimsMap["role"].(string)
 		businessIDStr, _ := claimsMap["business_id"].(string)
+		emailStr, _ := claimsMap["email"].(string)
+		isOwner, _ := claimsMap["is_owner"].(bool)
 		exp, _ := claimsMap["exp"].(float64)
 
 		userID, err := uuid.Parse(userIDStr)
@@ -65,15 +73,20 @@ func (j *JWTSigner) ValidateAccessToken(tokenString string) (*auth.JWTClaims, er
 			return nil, errors.New("invalid user id")
 		}
 
-		businessID, err := uuid.Parse(businessIDStr)
-		if err != nil {
-			businessID = uuid.Nil
+		var bIDPtr *uuid.UUID
+		if businessIDStr != "" {
+			parsedBID, err := uuid.Parse(businessIDStr)
+			if err == nil && parsedBID != uuid.Nil {
+				bIDPtr = &parsedBID
+			}
 		}
 
 		return &auth.JWTClaims{
 			UserID:     userID,
+			Email:      emailStr,
 			Role:       auth.UserRole(roleStr),
-			BusinessID: businessID,
+			BusinessID: bIDPtr,
+			IsOwner:    isOwner,
 			ExpiresAt:  int64(exp),
 		}, nil
 	}
