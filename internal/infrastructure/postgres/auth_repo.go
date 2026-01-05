@@ -22,24 +22,62 @@ func NewAuthRepository(db *sql.DB) *AuthRepository {
 
 func (r *AuthRepository) CreateUser(ctx context.Context, user *auth.User) error {
 	query := `
-		INSERT INTO users (id, email, full_name, phone, password_hash, role, business_id, avatar, is_active, is_owner, email_verified, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-	`
-	_, err := r.db.ExecContext(ctx, query, user.ID, user.Email, user.FullName, user.Phone, user.PasswordHash, user.Role, user.BusinessID, user.Avatar, user.IsActive, user.IsOwner, user.EmailVerified, user.CreatedAt, user.UpdatedAt)
+        INSERT INTO users (
+            id, email, full_name, phone, password_hash, 
+            role, business_id, avatar, is_active, is_owner, 
+            email_verified, created_at, updated_at
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+    `
+	_, err := r.db.ExecContext(ctx, query,
+		user.ID,
+		user.Email,
+		user.FullName,
+		user.Phone,
+		user.PasswordHash,
+		user.Role,
+		user.BusinessID,
+		user.Avatar,
+		user.IsActive,
+		user.IsOwner,
+		user.EmailVerified,
+		user.CreatedAt,
+		user.UpdatedAt,
+	)
+
 	if err != nil {
 		return fmt.Errorf("failed to insert user: %w", err)
 	}
+
 	return nil
 }
 
 func (r *AuthRepository) GetUserByEmail(ctx context.Context, email string) (*auth.User, error) {
-	query := `SELECT id, email, full_name, phone, password_hash, role, business_id, avatar, is_active, is_owner, email_verified, created_at, updated_at 
-	          FROM users WHERE email = $1 LIMIT 1`
+	query := `
+        SELECT id, email, full_name, phone, password_hash, role, 
+               business_id, avatar, is_active, is_owner, email_verified, 
+               created_at, updated_at 
+        FROM users 
+        WHERE email = $1 
+        LIMIT 1
+    `
+
 	user := &auth.User{}
 	err := r.db.QueryRowContext(ctx, query, email).Scan(
-		&user.ID, &user.Email, &user.FullName, &user.Phone, &user.PasswordHash,
-		&user.Role, &user.BusinessID, &user.Avatar, &user.IsActive, &user.IsOwner,
-		&user.EmailVerified, &user.CreatedAt, &user.UpdatedAt)
+		&user.ID,
+		&user.Email,
+		&user.FullName,
+		&user.Phone,
+		&user.PasswordHash,
+		&user.Role,
+		&user.BusinessID,
+		&user.Avatar,
+		&user.IsActive,
+		&user.IsOwner,
+		&user.EmailVerified,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -51,14 +89,31 @@ func (r *AuthRepository) GetUserByEmail(ctx context.Context, email string) (*aut
 }
 
 func (r *AuthRepository) GetUserByID(ctx context.Context, id uuid.UUID) (*auth.User, error) {
-	query := `SELECT id, email, full_name, phone, password_hash, role, business_id, avatar, is_active, is_owner, email_verified, created_at, updated_at 
-	          FROM users WHERE id = $1`
+	query := `
+        SELECT id, email, full_name, phone, password_hash, role, 
+               business_id, avatar, is_active, is_owner, email_verified, 
+               created_at, updated_at 
+        FROM users 
+        WHERE id = $1
+    `
+
 	user := &auth.User{}
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
-		&user.ID, &user.Email, &user.FullName, &user.Phone, &user.PasswordHash,
-		&user.Role, &user.BusinessID, &user.Avatar, &user.IsActive, &user.IsOwner,
-		&user.EmailVerified, &user.CreatedAt, &user.UpdatedAt,
+		&user.ID,
+		&user.Email,
+		&user.FullName,
+		&user.Phone,
+		&user.PasswordHash,
+		&user.Role,
+		&user.BusinessID,
+		&user.Avatar,
+		&user.IsActive,
+		&user.IsOwner,
+		&user.EmailVerified,
+		&user.CreatedAt,
+		&user.UpdatedAt,
 	)
+
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -99,8 +154,31 @@ func (r *AuthRepository) RevokeRefreshToken(ctx context.Context, tokenID uuid.UU
 	return nil
 }
 func (r *AuthRepository) SavePasswordReset(ctx context.Context, reset *auth.PasswordReset) error {
-	query := `INSERT INTO password_resets (id, email, token, expires_at, used, created_at) VALUES ($1, $2, $3, $4, $5, $6)`
-	_, err := r.db.ExecContext(ctx, query, reset.ID, reset.Email, reset.Token, reset.ExpiresAt, reset.Used, reset.CreatedAt)
+	query := `
+        INSERT INTO password_resets (
+            id, email, token, expires_at, used, created_at, updated_at
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        ON CONFLICT (id) DO UPDATE
+        SET 
+            used = EXCLUDED.used,
+            updated_at = EXCLUDED.updated_at
+    `
+
+	updatedAt := reset.UpdatedAt
+	if updatedAt.IsZero() {
+		updatedAt = reset.CreatedAt
+	}
+
+	_, err := r.db.ExecContext(ctx, query,
+		reset.ID,
+		reset.Email,
+		reset.Token,
+		reset.ExpiresAt,
+		reset.Used,
+		reset.CreatedAt,
+		updatedAt,
+	)
 	if err != nil {
 		return fmt.Errorf("failed to save password reset for %s: %w", reset.Email, err)
 	}
@@ -139,51 +217,21 @@ func (r *AuthRepository) EmailExists(ctx context.Context, email string) (bool, e
 	return exists, nil
 }
 func (r *AuthRepository) UpdateUserStatus(ctx context.Context, userID uuid.UUID, status string) error {
-	// active := (status == "active")
-	query := `UPDATE users SET is_active = $1, updated_at = $2, WHERE id = $3`
-	_, err := r.db.ExecContext(ctx, query, time.Now(), userID)
+	isActive := (status == "active")
+
+	query := `
+        UPDATE users 
+        SET is_active = $1, updated_at = $2 
+        WHERE id = $3
+    `
+	_, err := r.db.ExecContext(ctx, query,
+		isActive,
+		time.Now(),
+		userID,
+	)
+
 	if err != nil {
 		return fmt.Errorf("failed to update status for user %s: %w", userID, err)
-	}
-	return nil
-}
-
-func (r *AuthRepository) CreateStaffProfile(ctx context.Context, profile *auth.StaffProfile) error {
-	query := `INSERT INTO staff_profiles (id, user_id, business_id, location_id, role, title, department, bio, hourly_rate, status, joined_at, created_at, updated_at)
-	          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`
-	_, err := r.db.ExecContext(ctx, query,
-		profile.ID, profile.UserID, profile.BusinessID, profile.LocationID,
-		profile.Role, profile.Title, profile.Department, profile.Bio,
-		profile.HourlyRate, profile.Status, profile.JoinedAt, profile.CreatedAt, profile.UpdatedAt,
-	)
-	if err != nil {
-		return fmt.Errorf("failed to create staff profile for user %s: %w", profile.UserID, err)
-	}
-	return nil
-}
-
-func (r *AuthRepository) GetStaffProfile(ctx context.Context, userID string) (*auth.StaffProfile, error) {
-	query := `SELECT id, user_id, business_id, location_id, role, title, department, bio, hourly_rate, status, joined_at, created_at, updated_at 
-	          FROM staff_profiles WHERE user_id = $1`
-	sp := &auth.StaffProfile{}
-	err := r.db.QueryRowContext(ctx, query, userID).Scan(
-		&sp.ID, &sp.UserID, &sp.BusinessID, &sp.LocationID, &sp.Role, &sp.Title,
-		&sp.Department, &sp.Bio, &sp.HourlyRate, &sp.Status, &sp.JoinedAt, &sp.CreatedAt, &sp.UpdatedAt,
-	)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("failed to get staff profile for user %s: %w", userID, err)
-	}
-	return sp, nil
-}
-
-func (r *AuthRepository) UpdateStaffProfile(ctx context.Context, staffID string, profile *auth.StaffProfile) error {
-	query := `UPDATE staff_profiles SET title = $1, department = $2, bio = $3, hourly_rate = $4, status = $5, updated_at = $6 WHERE id = $7`
-	_, err := r.db.ExecContext(ctx, query, profile.Title, profile.Department, profile.Bio, profile.HourlyRate, profile.Status, time.Now(), staffID)
-	if err != nil {
-		return fmt.Errorf("failed to update staff profile %s: %w", staffID, err)
 	}
 	return nil
 }

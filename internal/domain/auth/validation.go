@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"errors"
 	"regexp"
 )
 
@@ -19,25 +18,15 @@ func (s *Service) validateRegisterRequest(req *RegisterRequest) error {
 	if err := s.validateFullName(req.FullName); err != nil {
 		return err
 	}
-	switch req.Role {
-	case UserTypeSoloPractitioner:
-		if req.BusinessName == "" {
-			return errors.New("business_name required for solo_practitioner")
-		}
-		if req.ServiceCategory == "" {
-			return errors.New("service_category required for solo_practitioner")
-		}
-
-	case UserTypeOwner:
-		if req.BusinessName == "" {
-			return errors.New("business_name required for provider_owner")
-		}
-		if req.Industry == "" {
-			return errors.New("industry required for provider_owner")
+	if req.Phone == "" {
+		return &RegistrationError{
+			Code:    "PHONE_REQUIRED",
+			Message: "phone is required",
 		}
 	}
 	return nil
 }
+
 func (s *Service) validateEmail(email string) error {
 	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 	if email == "" {
