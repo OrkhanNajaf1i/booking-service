@@ -35,19 +35,19 @@ const (
 // }
 
 type User struct {
-	ID            uuid.UUID `db:"id" json:"id"`
-	Email         string    `db:"email" json:"email"`
-	FullName      string    `db:"full_name" json:"full_name"`
-	Phone         string    `db:"phone" json:"phone"`
-	PasswordHash  string    `db:"password_hash" json:"-"`
-	Role          UserRole  `db:"role" json:"role"`
-	BusinessID    uuid.UUID `db:"business_id" json:"business_id"`
-	Avatar        string    `db:"avatar" json:"avatar"`
-	IsActive      bool      `db:"is_active" json:"is_active"`
-	IsOwner       bool      `db:"is_owner" json:"is_owner"`
-	EmailVerified bool      `db:"email_verified" json:"email_verified"`
-	CreatedAt     time.Time `db:"created_at" json:"created_at"`
-	UpdatedAt     time.Time `db:"updated_at" json:"updated_at"`
+	ID            uuid.UUID  `db:"id" json:"id"`
+	Email         string     `db:"email" json:"email"`
+	FullName      string     `db:"full_name" json:"full_name"`
+	Phone         string     `db:"phone" json:"phone"`
+	PasswordHash  string     `db:"password_hash" json:"-"`
+	Role          UserRole   `db:"role" json:"role"`
+	BusinessID    *uuid.UUID `db:"business_id" json:"business_id"`
+	Avatar        *string    `db:"avatar" json:"avatar"`
+	IsActive      bool       `db:"is_active" json:"is_active"`
+	IsOwner       bool       `db:"is_owner" json:"is_owner"`
+	EmailVerified bool       `db:"email_verified" json:"email_verified"`
+	CreatedAt     time.Time  `db:"created_at" json:"created_at"`
+	UpdatedAt     time.Time  `db:"updated_at" json:"updated_at"`
 }
 type RefreshToken struct {
 	ID        uuid.UUID `db:"id" json:"id"`
@@ -69,7 +69,7 @@ type PasswordReset struct {
 type StaffProfile struct {
 	ID         uuid.UUID  `db:"id" json:"id"`
 	UserID     uuid.UUID  `db:"user_id" json:"user_id"`
-	BusinessID uuid.UUID  `db:"business_id"`
+	BusinessID *uuid.UUID `db:"business_id"`
 	LocationID *uuid.UUID `db:"location_id"`
 	Role       StaffRole  `db:"role"`
 	Title      string     `db:"title"`
@@ -82,23 +82,18 @@ type StaffProfile struct {
 	UpdatedAt  time.Time  `db:"updated_at"`
 }
 type JWTClaims struct {
-	UserID     uuid.UUID `db:"user_id" json:"user_id"`
-	Email      string    `db:"email" json:"email"`
-	Role       UserRole  `db:"role" json:"role"`
-	BusinessID uuid.UUID `db:"business_id" json:"business_id"`
-	IsOwner    bool      `db:"is_owner" json:"is_owner"`
-	ExpiresAt  int64     `db:"expires_at" json:"expires_at"`
+	UserID     uuid.UUID  `db:"user_id" json:"user_id"`
+	Email      string     `db:"email" json:"email"`
+	Role       UserRole   `db:"role" json:"role"`
+	BusinessID *uuid.UUID `db:"business_id" json:"business_id"`
+	IsOwner    bool       `db:"is_owner" json:"is_owner"`
+	ExpiresAt  int64      `db:"expires_at" json:"expires_at"`
 }
 type RegisterRequest struct {
-	Email           string       `db:"email" json:"email"`
-	Password        string       `db:"password" json:"password"`
-	FullName        string       `db:"full_name" json:"full_name"`
-	Phone           string       `db:"phone" json:"phone"`
-	Role            UserRole     `db:"role" json:"role"`
-	BusinessType    BusinessType `db:"business_type" json:"business_type"`
-	BusinessName    string       `db:"business_name" json:"business_name"`
-	Industry        string       `db:"industry" json:"industry"`
-	ServiceCategory string       `db:"service_category" json:"service_category"`
+	Email    string `db:"email" json:"email"`
+	Password string `db:"password" json:"password"`
+	FullName string `db:"full_name" json:"full_name"`
+	Phone    string `db:"phone" json:"phone"`
 }
 
 type LoginRequest struct {
