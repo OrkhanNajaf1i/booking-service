@@ -21,12 +21,12 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /worker ./cmd/worker
 # Runtime Stage (Render bura baxacaq)
 FROM alpine:latest
 RUN apk --no-cache add ca-certificates
-WORKDIR /root/
+WORKDIR /app
 # Builder-dən binary-ləri götürürük
 COPY --from=builder /api .
 COPY --from=builder /worker .
 
-COPY --from=builder /root/migrations ./migrations
+COPY --from=builder /app/migrations ./migrations
 
 # Render üçün portu açırıq
 EXPOSE 8080
