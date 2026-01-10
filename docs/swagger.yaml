@@ -1,0 +1,156 @@
+basePath: /api/v1
+definitions:
+  github_com_OrkhanNajaf1i_booking-service_internal_domain_auth.UserRole:
+    enum:
+    - customer
+    - provider_owner
+    - staff
+    - solo_practitioner
+    type: string
+    x-enum-varnames:
+    - UserTypeCustomer
+    - UserTypeOwner
+    - UserTypeStaff
+    - UserTypeSoloPractitioner
+  internal_http_handlers_auth.AuthResponseDTO:
+    properties:
+      access_token:
+        example: eyJhbGci...
+        type: string
+      expires_in:
+        example: 900
+        type: integer
+      refresh_token:
+        example: def456...
+        type: string
+      token_type:
+        example: Bearer
+        type: string
+      user:
+        $ref: '#/definitions/internal_http_handlers_auth.UserResponseDTO'
+    type: object
+  internal_http_handlers_auth.ErrorResponseDTO:
+    properties:
+      code:
+        type: string
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  internal_http_handlers_auth.LoginHTTPRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  internal_http_handlers_auth.RegisterHTTPRequest:
+    properties:
+      email:
+        example: orkhan@example.com
+        type: string
+      full_name:
+        example: Orkhan Najafli
+        type: string
+      password:
+        example: StrongPass123!
+        type: string
+      phone:
+        example: "+994501234567"
+        type: string
+    type: object
+  internal_http_handlers_auth.UserResponseDTO:
+    properties:
+      avatar:
+        type: string
+      business_id:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      email_verified:
+        type: boolean
+      full_name:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      is_owner:
+        type: boolean
+      phone:
+        type: string
+      role:
+        $ref: '#/definitions/github_com_OrkhanNajaf1i_booking-service_internal_domain_auth.UserRole'
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Booking Platforması üçün Backend API sənədləri.
+  title: Booking Service API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Email və şifrə ilə giriş edərək JWT tokenlərini alır.
+      parameters:
+      - description: Giriş məlumatları
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_http_handlers_auth.LoginHTTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_http_handlers_auth.AuthResponseDTO'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_http_handlers_auth.ErrorResponseDTO'
+      summary: Giriş (Login)
+      tags:
+      - Auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Yeni istifadəçi hesabı yaradır (account-first).
+      parameters:
+      - description: Qeydiyyat məlumatları
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_http_handlers_auth.RegisterHTTPRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_http_handlers_auth.AuthResponseDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_http_handlers_auth.ErrorResponseDTO'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/internal_http_handlers_auth.ErrorResponseDTO'
+      summary: İstifadəçi qeydiyyatı
+      tags:
+      - Auth
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
