@@ -4,12 +4,22 @@ import (
 	"log"
 	"time"
 
+	_ "github.com/OrkhanNajaf1i/booking-service/docs"
 	"github.com/OrkhanNajaf1i/booking-service/internal/app/api"
 	"github.com/OrkhanNajaf1i/booking-service/internal/config"
 	"github.com/OrkhanNajaf1i/booking-service/internal/infrastructure/postgres"
 	"github.com/OrkhanNajaf1i/booking-service/internal/logger"
 	"github.com/joho/godotenv"
 )
+
+// @title           Booking Service API
+// @version         1.0
+// @description     Booking Platforması üçün Backend API sənədləri.
+// @host            localhost:8080
+// @BasePath        /api/v1
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 
 func main() {
 	if err := godotenv.Load(); err != nil {
