@@ -25,7 +25,6 @@ func NewUserServiceAdapter(
 	}
 }
 
-// ✅ DÜZƏLİŞ: auth.User → business.User mapping
 func (a *UserServiceAdapter) GetUserByID(ctx context.Context, userID uuid.UUID) (*business.User, error) {
 	authUser, err := a.authRepo.GetUserByID(ctx, userID)
 	if err != nil {
@@ -35,7 +34,6 @@ func (a *UserServiceAdapter) GetUserByID(ctx context.Context, userID uuid.UUID) 
 		return nil, fmt.Errorf("adapter: user not found")
 	}
 
-	// Type mapping: auth.User → business.User
 	businessUser := &business.User{
 		ID:         authUser.ID,
 		Email:      authUser.Email,
