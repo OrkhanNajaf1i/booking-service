@@ -1,4 +1,7 @@
 {
+    "schemes": [
+        "https"
+    ],
     "swagger": "2.0",
     "info": {
         "description": "Booking Platforması üçün Backend API sənədləri.",
@@ -6,7 +9,7 @@
         "contact": {},
         "version": "1.0"
     },
-    "host": "localhost:8080",
+    "host": "booking-service-sld9.onrender.com",
     "basePath": "/api/v1",
     "paths": {
         "/auth/login": {
@@ -29,7 +32,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_http_handlers_auth.LoginHTTPRequest"
+                            "$ref": "#/definitions/auth.LoginHTTPRequest"
                         }
                     }
                 ],
@@ -37,13 +40,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_http_handlers_auth.AuthResponseDTO"
+                            "$ref": "#/definitions/auth.AuthResponseDTO"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_http_handlers_auth.ErrorResponseDTO"
+                            "$ref": "#/definitions/auth.ErrorResponseDTO"
                         }
                     }
                 }
@@ -69,7 +72,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_http_handlers_auth.RegisterHTTPRequest"
+                            "$ref": "#/definitions/auth.RegisterHTTPRequest"
                         }
                     }
                 ],
@@ -77,19 +80,19 @@
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/internal_http_handlers_auth.AuthResponseDTO"
+                            "$ref": "#/definitions/auth.AuthResponseDTO"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/internal_http_handlers_auth.ErrorResponseDTO"
+                            "$ref": "#/definitions/auth.ErrorResponseDTO"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/internal_http_handlers_auth.ErrorResponseDTO"
+                            "$ref": "#/definitions/auth.ErrorResponseDTO"
                         }
                     }
                 }
@@ -97,22 +100,7 @@
         }
     },
     "definitions": {
-        "github_com_OrkhanNajaf1i_booking-service_internal_domain_auth.UserRole": {
-            "type": "string",
-            "enum": [
-                "customer",
-                "provider_owner",
-                "staff",
-                "solo_practitioner"
-            ],
-            "x-enum-varnames": [
-                "UserTypeCustomer",
-                "UserTypeOwner",
-                "UserTypeStaff",
-                "UserTypeSoloPractitioner"
-            ]
-        },
-        "internal_http_handlers_auth.AuthResponseDTO": {
+        "auth.AuthResponseDTO": {
             "type": "object",
             "properties": {
                 "access_token": {
@@ -132,11 +120,11 @@
                     "example": "Bearer"
                 },
                 "user": {
-                    "$ref": "#/definitions/internal_http_handlers_auth.UserResponseDTO"
+                    "$ref": "#/definitions/auth.UserResponseDTO"
                 }
             }
         },
-        "internal_http_handlers_auth.ErrorResponseDTO": {
+        "auth.ErrorResponseDTO": {
             "type": "object",
             "properties": {
                 "code": {
@@ -150,7 +138,7 @@
                 }
             }
         },
-        "internal_http_handlers_auth.LoginHTTPRequest": {
+        "auth.LoginHTTPRequest": {
             "type": "object",
             "properties": {
                 "email": {
@@ -161,7 +149,7 @@
                 }
             }
         },
-        "internal_http_handlers_auth.RegisterHTTPRequest": {
+        "auth.RegisterHTTPRequest": {
             "type": "object",
             "properties": {
                 "email": {
@@ -182,7 +170,7 @@
                 }
             }
         },
-        "internal_http_handlers_auth.UserResponseDTO": {
+        "auth.UserResponseDTO": {
             "type": "object",
             "properties": {
                 "avatar": {
@@ -216,9 +204,24 @@
                     "type": "string"
                 },
                 "role": {
-                    "$ref": "#/definitions/github_com_OrkhanNajaf1i_booking-service_internal_domain_auth.UserRole"
+                    "$ref": "#/definitions/auth.UserRole"
                 }
             }
+        },
+        "auth.UserRole": {
+            "type": "string",
+            "enum": [
+                "customer",
+                "provider_owner",
+                "staff",
+                "solo_practitioner"
+            ],
+            "x-enum-varnames": [
+                "UserTypeCustomer",
+                "UserTypeOwner",
+                "UserTypeStaff",
+                "UserTypeSoloPractitioner"
+            ]
         }
     },
     "securityDefinitions": {
