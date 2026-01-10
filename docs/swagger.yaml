@@ -1,18 +1,6 @@
 basePath: /api/v1
 definitions:
-  github_com_OrkhanNajaf1i_booking-service_internal_domain_auth.UserRole:
-    enum:
-    - customer
-    - provider_owner
-    - staff
-    - solo_practitioner
-    type: string
-    x-enum-varnames:
-    - UserTypeCustomer
-    - UserTypeOwner
-    - UserTypeStaff
-    - UserTypeSoloPractitioner
-  internal_http_handlers_auth.AuthResponseDTO:
+  auth.AuthResponseDTO:
     properties:
       access_token:
         example: eyJhbGci...
@@ -27,9 +15,9 @@ definitions:
         example: Bearer
         type: string
       user:
-        $ref: '#/definitions/internal_http_handlers_auth.UserResponseDTO'
+        $ref: '#/definitions/auth.UserResponseDTO'
     type: object
-  internal_http_handlers_auth.ErrorResponseDTO:
+  auth.ErrorResponseDTO:
     properties:
       code:
         type: string
@@ -38,14 +26,14 @@ definitions:
       success:
         type: boolean
     type: object
-  internal_http_handlers_auth.LoginHTTPRequest:
+  auth.LoginHTTPRequest:
     properties:
       email:
         type: string
       password:
         type: string
     type: object
-  internal_http_handlers_auth.RegisterHTTPRequest:
+  auth.RegisterHTTPRequest:
     properties:
       email:
         example: orkhan@example.com
@@ -60,7 +48,7 @@ definitions:
         example: "+994501234567"
         type: string
     type: object
-  internal_http_handlers_auth.UserResponseDTO:
+  auth.UserResponseDTO:
     properties:
       avatar:
         type: string
@@ -83,9 +71,21 @@ definitions:
       phone:
         type: string
       role:
-        $ref: '#/definitions/github_com_OrkhanNajaf1i_booking-service_internal_domain_auth.UserRole'
+        $ref: '#/definitions/auth.UserRole'
     type: object
-host: localhost:8080
+  auth.UserRole:
+    enum:
+    - customer
+    - provider_owner
+    - staff
+    - solo_practitioner
+    type: string
+    x-enum-varnames:
+    - UserTypeCustomer
+    - UserTypeOwner
+    - UserTypeStaff
+    - UserTypeSoloPractitioner
+host: booking-service-sld9.onrender.com
 info:
   contact: {}
   description: Booking Platforması üçün Backend API sənədləri.
@@ -103,18 +103,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/internal_http_handlers_auth.LoginHTTPRequest'
+          $ref: '#/definitions/auth.LoginHTTPRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_http_handlers_auth.AuthResponseDTO'
+            $ref: '#/definitions/auth.AuthResponseDTO'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/internal_http_handlers_auth.ErrorResponseDTO'
+            $ref: '#/definitions/auth.ErrorResponseDTO'
       summary: Giriş (Login)
       tags:
       - Auth
@@ -129,25 +129,27 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/internal_http_handlers_auth.RegisterHTTPRequest'
+          $ref: '#/definitions/auth.RegisterHTTPRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/internal_http_handlers_auth.AuthResponseDTO'
+            $ref: '#/definitions/auth.AuthResponseDTO'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/internal_http_handlers_auth.ErrorResponseDTO'
+            $ref: '#/definitions/auth.ErrorResponseDTO'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/internal_http_handlers_auth.ErrorResponseDTO'
+            $ref: '#/definitions/auth.ErrorResponseDTO'
       summary: İstifadəçi qeydiyyatı
       tags:
       - Auth
+schemes:
+- https
 securityDefinitions:
   BearerAuth:
     in: header
