@@ -15,7 +15,8 @@ import (
 // @title           Booking Service API
 // @version         1.0
 // @description     Booking Platforması üçün Backend API sənədləri.
-// @host            localhost:8080
+// @host            booking-service-sld9.onrender.com
+// @schemes         https
 // @BasePath        /api/v1
 // @securityDefinitions.apikey BearerAuth
 // @in header
