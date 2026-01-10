@@ -10,6 +10,8 @@ import (
 	"github.com/OrkhanNajaf1i/booking-service/internal/logger"
 )
 
+// var _ AuthSwagger = (*Handler)(nil)
+
 type Handler struct {
 	authService *auth.Service
 	logger      logger.Logger
@@ -31,6 +33,16 @@ func (h *Handler) sendError(w http.ResponseWriter, status int, code string) {
 	h.sendJSON(w, status, errorDTO)
 }
 
+// @Summary      İstifadəçi qeydiyyatı
+// @Description  Yeni istifadəçi hesabı yaradır (account-first).
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        request body RegisterHTTPRequest true "Qeydiyyat məlumatları"
+// @Success      201  {object}  AuthResponseDTO
+// @Failure      400  {object}  ErrorResponseDTO
+// @Failure      409  {object}  ErrorResponseDTO
+// @Router       /auth/register [post]
 func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
@@ -86,6 +98,15 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 	h.sendJSON(w, http.StatusCreated, httpResp)
 }
 
+// @Summary      Giriş (Login)
+// @Description  Email və şifrə ilə giriş edərək JWT tokenlərini alır.
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        request body LoginHTTPRequest true "Giriş məlumatları"
+// @Success      200  {object}  AuthResponseDTO
+// @Failure      401  {object}  ErrorResponseDTO
+// @Router       /auth/login [post]
 func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()

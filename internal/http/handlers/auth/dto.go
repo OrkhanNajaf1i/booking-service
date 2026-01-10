@@ -10,10 +10,10 @@ import (
 )
 
 type RegisterHTTPRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	FullName string `json:"full_name"`
-	Phone    string `json:"phone"`
+	Email    string `json:"email" example:"orkhan@example.com"`
+	Password string `json:"password" example:"StrongPass123!"`
+	FullName string `json:"full_name" example:"Orkhan Najafli"`
+	Phone    string `json:"phone" example:"+994501234567"`
 }
 
 type LoginHTTPRequest struct {
@@ -49,11 +49,11 @@ type UserResponseDTO struct {
 }
 
 type AuthResponseDTO struct {
-	AccessToken  string          `json:"access_token"`
-	RefreshToken string          `json:"refresh_token"`
+	AccessToken  string          `json:"access_token" example:"eyJhbGci..."`
+	RefreshToken string          `json:"refresh_token" example:"def456..."`
 	User         UserResponseDTO `json:"user"`
-	ExpiresIn    int             `json:"expires_in"`
-	TokenType    string          `json:"token_type"`
+	ExpiresIn    int             `json:"expires_in" example:"900"`
+	TokenType    string          `json:"token_type" example:"Bearer"`
 }
 
 type SuccessResponseDTO struct {
