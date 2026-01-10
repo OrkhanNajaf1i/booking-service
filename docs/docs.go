@@ -35,7 +35,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_http_handlers_auth.LoginHTTPRequest"
+                            "$ref": "#/definitions/auth.LoginHTTPRequest"
                         }
                     }
                 ],
@@ -43,13 +43,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_http_handlers_auth.AuthResponseDTO"
+                            "$ref": "#/definitions/auth.AuthResponseDTO"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_http_handlers_auth.ErrorResponseDTO"
+                            "$ref": "#/definitions/auth.ErrorResponseDTO"
                         }
                     }
                 }
@@ -75,7 +75,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_http_handlers_auth.RegisterHTTPRequest"
+                            "$ref": "#/definitions/auth.RegisterHTTPRequest"
                         }
                     }
                 ],
@@ -83,19 +83,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/internal_http_handlers_auth.AuthResponseDTO"
+                            "$ref": "#/definitions/auth.AuthResponseDTO"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/internal_http_handlers_auth.ErrorResponseDTO"
+                            "$ref": "#/definitions/auth.ErrorResponseDTO"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/internal_http_handlers_auth.ErrorResponseDTO"
+                            "$ref": "#/definitions/auth.ErrorResponseDTO"
                         }
                     }
                 }
@@ -103,22 +103,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "github_com_OrkhanNajaf1i_booking-service_internal_domain_auth.UserRole": {
-            "type": "string",
-            "enum": [
-                "customer",
-                "provider_owner",
-                "staff",
-                "solo_practitioner"
-            ],
-            "x-enum-varnames": [
-                "UserTypeCustomer",
-                "UserTypeOwner",
-                "UserTypeStaff",
-                "UserTypeSoloPractitioner"
-            ]
-        },
-        "internal_http_handlers_auth.AuthResponseDTO": {
+        "auth.AuthResponseDTO": {
             "type": "object",
             "properties": {
                 "access_token": {
@@ -138,11 +123,11 @@ const docTemplate = `{
                     "example": "Bearer"
                 },
                 "user": {
-                    "$ref": "#/definitions/internal_http_handlers_auth.UserResponseDTO"
+                    "$ref": "#/definitions/auth.UserResponseDTO"
                 }
             }
         },
-        "internal_http_handlers_auth.ErrorResponseDTO": {
+        "auth.ErrorResponseDTO": {
             "type": "object",
             "properties": {
                 "code": {
@@ -156,7 +141,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_http_handlers_auth.LoginHTTPRequest": {
+        "auth.LoginHTTPRequest": {
             "type": "object",
             "properties": {
                 "email": {
@@ -167,7 +152,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_http_handlers_auth.RegisterHTTPRequest": {
+        "auth.RegisterHTTPRequest": {
             "type": "object",
             "properties": {
                 "email": {
@@ -188,7 +173,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_http_handlers_auth.UserResponseDTO": {
+        "auth.UserResponseDTO": {
             "type": "object",
             "properties": {
                 "avatar": {
@@ -222,9 +207,24 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "role": {
-                    "$ref": "#/definitions/github_com_OrkhanNajaf1i_booking-service_internal_domain_auth.UserRole"
+                    "$ref": "#/definitions/auth.UserRole"
                 }
             }
+        },
+        "auth.UserRole": {
+            "type": "string",
+            "enum": [
+                "customer",
+                "provider_owner",
+                "staff",
+                "solo_practitioner"
+            ],
+            "x-enum-varnames": [
+                "UserTypeCustomer",
+                "UserTypeOwner",
+                "UserTypeStaff",
+                "UserTypeSoloPractitioner"
+            ]
         }
     },
     "securityDefinitions": {
@@ -239,9 +239,9 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:8080",
+	Host:             "booking-service-sld9.onrender.com",
 	BasePath:         "/api/v1",
-	Schemes:          []string{},
+	Schemes:          []string{"https"},
 	Title:            "Booking Service API",
 	Description:      "Booking Platforması üçün Backend API sənədləri.",
 	InfoInstanceName: "swagger",
