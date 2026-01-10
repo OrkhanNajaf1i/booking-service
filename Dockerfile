@@ -26,7 +26,7 @@ WORKDIR /root/
 COPY --from=builder /api .
 COPY --from=builder /worker .
 
-COPY --from=builder /app/migrations ./migrations
+COPY --from=builder /root/migrations ./migrations
 
 # Render üçün portu açırıq
 EXPOSE 8080
