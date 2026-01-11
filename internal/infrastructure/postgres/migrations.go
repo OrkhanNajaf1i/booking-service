@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/OrkhanNajaf1i/booking-service/internal/config"
 	"github.com/OrkhanNajaf1i/booking-service/internal/logger"
@@ -13,6 +14,48 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
+
+// buildMigrationDSN:
+// - Prioritet: cfg.DbDsn (APP_DB_DSN)
+// - Yoxdursa: cfg.DBHost.. ilə DSN yığır
+// - Supabase üçün sslmode=require
+// - Transaction pooler (6543) üçün prepared statements söndürür
+func buildMigrationDSN(cfg config.AppConfig) string {
+	dsn := strings.TrimSpace(cfg.DbDsn)
+
+	if dsn == "" {
+		// fallback: env parçaları ilə DSN
+		dsn = fmt.Sprintf(
+			"postgres://%s:%s@%s:%s/%s?sslmode=require",
+			cfg.DBUser,
+			cfg.DBPassword,
+			cfg.DBHost,
+			cfg.DBPort,
+			cfg.DBName,
+		)
+	} else {
+		// DSN-də sslmode yoxdursa əlavə et
+		if !strings.Contains(dsn, "sslmode=") {
+			sep := "?"
+			if strings.Contains(dsn, "?") {
+				sep = "&"
+			}
+			dsn += sep + "sslmode=require"
+		}
+	}
+
+	// Supabase transaction pooler (6543) prepared statements dəstəkləmir [web:131]
+	// pgx üçün “simple protocol” ilə işləməyə məcbur edirik.
+	if strings.Contains(dsn, "pooler.supabase.com:6543") && !strings.Contains(dsn, "default_query_exec_mode=") {
+		sep := "?"
+		if strings.Contains(dsn, "?") {
+			sep = "&"
+		}
+		dsn += sep + "default_query_exec_mode=simple_protocol"
+	}
+
+	return dsn
+}
 
 func RunMigrations(cfg config.AppConfig, appLogger logger.Logger) error {
 	_, currentFile, _, _ := runtime.Caller(0)
@@ -28,12 +71,8 @@ func RunMigrations(cfg config.AppConfig, appLogger logger.Logger) error {
 
 	migrationsPath := "file://" + filepath.ToSlash(migrationsDir)
 
-	// ✅ DÜZƏLİŞ: x-schema=public silindi
-	// search_path istifadə edə bilərsən, amma default public schema-dır
-	dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
-		cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName,
-	)
-
+	// ✅ FIX: DSN-i düzgün seçirik
+	dsn := buildMigrationDSN(cfg)
 	appLogger.Info("Migration DSN", logger.Field{Key: "dsn", Value: dsn})
 
 	m, err := migrate.New(migrationsPath, dsn)
@@ -59,31 +98,3 @@ func RunMigrations(cfg config.AppConfig, appLogger logger.Logger) error {
 	appLogger.Info("Migrations completed successfully")
 	return nil
 }
-
-// package postgres
-
-// import (
-// 	"fmt"
-
-// 	"github.com/OrkhanNajaf1i/booking-service/internal/config"
-// 	// "github.com/golang-migrate/migrate"
-// 	"github.com/golang-migrate/migrate/v4"
-// 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
-// 	_ "github.com/golang-migrate/migrate/v4/source/file"
-// )
-
-// func RunMigrations(cfg config.AppConfig) error {
-// 	m, err := migrate.New("file://migrations", fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
-// 		cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName,
-// 	))
-// 	if err != nil {
-// 		return err
-// 	}
-// 	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
-// 		return err
-// 	}
-// 	return nil
-// }
-
-// File: internal/infrastructure/postgres/migrations.go
-// File: internal/infrastructure/postgres/migrations.go
