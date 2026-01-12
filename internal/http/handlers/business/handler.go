@@ -21,6 +21,20 @@ func NewBusinessHandler(businessService business.Service) *BusinessHandler {
 		businessService: businessService,
 	}
 }
+
+// @Summary      Create Solo Business
+// @Description  Creates a solo practitioner business for the authenticated user. Automatically generates business, location, and active staff records. User role set to solo_practitioner.
+// @Tags         Business
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request body CreateSoloBusinessHTTPRequest true "Solo business data (BusinessName, Phone, ServiceCategory, Industry)"
+// @Success      201  {object}  BusinessHTTPResponse "Solo business created successfully"
+// @Failure      400  {object}  ErrorHTTPResponse "Validation error - invalid or missing required fields"
+// @Failure      401  {object}  ErrorHTTPResponse "Unauthorized - user not authenticated"
+// @Failure      409  {object}  ErrorHTTPResponse "Conflict - business already exists for user"
+// @Failure      500  {object}  ErrorHTTPResponse "Internal server error"
+// @Router       /api/v1/businesses/solo [post]
 func (handler *BusinessHandler) CreateSoloBusiness(writer http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodPost {
 		handler.respondWithError(writer, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "Method not allowed")
@@ -53,6 +67,19 @@ func (handler *BusinessHandler) CreateSoloBusiness(writer http.ResponseWriter, r
 	handler.respondWithJSON(writer, http.StatusCreated, response)
 }
 
+// @Summary      Create Multi-Staff Business
+// @Description  Creates a multi-staff business for the authenticated user. Owner can invite staff members later. Staff management handled through separate endpoints.
+// @Tags         Business
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request body CreateMultiBusinessHTTPRequest true "Multi-staff business data (BusinessName, Phone, ServiceCategory, Industry)"
+// @Success      201  {object}  BusinessHTTPResponse "Multi-staff business created successfully"
+// @Failure      400  {object}  ErrorHTTPResponse "Validation error - invalid or missing required fields"
+// @Failure      401  {object}  ErrorHTTPResponse "Unauthorized - user not authenticated"
+// @Failure      409  {object}  ErrorHTTPResponse "Conflict - business already exists for user"
+// @Failure      500  {object}  ErrorHTTPResponse "Internal server error"
+// @Router       /api/v1/businesses/multi [post]
 func (handler *BusinessHandler) CreateMultiBusiness(writer http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodPost {
 		handler.respondWithError(writer, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "Method not allowed")
@@ -86,6 +113,17 @@ func (handler *BusinessHandler) CreateMultiBusiness(writer http.ResponseWriter, 
 	handler.respondWithJSON(writer, http.StatusCreated, response)
 }
 
+// @Summary      Get My Business
+// @Description  Retrieves the authenticated user's business information. User must be a business owner. Returns full business details including location, staff, and service information.
+// @Tags         Business
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  BusinessHTTPResponse "Business details retrieved successfully"
+// @Failure      401  {object}  ErrorHTTPResponse "Unauthorized - user not authenticated"
+// @Failure      404  {object}  ErrorHTTPResponse "Business not found for user"
+// @Failure      500  {object}  ErrorHTTPResponse "Internal server error"
+// @Router       /api/v1/business [get]
 func (handler *BusinessHandler) GetBusiness(writer http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodGet {
 		handler.respondWithError(writer, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "Method not allowed")
@@ -110,6 +148,19 @@ func (handler *BusinessHandler) GetBusiness(writer http.ResponseWriter, request 
 	handler.respondWithJSON(writer, http.StatusOK, response)
 }
 
+// @Summary      Get Business by ID
+// @Description  Retrieves business information by business ID. Can be accessed by any authenticated user (public business view). Returns business profile, location, and active staff information.
+// @Tags         Business
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path string true "Business ID (UUID format)"
+// @Success      200  {object}  BusinessHTTPResponse "Business details retrieved successfully"
+// @Failure      400  {object}  ErrorHTTPResponse "Invalid business ID format"
+// @Failure      401  {object}  ErrorHTTPResponse "Unauthorized - user not authenticated"
+// @Failure      404  {object}  ErrorHTTPResponse "Business not found"
+// @Failure      500  {object}  ErrorHTTPResponse "Internal server error"
+// @Router       /api/v1/businesses/{id} [get]
 func (handler *BusinessHandler) GetBusinessByID(writer http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodGet {
 		handler.respondWithError(writer, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "Method not allowed")
@@ -140,6 +191,19 @@ func (handler *BusinessHandler) GetBusinessByID(writer http.ResponseWriter, requ
 	handler.respondWithJSON(writer, http.StatusOK, response)
 }
 
+// @Summary      Update Business
+// @Description  Updates the authenticated user's business information. Only business owner can update. Updates business name, phone, service category, and industry fields. Validation applied to all fields.
+// @Tags         Business
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request body UpdateBusinessHTTPRequest true "Business update data (BusinessName, Phone, ServiceCategory, Industry - all optional)"
+// @Success      200  {object}  SuccessHTTPResponse "Business updated successfully"
+// @Failure      400  {object}  ErrorHTTPResponse "Validation error - invalid field values"
+// @Failure      401  {object}  ErrorHTTPResponse "Unauthorized - user not authenticated or not owner"
+// @Failure      404  {object}  ErrorHTTPResponse "Business not found"
+// @Failure      500  {object}  ErrorHTTPResponse "Internal server error"
+// @Router       /api/v1/business [put]
 func (handler *BusinessHandler) UpdateBusiness(writer http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodPut {
 		handler.respondWithError(writer, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "Method not allowed")
