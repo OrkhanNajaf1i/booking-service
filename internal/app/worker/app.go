@@ -1,19 +1,20 @@
+// File: worker/app.go
 package worker
 
 import (
 	"context"
-	"database/sql"
 	"time"
 
 	"github.com/OrkhanNajaf1i/booking-service/internal/config"
 	"github.com/OrkhanNajaf1i/booking-service/internal/infrastructure/postgres"
 	"github.com/OrkhanNajaf1i/booking-service/internal/logger"
+	"github.com/jmoiron/sqlx"
 )
 
 type App struct {
 	config       *config.AppConfig
 	logger       logger.Logger
-	db           *sql.DB
+	db           *sqlx.DB
 	pollInterval time.Duration
 }
 
@@ -22,6 +23,7 @@ func New(cfg *config.AppConfig) (*App, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	db, err := postgres.New(*cfg)
 	if err != nil {
 		return nil, err
@@ -47,7 +49,6 @@ func (a *App) Run(ctx context.Context) error {
 			a.logger.Info("Worker stopping")
 			return ctx.Err()
 		case <-ticker.C:
-			// Worker işi burada olacaq
 			a.logger.Info("Worker polling")
 		}
 	}

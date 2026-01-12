@@ -36,12 +36,14 @@ func New(cfg *config.AppConfig, appLogger logger.Logger) (*App, error) {
 
 	db, err := postgres.New(*cfg)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("postgres init failed: %w", err)
 	}
 
-	businessRepository := postgres.NewBusinessRepository(db)
-	authRepo := postgres.NewAuthRepository(db)
+	businessRepo := postgres.NewBusinessRepository(db)
+	businessSvc := business.NewService(businessRepo)
 
+	// Auth repo + service
+	authRepo := postgres.NewAuthRepository(db)
 	passwordHasher := crypto.NewBcryptPasswordHasher()
 	tokenManager := crypto.NewJWTSigner(cfg.JWTSecret)
 	emailService := email.NewSMTPService(
@@ -51,11 +53,6 @@ func New(cfg *config.AppConfig, appLogger logger.Logger) (*App, error) {
 		cfg.SMTPPass,
 		cfg.SMTPFrom,
 	)
-
-	userServiceAdapter := NewUserServiceAdapter(authRepo, businessRepository)
-
-	businessSvc := business.NewService(businessRepository, userServiceAdapter)
-
 	authSvc := auth.NewAuthService(
 		authRepo,
 		passwordHasher,
@@ -63,7 +60,7 @@ func New(cfg *config.AppConfig, appLogger logger.Logger) (*App, error) {
 		tokenManager,
 	)
 
-	businessH := businessHandler.NewHandler(businessSvc)
+	businessH := businessHandler.NewBusinessHandler(businessSvc)
 	authH := authHandler.NewAuthHandler(authSvc, appLogger)
 
 	router := httpapi.NewRouter(httpapi.Handlers{
