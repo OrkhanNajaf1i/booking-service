@@ -34,7 +34,6 @@ func buildMigrationDSN(cfg config.AppConfig) string {
 			cfg.DBName,
 		)
 	} else {
-		// DSN-də sslmode yoxdursa əlavə et
 		if !strings.Contains(dsn, "sslmode=") {
 			sep := "?"
 			if strings.Contains(dsn, "?") {
