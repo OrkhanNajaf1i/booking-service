@@ -51,6 +51,18 @@ func getBusinessIDFromContext(r *http.Request) (uuid.UUID, error) {
 	return businessID, nil
 }
 
+// @Summary      Create Location
+// @Description  Creates a new location for the authenticated business. Location is address where services are provided. Each business can have multiple locations (main office, branch, etc).
+// @Tags         Location
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request body CreateLocationHTTPRequest true "Location data (Name, Address, City, State, Country, PostalCode, Latitude, Longitude, PhoneNumber)"
+// @Success      201  {object}  SuccessResponse "Location created successfully with generated UUID"
+// @Failure      400  {object}  ErrorResponse "Validation error - invalid or missing required fields"
+// @Failure      401  {object}  ErrorResponse "Unauthorized - user not authenticated or business_id missing"
+// @Failure      500  {object}  ErrorResponse "Internal server error"
+// @Router       /api/v1/locations [post]
 func (h Handler) CreateLocation(w http.ResponseWriter, r *http.Request) {
 	businessID, err := getBusinessIDFromContext(r)
 	if err != nil {
@@ -83,6 +95,16 @@ func (h Handler) CreateLocation(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, resp)
 }
 
+// @Summary      List All Locations
+// @Description  Retrieves all locations for the authenticated business. Returns complete list of active and inactive locations with full details.
+// @Tags         Location
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  SuccessResponse "Locations retrieved successfully (array of LocationHTTPResponse)"
+// @Failure      401  {object}  ErrorResponse "Unauthorized - user not authenticated or business_id missing"
+// @Failure      500  {object}  ErrorResponse "Internal server error"
+// @Router       /api/v1/locations [get]
 func (h Handler) ListLocations(w http.ResponseWriter, r *http.Request) {
 	businessID, err := getBusinessIDFromContext(r)
 	if err != nil {
@@ -103,6 +125,19 @@ func (h Handler) ListLocations(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, resp)
 }
 
+// @Summary      Get Location by ID
+// @Description  Retrieves specific location details by location ID. Location must belong to authenticated business (multi-tenancy filtering applied).
+// @Tags         Location
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path string true "Location ID (UUID format)"
+// @Success      200  {object}  SuccessResponse "Location details retrieved successfully"
+// @Failure      400  {object}  ErrorResponse "Invalid location ID format"
+// @Failure      401  {object}  ErrorResponse "Unauthorized - user not authenticated or business_id missing"
+// @Failure      404  {object}  ErrorResponse "Location not found"
+// @Failure      500  {object}  ErrorResponse "Internal server error"
+// @Router       /api/v1/locations/{id} [get]
 func (h Handler) GetLocation(w http.ResponseWriter, r *http.Request) {
 	businessID, err := getBusinessIDFromContext(r)
 	if err != nil {
@@ -134,6 +169,20 @@ func (h Handler) GetLocation(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, resp)
 }
 
+// @Summary      Update Location
+// @Description  Updates location details for authenticated business. Supports partial updates - only provided fields are updated. Location must belong to business (multi-tenancy filtering applied).
+// @Tags         Location
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path string true "Location ID (UUID format)"
+// @Param        request body UpdateLocationHTTPRequest true "Location update data (all fields optional - Name, Address, City, State, Country, PostalCode, Latitude, Longitude, PhoneNumber)"
+// @Success      200  {object}  SuccessResponse "Location updated successfully"
+// @Failure      400  {object}  ErrorResponse "Validation error - invalid field values or invalid location ID format"
+// @Failure      401  {object}  ErrorResponse "Unauthorized - user not authenticated or business_id missing"
+// @Failure      404  {object}  ErrorResponse "Location not found"
+// @Failure      500  {object}  ErrorResponse "Internal server error"
+// @Router       /api/v1/locations/{id} [put]
 func (h Handler) UpdateLocation(w http.ResponseWriter, r *http.Request) {
 	businessID, err := getBusinessIDFromContext(r)
 	if err != nil {
@@ -175,6 +224,19 @@ func (h Handler) UpdateLocation(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, resp)
 }
 
+// @Summary      Deactivate Location
+// @Description  Soft-deletes a location by marking it as inactive. Location is not permanently deleted - it remains in database for historical records. Deactivated locations cannot be used for new bookings. Location must belong to authenticated business.
+// @Tags         Location
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path string true "Location ID (UUID format)"
+// @Success      200  {object}  SuccessResponse "Location deactivated successfully"
+// @Failure      400  {object}  ErrorResponse "Validation error or invalid location ID format"
+// @Failure      401  {object}  ErrorResponse "Unauthorized - user not authenticated or business_id missing"
+// @Failure      404  {object}  ErrorResponse "Location not found"
+// @Failure      500  {object}  ErrorResponse "Internal server error"
+// @Router       /api/v1/locations/{id} [delete]
 func (h Handler) DeactivateLocation(w http.ResponseWriter, r *http.Request) {
 	businessID, err := getBusinessIDFromContext(r)
 	if err != nil {

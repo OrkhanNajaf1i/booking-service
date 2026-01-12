@@ -46,6 +46,16 @@ func getBusinessIDFromContext(r *http.Request) (uuid.UUID, error) {
 	return businessID, nil
 }
 
+// @Summary      List All Services
+// @Description  Retrieves all services offered by the authenticated business. Returns complete list of active and inactive services with pricing, duration, and staff assignment information.
+// @Tags         Service
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  SuccessResponse "Services retrieved successfully (array of ServiceHTTPResponse)"
+// @Failure      401  {object}  ErrorResponse "Unauthorized - user not authenticated or business_id missing"
+// @Failure      500  {object}  ErrorResponse "Internal server error"
+// @Router       /api/v1/services [get]
 func (h Handler) ListServices(w http.ResponseWriter, r *http.Request) {
 	businessID, err := getBusinessIDFromContext(r)
 	if err != nil {
@@ -66,6 +76,19 @@ func (h Handler) ListServices(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, resp)
 }
 
+// @Summary      Get Service by ID
+// @Description  Retrieves specific service details by service ID. Service must belong to authenticated business. Returns service name, description, duration, price, and staff assignments.
+// @Tags         Service
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path string true "Service ID (UUID format)"
+// @Success      200  {object}  SuccessResponse "Service details retrieved successfully"
+// @Failure      400  {object}  ErrorResponse "Invalid service ID format"
+// @Failure      401  {object}  ErrorResponse "Unauthorized - user not authenticated or business_id missing"
+// @Failure      404  {object}  ErrorResponse "Service not found"
+// @Failure      500  {object}  ErrorResponse "Internal server error"
+// @Router       /api/v1/services/{id} [get]
 func (h Handler) GetService(w http.ResponseWriter, r *http.Request) {
 	businessID, err := getBusinessIDFromContext(r)
 	if err != nil {
@@ -97,6 +120,20 @@ func (h Handler) GetService(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, resp)
 }
 
+// @Summary      Update Service
+// @Description  Updates service details for authenticated business. Supports partial updates - only provided fields are modified. Service must belong to business. Updates name, description, duration, pricing, and status.
+// @Tags         Service
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path string true "Service ID (UUID format)"
+// @Param        request body UpdateServiceHTTPRequest true "Service update data (all fields optional - Name, Description, Duration, Price, IsActive)"
+// @Success      200  {object}  SuccessResponse "Service updated successfully"
+// @Failure      400  {object}  ErrorResponse "Validation error - invalid field values or invalid service ID format"
+// @Failure      401  {object}  ErrorResponse "Unauthorized - user not authenticated or business_id missing"
+// @Failure      404  {object}  ErrorResponse "Service not found"
+// @Failure      500  {object}  ErrorResponse "Internal server error"
+// @Router       /api/v1/services/{id} [put]
 func (h Handler) UpdateService(w http.ResponseWriter, r *http.Request) {
 	businessID, err := getBusinessIDFromContext(r)
 	if err != nil {
@@ -139,6 +176,19 @@ func (h Handler) UpdateService(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, resp)
 }
 
+// @Summary      Deactivate Service
+// @Description  Soft-deletes a service by marking it as inactive. Service is not permanently deleted - remains in database for historical records. Deactivated services cannot be booked. Service must belong to authenticated business.
+// @Tags         Service
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path string true "Service ID (UUID format)"
+// @Success      200  {object}  SuccessResponse "Service deactivated successfully"
+// @Failure      400  {object}  ErrorResponse "Validation error or invalid service ID format"
+// @Failure      401  {object}  ErrorResponse "Unauthorized - user not authenticated or business_id missing"
+// @Failure      404  {object}  ErrorResponse "Service not found"
+// @Failure      500  {object}  ErrorResponse "Internal server error"
+// @Router       /api/v1/services/{id} [delete]
 func (h Handler) DeactivateService(w http.ResponseWriter, r *http.Request) {
 	businessID, err := getBusinessIDFromContext(r)
 	if err != nil {
@@ -173,6 +223,19 @@ func (h Handler) DeactivateService(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, resp)
 }
 
+// @Summary      Assign Services to Staff
+// @Description  Assigns multiple services to a staff member. Staff member becomes available to book appointments for assigned services. All services must exist and belong to authenticated business. Staff member must belong to business.
+// @Tags         Service
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        staff_id path string true "Staff Member ID (UUID format)"
+// @Param        request body AssignServicesHTTPRequest true "Service IDs to assign (ServiceIDs array of UUID strings)"
+// @Success      200  {object}  SuccessResponse "Services assigned to staff successfully"
+// @Failure      400  {object}  ErrorResponse "Validation error - invalid staff ID format, invalid service IDs, or staff/service not found"
+// @Failure      401  {object}  ErrorResponse "Unauthorized - user not authenticated or business_id missing"
+// @Failure      500  {object}  ErrorResponse "Internal server error"
+// @Router       /api/v1/staff/{staff_id}/services [post]
 func (h Handler) AssignServicesToStaff(w http.ResponseWriter, r *http.Request) {
 	businessID, err := getBusinessIDFromContext(r)
 	if err != nil {
@@ -215,6 +278,18 @@ func (h Handler) AssignServicesToStaff(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, resp)
 }
 
+// @Summary      Get Staff Services
+// @Description  Retrieves all services assigned to a specific staff member. Returns services the staff member is qualified and available to provide. Staff member must belong to authenticated business.
+// @Tags         Service
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        staff_id path string true "Staff Member ID (UUID format)"
+// @Success      200  {object}  SuccessResponse "Staff services retrieved successfully (array of ServiceHTTPResponse)"
+// @Failure      400  {object}  ErrorResponse "Invalid staff ID format"
+// @Failure      401  {object}  ErrorResponse "Unauthorized - user not authenticated or business_id missing"
+// @Failure      500  {object}  ErrorResponse "Internal server error"
+// @Router       /api/v1/staff/{staff_id}/services [get]
 func (h Handler) GetStaffServices(w http.ResponseWriter, r *http.Request) {
 	businessID, err := getBusinessIDFromContext(r)
 	if err != nil {
@@ -242,6 +317,19 @@ func (h Handler) GetStaffServices(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, resp)
 }
 
+// @Summary      Remove Service from Staff
+// @Description  Removes a specific service from a staff member's service list. Staff member becomes unavailable to book appointments for this service. Service assignment removed but service and staff member remain active.
+// @Tags         Service
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        staff_id path string true "Staff Member ID (UUID format)"
+// @Param        service_id path string true "Service ID (UUID format)"
+// @Success      200  {object}  SuccessResponse "Service removed from staff successfully"
+// @Failure      400  {object}  ErrorResponse "Validation error - invalid staff/service ID format or service not assigned to staff"
+// @Failure      401  {object}  ErrorResponse "Unauthorized - user not authenticated or business_id missing"
+// @Failure      500  {object}  ErrorResponse "Internal server error"
+// @Router       /api/v1/staff/{staff_id}/services/{service_id} [delete]
 func (h Handler) RemoveServiceFromStaff(w http.ResponseWriter, r *http.Request) {
 	businessID, err := getBusinessIDFromContext(r)
 	if err != nil {
