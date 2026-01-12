@@ -1,3 +1,4 @@
+// File: internal/infrastructure/postgres/auth_repo.go
 package postgres
 
 import (
@@ -8,13 +9,14 @@ import (
 
 	"github.com/OrkhanNajaf1i/booking-service/internal/domain/auth"
 	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
 )
 
 type AuthRepository struct {
-	db *sql.DB
+	db *sqlx.DB
 }
 
-func NewAuthRepository(db *sql.DB) *AuthRepository {
+func NewAuthRepository(db *sqlx.DB) *AuthRepository {
 	return &AuthRepository{
 		db: db,
 	}
@@ -153,6 +155,7 @@ func (r *AuthRepository) RevokeRefreshToken(ctx context.Context, tokenID uuid.UU
 	}
 	return nil
 }
+
 func (r *AuthRepository) SavePasswordReset(ctx context.Context, reset *auth.PasswordReset) error {
 	query := `
         INSERT INTO password_resets (
@@ -216,6 +219,7 @@ func (r *AuthRepository) EmailExists(ctx context.Context, email string) (bool, e
 	}
 	return exists, nil
 }
+
 func (r *AuthRepository) UpdateUserStatus(ctx context.Context, userID uuid.UUID, status string) error {
 	isActive := (status == "active")
 
