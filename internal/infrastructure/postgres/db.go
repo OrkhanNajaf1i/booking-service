@@ -1,59 +1,25 @@
-// package postgres
-
-// import (
-// 	"database/sql"
-// 	"fmt"
-
-// 	"github.com/OrkhanNajaf1i/booking-service/internal/config"
-// 	_ "github.com/jackc/pgx/v5/stdlib"
-// )
-
-// func New(cfg config.AppConfig) (*sql.DB, error) {
-// 	// dsn := fmt.Sprintf(
-// 	// 	"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-// 	// 	cfg.DBHost, cfg.DBPort, cfg.DBUser, cfg.DBPassword, cfg.DBName,
-// 	// )
-// 	dsn := fmt.Sprintf(
-// 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-// 		cfg.DBHost, cfg.DBPort, cfg.DBUser, cfg.DBPassword, cfg.DBName,
-// 		// DBPort STRING olaraq qalır ✅ (bu düzgün)
-// 	)
-
-// 	db, err := sql.Open("pgx", dsn)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	if err := db.Ping(); err != nil {
-// 		return nil, err
-// 	}
-
-//		return db, nil
-//	}
+// File: internal/infrastructure/postgres/db.go
 package postgres
 
 import (
-	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/OrkhanNajaf1i/booking-service/internal/config"
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/jmoiron/sqlx"
 )
 
-func New(cfg config.AppConfig) (*sql.DB, error) {
-	// 1) Əgər APP_DB_DSN verilibsə, ona prioritet ver
+func New(cfg config.AppConfig) (*sqlx.DB, error) {
 	dsn := strings.TrimSpace(cfg.DbDsn)
 
 	if dsn == "" {
-		// 2) Yoxdursa env-lərdən DSN yığ
-		// Supabase üçün sslmode=disable olmaz; require istifadə edirik.
 		dsn = fmt.Sprintf(
 			"host=%s port=%s user=%s password=%s dbname=%s sslmode=require",
 			cfg.DBHost, cfg.DBPort, cfg.DBUser, cfg.DBPassword, cfg.DBName,
 		)
 	} else {
-		// 3) URL DSN-də sslmode yoxdursa, əlavə et (Supabase üçün)
 		if !strings.Contains(dsn, "sslmode=") {
 			sep := "?"
 			if strings.Contains(dsn, "?") {
@@ -62,8 +28,6 @@ func New(cfg config.AppConfig) (*sql.DB, error) {
 			dsn += sep + "sslmode=require"
 		}
 
-		// 4) Transaction pooler (6543) üçün prepared statements söndür (pgx)
-		// Supabase transaction pooler prepared statements dəstəkləmir.
 		if strings.Contains(dsn, "pooler.supabase.com:6543") && !strings.Contains(dsn, "default_query_exec_mode=") {
 			sep := "?"
 			if strings.Contains(dsn, "?") {
@@ -73,14 +37,18 @@ func New(cfg config.AppConfig) (*sql.DB, error) {
 		}
 	}
 
-	db, err := sql.Open("pgx", dsn)
+	db, err := sqlx.Open("pgx", dsn)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("sqlx open failed: %w", err)
 	}
 
-	// Render-də ilk request-dən əvvəl problem çıxmasın deyə ping
+	db.SetMaxOpenConns(25)
+	db.SetMaxIdleConns(25)
+	db.SetConnMaxLifetime(5 * time.Minute)
+
 	if err := db.Ping(); err != nil {
-		return nil, err
+		db.Close()
+		return nil, fmt.Errorf("postgres ping failed: %w", err)
 	}
 
 	return db, nil
