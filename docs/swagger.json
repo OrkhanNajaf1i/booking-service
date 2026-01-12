@@ -12,9 +12,9 @@
     "host": "booking-service-sld9.onrender.com",
     "basePath": "/api/v1",
     "paths": {
-        "/auth/login": {
+        "/api/v1/auth/forgot-password": {
             "post": {
-                "description": "Email və şifrə ilə giriş edərək JWT tokenlərini alır.",
+                "description": "Initiates password reset process. Sends password reset link to user email. Reset link contains unique token valid for limited time (typically 1 hour).",
                 "consumes": [
                     "application/json"
                 ],
@@ -24,10 +24,56 @@
                 "tags": [
                     "Auth"
                 ],
-                "summary": "Giriş (Login)",
+                "summary": "Forgot Password",
                 "parameters": [
                     {
-                        "description": "Giriş məlumatları",
+                        "description": "User email address",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/auth.ForgotPasswordHTTPRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Password reset email sent successfully",
+                        "schema": {
+                            "$ref": "#/definitions/auth.SuccessResponseDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error - invalid email format",
+                        "schema": {
+                            "$ref": "#/definitions/auth.ErrorResponseDTO"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/auth.ErrorResponseDTO"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/login": {
+            "post": {
+                "description": "Authenticates user using email and password. Returns JWT access and refresh tokens. On successful login, if user is owner, onboarding wizard triggered (if not completed).",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "User Login",
+                "parameters": [
+                    {
+                        "description": "Login credentials (Email, Password)",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -38,13 +84,31 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Authentication successful, tokens returned",
                         "schema": {
                             "$ref": "#/definitions/auth.AuthResponseDTO"
                         }
                     },
+                    "400": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/auth.ErrorResponseDTO"
+                        }
+                    },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Invalid credentials",
+                        "schema": {
+                            "$ref": "#/definitions/auth.ErrorResponseDTO"
+                        }
+                    },
+                    "403": {
+                        "description": "User account is inactive",
+                        "schema": {
+                            "$ref": "#/definitions/auth.ErrorResponseDTO"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/auth.ErrorResponseDTO"
                         }
@@ -52,9 +116,9 @@
                 }
             }
         },
-        "/auth/register": {
+        "/api/v1/auth/logout": {
             "post": {
-                "description": "Yeni istifadəçi hesabı yaradır (account-first).",
+                "description": "Revokes user refresh token, effectively ending session. After logout, refresh token cannot be used to obtain new access tokens. User must log in again to get new tokens.",
                 "consumes": [
                     "application/json"
                 ],
@@ -64,10 +128,108 @@
                 "tags": [
                     "Auth"
                 ],
-                "summary": "İstifadəçi qeydiyyatı",
+                "summary": "User Logout",
                 "parameters": [
                     {
-                        "description": "Qeydiyyat məlumatları",
+                        "description": "Refresh token to revoke",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/auth.RefreshTokenHTTPRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Logout successful, refresh token revoked",
+                        "schema": {
+                            "$ref": "#/definitions/auth.SuccessResponseDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error or invalid refresh token",
+                        "schema": {
+                            "$ref": "#/definitions/auth.ErrorResponseDTO"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/auth.ErrorResponseDTO"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/refresh": {
+            "post": {
+                "description": "Generates new access token using valid refresh token. Refresh token must not be expired or revoked. Used to maintain user sessions without re-authentication.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Refresh Access Token",
+                "parameters": [
+                    {
+                        "description": "Refresh token (RefreshToken field)",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/auth.RefreshTokenHTTPRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "New access token generated successfully with 15-minute expiration",
+                        "schema": {
+                            "$ref": "#/definitions/auth.SuccessResponseDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/auth.ErrorResponseDTO"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid, expired, or revoked refresh token; User not found",
+                        "schema": {
+                            "$ref": "#/definitions/auth.ErrorResponseDTO"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/auth.ErrorResponseDTO"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/register": {
+            "post": {
+                "description": "Creates a new user account (account-first registration). Initializes a user without a business. After successful registration, user must complete onboarding wizard to create business.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "User Registration",
+                "parameters": [
+                    {
+                        "description": "Registration data (Email, Password, FullName, Phone)",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -78,21 +240,1500 @@
                 ],
                 "responses": {
                     "201": {
-                        "description": "Created",
+                        "description": "User account created successfully with JWT tokens",
                         "schema": {
                             "$ref": "#/definitions/auth.AuthResponseDTO"
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Validation error - missing fields, invalid format, password too short",
                         "schema": {
                             "$ref": "#/definitions/auth.ErrorResponseDTO"
                         }
                     },
                     "409": {
-                        "description": "Conflict",
+                        "description": "Email already exists",
                         "schema": {
                             "$ref": "#/definitions/auth.ErrorResponseDTO"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/auth.ErrorResponseDTO"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/reset-password": {
+            "post": {
+                "description": "Completes password reset process using reset token and new password. Reset token generated by ForgotPassword endpoint expires after 1 hour. Token cannot be reused after first successful use.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Reset Password",
+                "parameters": [
+                    {
+                        "description": "Reset token and new password",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/auth.ResetPasswordHTTPRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Password reset successfully",
+                        "schema": {
+                            "$ref": "#/definitions/auth.SuccessResponseDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid or expired token; Password validation failure; User not found",
+                        "schema": {
+                            "$ref": "#/definitions/auth.ErrorResponseDTO"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/auth.ErrorResponseDTO"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/business": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves the authenticated user's business information. User must be a business owner. Returns full business details including location, staff, and service information.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Business"
+                ],
+                "summary": "Get My Business",
+                "responses": {
+                    "200": {
+                        "description": "Business details retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/business.BusinessHTTPResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - user not authenticated",
+                        "schema": {
+                            "$ref": "#/definitions/business.ErrorHTTPResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Business not found for user",
+                        "schema": {
+                            "$ref": "#/definitions/business.ErrorHTTPResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/business.ErrorHTTPResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates the authenticated user's business information. Only business owner can update. Updates business name, phone, service category, and industry fields. Validation applied to all fields.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Business"
+                ],
+                "summary": "Update Business",
+                "parameters": [
+                    {
+                        "description": "Business update data (BusinessName, Phone, ServiceCategory, Industry - all optional)",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/business.UpdateBusinessHTTPRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Business updated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/business.SuccessHTTPResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error - invalid field values",
+                        "schema": {
+                            "$ref": "#/definitions/business.ErrorHTTPResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - user not authenticated or not owner",
+                        "schema": {
+                            "$ref": "#/definitions/business.ErrorHTTPResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Business not found",
+                        "schema": {
+                            "$ref": "#/definitions/business.ErrorHTTPResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/business.ErrorHTTPResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/businesses/multi": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Creates a multi-staff business for the authenticated user. Owner can invite staff members later. Staff management handled through separate endpoints.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Business"
+                ],
+                "summary": "Create Multi-Staff Business",
+                "parameters": [
+                    {
+                        "description": "Multi-staff business data (BusinessName, Phone, ServiceCategory, Industry)",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/business.CreateMultiBusinessHTTPRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Multi-staff business created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/business.BusinessHTTPResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error - invalid or missing required fields",
+                        "schema": {
+                            "$ref": "#/definitions/business.ErrorHTTPResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - user not authenticated",
+                        "schema": {
+                            "$ref": "#/definitions/business.ErrorHTTPResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict - business already exists for user",
+                        "schema": {
+                            "$ref": "#/definitions/business.ErrorHTTPResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/business.ErrorHTTPResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/businesses/solo": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Creates a solo practitioner business for the authenticated user. Automatically generates business, location, and active staff records. User role set to solo_practitioner.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Business"
+                ],
+                "summary": "Create Solo Business",
+                "parameters": [
+                    {
+                        "description": "Solo business data (BusinessName, Phone, ServiceCategory, Industry)",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/business.CreateSoloBusinessHTTPRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Solo business created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/business.BusinessHTTPResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error - invalid or missing required fields",
+                        "schema": {
+                            "$ref": "#/definitions/business.ErrorHTTPResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - user not authenticated",
+                        "schema": {
+                            "$ref": "#/definitions/business.ErrorHTTPResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict - business already exists for user",
+                        "schema": {
+                            "$ref": "#/definitions/business.ErrorHTTPResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/business.ErrorHTTPResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/businesses/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves business information by business ID. Can be accessed by any authenticated user (public business view). Returns business profile, location, and active staff information.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Business"
+                ],
+                "summary": "Get Business by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Business ID (UUID format)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Business details retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/business.BusinessHTTPResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid business ID format",
+                        "schema": {
+                            "$ref": "#/definitions/business.ErrorHTTPResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - user not authenticated",
+                        "schema": {
+                            "$ref": "#/definitions/business.ErrorHTTPResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Business not found",
+                        "schema": {
+                            "$ref": "#/definitions/business.ErrorHTTPResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/business.ErrorHTTPResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/locations": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves all locations for the authenticated business. Returns complete list of active and inactive locations with full details.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Location"
+                ],
+                "summary": "List All Locations",
+                "responses": {
+                    "200": {
+                        "description": "Locations retrieved successfully (array of LocationHTTPResponse)",
+                        "schema": {
+                            "$ref": "#/definitions/location.SuccessResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - user not authenticated or business_id missing",
+                        "schema": {
+                            "$ref": "#/definitions/location.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/location.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Creates a new location for the authenticated business. Location is address where services are provided. Each business can have multiple locations (main office, branch, etc).",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Location"
+                ],
+                "summary": "Create Location",
+                "parameters": [
+                    {
+                        "description": "Location data (Name, Address, City, State, Country, PostalCode, Latitude, Longitude, PhoneNumber)",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/location.CreateLocationHTTPRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Location created successfully with generated UUID",
+                        "schema": {
+                            "$ref": "#/definitions/location.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error - invalid or missing required fields",
+                        "schema": {
+                            "$ref": "#/definitions/location.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - user not authenticated or business_id missing",
+                        "schema": {
+                            "$ref": "#/definitions/location.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/location.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/locations/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves specific location details by location ID. Location must belong to authenticated business (multi-tenancy filtering applied).",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Location"
+                ],
+                "summary": "Get Location by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Location ID (UUID format)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Location details retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/location.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid location ID format",
+                        "schema": {
+                            "$ref": "#/definitions/location.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - user not authenticated or business_id missing",
+                        "schema": {
+                            "$ref": "#/definitions/location.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Location not found",
+                        "schema": {
+                            "$ref": "#/definitions/location.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/location.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates location details for authenticated business. Supports partial updates - only provided fields are updated. Location must belong to business (multi-tenancy filtering applied).",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Location"
+                ],
+                "summary": "Update Location",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Location ID (UUID format)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Location update data (all fields optional - Name, Address, City, State, Country, PostalCode, Latitude, Longitude, PhoneNumber)",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/location.UpdateLocationHTTPRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Location updated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/location.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error - invalid field values or invalid location ID format",
+                        "schema": {
+                            "$ref": "#/definitions/location.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - user not authenticated or business_id missing",
+                        "schema": {
+                            "$ref": "#/definitions/location.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Location not found",
+                        "schema": {
+                            "$ref": "#/definitions/location.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/location.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Soft-deletes a location by marking it as inactive. Location is not permanently deleted - it remains in database for historical records. Deactivated locations cannot be used for new bookings. Location must belong to authenticated business.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Location"
+                ],
+                "summary": "Deactivate Location",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Location ID (UUID format)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Location deactivated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/location.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error or invalid location ID format",
+                        "schema": {
+                            "$ref": "#/definitions/location.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - user not authenticated or business_id missing",
+                        "schema": {
+                            "$ref": "#/definitions/location.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Location not found",
+                        "schema": {
+                            "$ref": "#/definitions/location.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/location.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/services": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves all services offered by the authenticated business. Returns complete list of active and inactive services with pricing, duration, and staff assignment information.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Service"
+                ],
+                "summary": "List All Services",
+                "responses": {
+                    "200": {
+                        "description": "Services retrieved successfully (array of ServiceHTTPResponse)",
+                        "schema": {
+                            "$ref": "#/definitions/service.SuccessResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - user not authenticated or business_id missing",
+                        "schema": {
+                            "$ref": "#/definitions/service.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/service.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/services/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves specific service details by service ID. Service must belong to authenticated business. Returns service name, description, duration, price, and staff assignments.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Service"
+                ],
+                "summary": "Get Service by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Service ID (UUID format)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Service details retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/service.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid service ID format",
+                        "schema": {
+                            "$ref": "#/definitions/service.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - user not authenticated or business_id missing",
+                        "schema": {
+                            "$ref": "#/definitions/service.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Service not found",
+                        "schema": {
+                            "$ref": "#/definitions/service.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/service.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates service details for authenticated business. Supports partial updates - only provided fields are modified. Service must belong to business. Updates name, description, duration, pricing, and status.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Service"
+                ],
+                "summary": "Update Service",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Service ID (UUID format)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Service update data (all fields optional - Name, Description, Duration, Price, IsActive)",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.UpdateServiceHTTPRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Service updated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/service.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error - invalid field values or invalid service ID format",
+                        "schema": {
+                            "$ref": "#/definitions/service.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - user not authenticated or business_id missing",
+                        "schema": {
+                            "$ref": "#/definitions/service.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Service not found",
+                        "schema": {
+                            "$ref": "#/definitions/service.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/service.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Soft-deletes a service by marking it as inactive. Service is not permanently deleted - remains in database for historical records. Deactivated services cannot be booked. Service must belong to authenticated business.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Service"
+                ],
+                "summary": "Deactivate Service",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Service ID (UUID format)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Service deactivated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/service.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error or invalid service ID format",
+                        "schema": {
+                            "$ref": "#/definitions/service.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - user not authenticated or business_id missing",
+                        "schema": {
+                            "$ref": "#/definitions/service.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Service not found",
+                        "schema": {
+                            "$ref": "#/definitions/service.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/service.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/staff": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves all staff members for the authenticated business. Returns complete list of active and inactive staff with user associations, specializations, and availability status.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Staff"
+                ],
+                "summary": "List All Staff Members",
+                "responses": {
+                    "200": {
+                        "description": "Staff list retrieved successfully (array of StaffWithUserHTTPResponse)",
+                        "schema": {
+                            "$ref": "#/definitions/staff.SuccessResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - user not authenticated or business_id missing",
+                        "schema": {
+                            "$ref": "#/definitions/staff.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/staff.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Creates a new staff member profile for multi-staff business. Used when directly adding staff without invitation flow (admin creates profile). Staff member becomes available for service assignment. Only available for multi-staff businesses.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Staff"
+                ],
+                "summary": "Create Staff Profile",
+                "parameters": [
+                    {
+                        "description": "Staff profile data (FirstName, LastName, Email, Phone, Specializations - optional)",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/staff.CreateStaffHTTPRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Staff profile created successfully with generated UUID",
+                        "schema": {
+                            "$ref": "#/definitions/staff.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error - invalid or missing required fields",
+                        "schema": {
+                            "$ref": "#/definitions/staff.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - user not authenticated or business_id missing",
+                        "schema": {
+                            "$ref": "#/definitions/staff.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/staff.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/staff/invites": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Sends invitation to join business as staff member (zero-knowledge invitation flow). Generates unique invitation token valid for 7 days. Invitee receives token and can accept by creating password and joining business. Used for multi-staff businesses to onboard team members.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Staff"
+                ],
+                "summary": "Invite Staff Member",
+                "parameters": [
+                    {
+                        "description": "Invitation details (FirstName, LastName, Email, Phone, Role - provider_owner, staff, customer)",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/staff.InviteStaffHTTPRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Invitation created successfully with token and expiration",
+                        "schema": {
+                            "$ref": "#/definitions/staff.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error - invalid email format or staff already invited",
+                        "schema": {
+                            "$ref": "#/definitions/staff.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - user not authenticated or business_id missing",
+                        "schema": {
+                            "$ref": "#/definitions/staff.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/staff.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/staff/invites/accept": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Completes staff member onboarding by accepting invitation and setting password. User must be authenticated (user_id from context). Uses zero-knowledge invitation flow - staff sets their own password without server storing temporary passwords. Staff becomes active member after acceptance. Token is marked as used and cannot be reused.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Staff"
+                ],
+                "summary": "Accept Invitation (Staff Onboarding)",
+                "parameters": [
+                    {
+                        "description": "Invitation token and password for account setup",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/staff.AcceptInviteHTTPRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Invitation accepted successfully, staff member activated",
+                        "schema": {
+                            "$ref": "#/definitions/staff.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid or expired token, password validation failure",
+                        "schema": {
+                            "$ref": "#/definitions/staff.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - user not authenticated or user_id missing",
+                        "schema": {
+                            "$ref": "#/definitions/staff.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/staff.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/staff/invites/validate": {
+            "post": {
+                "description": "Validates staff invitation token before acceptance. Returns invitation details if token is valid and not expired. No authentication required - used during invitation onboarding flow. Token must be valid and within 7-day expiration window.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Staff"
+                ],
+                "summary": "Validate Invitation Token",
+                "parameters": [
+                    {
+                        "description": "Invitation token to validate",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/staff.ValidateInviteHTTPRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Token is valid with invitation details (FirstName, LastName, Email, BusinessName)",
+                        "schema": {
+                            "$ref": "#/definitions/staff.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid, expired, or already-used invitation token",
+                        "schema": {
+                            "$ref": "#/definitions/staff.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/staff.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/staff/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves specific staff member details by staff ID. Includes services assigned, specializations, user account info, and availability status. Staff member must belong to authenticated business.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Staff"
+                ],
+                "summary": "Get Staff Member Details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Staff ID (UUID format)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Staff details retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/staff.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid staff ID format",
+                        "schema": {
+                            "$ref": "#/definitions/staff.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - user not authenticated or business_id missing",
+                        "schema": {
+                            "$ref": "#/definitions/staff.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Staff member not found",
+                        "schema": {
+                            "$ref": "#/definitions/staff.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/staff.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates staff member details for authenticated business. Supports partial updates - only provided fields are modified. Updates name, email, phone, specializations, and availability status. Staff member must belong to business.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Staff"
+                ],
+                "summary": "Update Staff Member",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Staff ID (UUID format)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Staff update data (all fields optional - FirstName, LastName, Email, Phone, Specializations, IsActive)",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/staff.UpdateStaffHTTPRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Staff member updated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/staff.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error - invalid field values or invalid staff ID format",
+                        "schema": {
+                            "$ref": "#/definitions/staff.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - user not authenticated or business_id missing",
+                        "schema": {
+                            "$ref": "#/definitions/staff.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Staff member not found",
+                        "schema": {
+                            "$ref": "#/definitions/staff.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/staff.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Soft-deletes a staff member by marking as inactive. Staff member is not permanently deleted - remains in database for historical booking records. Deactivated staff cannot book new appointments. Staff member must belong to authenticated business.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Staff"
+                ],
+                "summary": "Deactivate Staff Member",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Staff ID (UUID format)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Staff member deactivated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/staff.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error or invalid staff ID format",
+                        "schema": {
+                            "$ref": "#/definitions/staff.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - user not authenticated or business_id missing",
+                        "schema": {
+                            "$ref": "#/definitions/staff.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Staff member not found",
+                        "schema": {
+                            "$ref": "#/definitions/staff.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/staff.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/staff/{staff_id}/services": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves all services assigned to a specific staff member. Returns services the staff member is qualified and available to provide. Staff member must belong to authenticated business.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Service"
+                ],
+                "summary": "Get Staff Services",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Staff Member ID (UUID format)",
+                        "name": "staff_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Staff services retrieved successfully (array of ServiceHTTPResponse)",
+                        "schema": {
+                            "$ref": "#/definitions/service.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid staff ID format",
+                        "schema": {
+                            "$ref": "#/definitions/service.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - user not authenticated or business_id missing",
+                        "schema": {
+                            "$ref": "#/definitions/service.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/service.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Assigns multiple services to a staff member. Staff member becomes available to book appointments for assigned services. All services must exist and belong to authenticated business. Staff member must belong to business.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Service"
+                ],
+                "summary": "Assign Services to Staff",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Staff Member ID (UUID format)",
+                        "name": "staff_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Service IDs to assign (ServiceIDs array of UUID strings)",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.AssignServicesHTTPRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Services assigned to staff successfully",
+                        "schema": {
+                            "$ref": "#/definitions/service.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error - invalid staff ID format, invalid service IDs, or staff/service not found",
+                        "schema": {
+                            "$ref": "#/definitions/service.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - user not authenticated or business_id missing",
+                        "schema": {
+                            "$ref": "#/definitions/service.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/service.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/staff/{staff_id}/services/{service_id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Removes a specific service from a staff member's service list. Staff member becomes unavailable to book appointments for this service. Service assignment removed but service and staff member remain active.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Service"
+                ],
+                "summary": "Remove Service from Staff",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Staff Member ID (UUID format)",
+                        "name": "staff_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Service ID (UUID format)",
+                        "name": "service_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Service removed from staff successfully",
+                        "schema": {
+                            "$ref": "#/definitions/service.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error - invalid staff/service ID format or service not assigned to staff",
+                        "schema": {
+                            "$ref": "#/definitions/service.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - user not authenticated or business_id missing",
+                        "schema": {
+                            "$ref": "#/definitions/service.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/service.ErrorResponse"
                         }
                     }
                 }
@@ -138,6 +1779,14 @@
                 }
             }
         },
+        "auth.ForgotPasswordHTTPRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                }
+            }
+        },
         "auth.LoginHTTPRequest": {
             "type": "object",
             "properties": {
@@ -145,6 +1794,14 @@
                     "type": "string"
                 },
                 "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "auth.RefreshTokenHTTPRequest": {
+            "type": "object",
+            "properties": {
+                "refresh_token": {
                     "type": "string"
                 }
             }
@@ -167,6 +1824,29 @@
                 "phone": {
                     "type": "string",
                     "example": "+994501234567"
+                }
+            }
+        },
+        "auth.ResetPasswordHTTPRequest": {
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "auth.SuccessResponseDTO": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
                 }
             }
         },
@@ -222,6 +1902,325 @@
                 "UserTypeStaff",
                 "UserTypeSoloPractitioner"
             ]
+        },
+        "business.BusinessHTTPResponse": {
+            "type": "object",
+            "properties": {
+                "business_type": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "industry": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "owner_id": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "service_category": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "business.CreateMultiBusinessHTTPRequest": {
+            "type": "object",
+            "properties": {
+                "industry": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                }
+            }
+        },
+        "business.CreateSoloBusinessHTTPRequest": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "service_category": {
+                    "type": "string"
+                }
+            }
+        },
+        "business.ErrorHTTPResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "business.SuccessHTTPResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "business.UpdateBusinessHTTPRequest": {
+            "type": "object",
+            "properties": {
+                "industry": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                }
+            }
+        },
+        "location.CreateLocationHTTPRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                }
+            }
+        },
+        "location.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "details": {},
+                "error": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "location.SuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "location.UpdateLocationHTTPRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                }
+            }
+        },
+        "service.AssignServicesHTTPRequest": {
+            "type": "object",
+            "properties": {
+                "service_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "service.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "details": {},
+                "error": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "service.SuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "service.UpdateServiceHTTPRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "duration_minutes": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                }
+            }
+        },
+        "staff.AcceptInviteHTTPRequest": {
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "staff.CreateStaffHTTPRequest": {
+            "type": "object",
+            "properties": {
+                "location_id": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "staff.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "details": {},
+                "error": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "staff.InviteStaffHTTPRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "location_id": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                }
+            }
+        },
+        "staff.SuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "staff.UpdateStaffHTTPRequest": {
+            "type": "object",
+            "properties": {
+                "bio": {
+                    "type": "string"
+                },
+                "department": {
+                    "type": "string"
+                },
+                "hourly_rate": {
+                    "type": "number"
+                },
+                "location_id": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "staff.ValidateInviteHTTPRequest": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string"
+                }
+            }
         }
     },
     "securityDefinitions": {

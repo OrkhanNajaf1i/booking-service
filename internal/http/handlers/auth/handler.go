@@ -33,16 +33,17 @@ func (h *Handler) sendError(w http.ResponseWriter, status int, code string) {
 	h.sendJSON(w, status, errorDTO)
 }
 
-// @Summary      İstifadəçi qeydiyyatı
-// @Description  Yeni istifadəçi hesabı yaradır (account-first).
+// @Summary      User Registration
+// @Description  Creates a new user account (account-first registration). Initializes a user without a business. After successful registration, user must complete onboarding wizard to create business.
 // @Tags         Auth
 // @Accept       json
 // @Produce      json
-// @Param        request body RegisterHTTPRequest true "Qeydiyyat məlumatları"
-// @Success      201  {object}  AuthResponseDTO
-// @Failure      400  {object}  ErrorResponseDTO
-// @Failure      409  {object}  ErrorResponseDTO
-// @Router       /auth/register [post]
+// @Param        request body RegisterHTTPRequest true "Registration data (Email, Password, FullName, Phone)"
+// @Success      201  {object}  AuthResponseDTO "User account created successfully with JWT tokens"
+// @Failure      400  {object}  ErrorResponseDTO "Validation error - missing fields, invalid format, password too short"
+// @Failure      409  {object}  ErrorResponseDTO "Email already exists"
+// @Failure      500  {object}  ErrorResponseDTO "Internal server error"
+// @Router       /api/v1/auth/register [post]
 func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
@@ -98,15 +99,18 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 	h.sendJSON(w, http.StatusCreated, httpResp)
 }
 
-// @Summary      Giriş (Login)
-// @Description  Email və şifrə ilə giriş edərək JWT tokenlərini alır.
+// @Summary      User Login
+// @Description  Authenticates user using email and password. Returns JWT access and refresh tokens. On successful login, if user is owner, onboarding wizard triggered (if not completed).
 // @Tags         Auth
 // @Accept       json
 // @Produce      json
-// @Param        request body LoginHTTPRequest true "Giriş məlumatları"
-// @Success      200  {object}  AuthResponseDTO
-// @Failure      401  {object}  ErrorResponseDTO
-// @Router       /auth/login [post]
+// @Param        request body LoginHTTPRequest true "Login credentials (Email, Password)"
+// @Success      200  {object}  AuthResponseDTO "Authentication successful, tokens returned"
+// @Failure      400  {object}  ErrorResponseDTO "Validation error"
+// @Failure      401  {object}  ErrorResponseDTO "Invalid credentials"
+// @Failure      403  {object}  ErrorResponseDTO "User account is inactive"
+// @Failure      500  {object}  ErrorResponseDTO "Internal server error"
+// @Router       /api/v1/auth/login [post]
 func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
@@ -159,6 +163,17 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	h.sendJSON(w, http.StatusOK, httpRes)
 }
 
+// @Summary      Refresh Access Token
+// @Description  Generates new access token using valid refresh token. Refresh token must not be expired or revoked. Used to maintain user sessions without re-authentication.
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        request body RefreshTokenHTTPRequest true "Refresh token (RefreshToken field)"
+// @Success      200  {object}  SuccessResponseDTO "New access token generated successfully with 15-minute expiration"
+// @Failure      400  {object}  ErrorResponseDTO "Validation error"
+// @Failure      401  {object}  ErrorResponseDTO "Invalid, expired, or revoked refresh token; User not found"
+// @Failure      500  {object}  ErrorResponseDTO "Internal server error"
+// @Router       /api/v1/auth/refresh [post]
 func (h *Handler) RefreshAccessToken(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
@@ -212,6 +227,16 @@ func (h *Handler) RefreshAccessToken(w http.ResponseWriter, r *http.Request) {
 	h.sendJSON(w, http.StatusOK, successResponse)
 }
 
+// @Summary      Forgot Password
+// @Description  Initiates password reset process. Sends password reset link to user email. Reset link contains unique token valid for limited time (typically 1 hour).
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        request body ForgotPasswordHTTPRequest true "User email address"
+// @Success      200  {object}  SuccessResponseDTO "Password reset email sent successfully"
+// @Failure      400  {object}  ErrorResponseDTO "Validation error - invalid email format"
+// @Failure      500  {object}  ErrorResponseDTO "Internal server error"
+// @Router       /api/v1/auth/forgot-password [post]
 func (h *Handler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
@@ -242,6 +267,17 @@ func (h *Handler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	)
 	h.sendJSON(w, http.StatusOK, successResp)
 }
+
+// @Summary      Reset Password
+// @Description  Completes password reset process using reset token and new password. Reset token generated by ForgotPassword endpoint expires after 1 hour. Token cannot be reused after first successful use.
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        request body ResetPasswordHTTPRequest true "Reset token and new password"
+// @Success      200  {object}  SuccessResponseDTO "Password reset successfully"
+// @Failure      400  {object}  ErrorResponseDTO "Invalid or expired token; Password validation failure; User not found"
+// @Failure      500  {object}  ErrorResponseDTO "Internal server error"
+// @Router       /api/v1/auth/reset-password [post]
 func (h *Handler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
@@ -299,6 +335,16 @@ func (h *Handler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	h.sendJSON(w, http.StatusOK, successResp)
 }
 
+// @Summary      User Logout
+// @Description  Revokes user refresh token, effectively ending session. After logout, refresh token cannot be used to obtain new access tokens. User must log in again to get new tokens.
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        request body RefreshTokenHTTPRequest true "Refresh token to revoke"
+// @Success      200  {object}  SuccessResponseDTO "Logout successful, refresh token revoked"
+// @Failure      400  {object}  ErrorResponseDTO "Validation error or invalid refresh token"
+// @Failure      500  {object}  ErrorResponseDTO "Internal server error"
+// @Router       /api/v1/auth/logout [post]
 func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()

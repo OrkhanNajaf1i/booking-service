@@ -2,8 +2,6 @@
 package business
 
 import (
-	"fmt"
-	"strings"
 	"time"
 
 	"github.com/OrkhanNajaf1i/booking-service/internal/domain/business"
@@ -11,128 +9,91 @@ import (
 )
 
 type CreateSoloBusinessHTTPRequest struct {
-	Name            string `json:"name" binding:"required"`
-	Phone           string `json:"phone" binding:"required"`
-	ServiceCategory string `json:"service_category" binding:"required"`
-	Industry        string `json:"industry,omitempty"`
+	Name            string `json:"name"`
+	ServiceCategory string `json:"service_category"`
+	Phone           string `json:"phone"`
 }
 
 type CreateMultiBusinessHTTPRequest struct {
-	Name            string `json:"name" binding:"required"`
-	Phone           string `json:"phone" binding:"required"`
-	Industry        string `json:"industry" binding:"required"`
-	ServiceCategory string `json:"service_category,omitempty"`
+	Name     string `json:"name"`
+	Industry string `json:"industry"`
+	Phone    string `json:"phone"`
 }
 
-type InviteStaffHTTPRequest struct {
-	Email      string `json:"email"`
-	Phone      string `json:"phone"`
-	Role       string `json:"role" binding:"required"`
-	LocationID string `json:"location_id,omitempty"`
-	Title      string `json:"title,omitempty"`
+type UpdateBusinessHTTPRequest struct {
+	Name     string `json:"name"`
+	Industry string `json:"industry"`
+	Phone    string `json:"phone"`
 }
 
-type JoinWithInviteHTTPRequest struct {
-	Token    string `json:"token" binding:"required"`
-	Password string `json:"password" binding:"required"`
+type BusinessHTTPResponse struct {
+	ID              uuid.UUID `json:"id"`
+	Name            string    `json:"name"`
+	OwnerID         uuid.UUID `json:"owner_id"`
+	Industry        string    `json:"industry"`
+	ServiceCategory string    `json:"service_category"`
+	Phone           string    `json:"phone"`
+	BusinessType    string    `json:"business_type"`
+	IsActive        bool      `json:"is_active"`
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
 }
 
-type BusinessResponse struct {
-	ID              string `json:"id"`
-	Name            string `json:"name"`
-	Phone           string `json:"phone,omitempty"`
-	OwnerID         string `json:"owner_id"`
-	Industry        string `json:"industry,omitempty"`
-	ServiceCategory string `json:"service_category,omitempty"`
-	BusinessType    string `json:"business_type"`
-	IsActive        bool   `json:"is_active"`
-	CreatedAt       string `json:"created_at"`
+type ErrorHTTPResponse struct {
+	Error   string `json:"error"`
+	Code    string `json:"code"`
+	Message string `json:"message"`
 }
 
-type InviteResponse struct {
-	Token     string `json:"token"`
-	ExpiresAt string `json:"expires_at"`
-	Message   string `json:"message"`
-}
-
-type SuccessResponse struct {
+type SuccessHTTPResponse struct {
 	Success bool        `json:"success"`
 	Data    interface{} `json:"data,omitempty"`
 	Message string      `json:"message,omitempty"`
 }
 
-type ErrorResponse struct {
-	Success bool        `json:"success"`
-	Error   string      `json:"error"`
-	Details interface{} `json:"details,omitempty"`
+func ToBusinessHTTPResponse(business *business.Business) *BusinessHTTPResponse {
+	if business == nil {
+		return nil
+	}
+
+	return &BusinessHTTPResponse{
+		ID:              business.ID,
+		Name:            business.Name,
+		OwnerID:         business.OwnerID,
+		Industry:        business.Industry,
+		ServiceCategory: business.ServiceCategory,
+		Phone:           business.Phone,
+		BusinessType:    string(business.BusinessType),
+		IsActive:        business.IsActive,
+		CreatedAt:       business.CreatedAt,
+		UpdatedAt:       business.UpdatedAt,
+	}
 }
 
-func ToDomainCreateBusinessRequest(
-	name, phone, industry, serviceCategory string,
-	businessType business.BusinessType,
-) *business.CreateBusinessRequest {
+func (request *CreateSoloBusinessHTTPRequest) ToCreateBusinessRequest() *business.CreateBusinessRequest {
 	return &business.CreateBusinessRequest{
-		Name:            strings.TrimSpace(name),
-		Phone:           strings.TrimSpace(phone),
-		Industry:        strings.TrimSpace(industry),
-		ServiceCategory: strings.TrimSpace(serviceCategory),
-		BusinessType:    businessType,
+		Name:            request.Name,
+		ServiceCategory: request.ServiceCategory,
+		Phone:           request.Phone,
+		BusinessType:    business.BusinessTypeSolo,
+		Industry:        "",
 	}
 }
 
-func ToDomainInviteStaffRequest(req *InviteStaffHTTPRequest) (*business.InviteStaffRequest, error) {
-	var role business.StaffRole
-	switch strings.ToLower(strings.TrimSpace(req.Role)) {
-	case "admin":
-		role = business.StaffRoleAdmin
-	case "manager":
-		role = business.StaffRoleManager
-	case "staff":
-		role = business.StaffRoleStaff
-	default:
-		return nil, fmt.Errorf("invalid role: %s (valid: admin, manager, staff)", req.Role)
-	}
-	var locationID *uuid.UUID
-	if req.LocationID != "" {
-		parsed, err := uuid.Parse(req.LocationID)
-		if err != nil {
-			return nil, fmt.Errorf("invalid location_id format: %w", err)
-		}
-		locationID = &parsed
-	}
-
-	return &business.InviteStaffRequest{
-		Email:      strings.TrimSpace(req.Email),
-		Phone:      strings.TrimSpace(req.Phone),
-		Role:       role,
-		LocationID: locationID,
-		Title:      strings.TrimSpace(req.Title),
-	}, nil
-}
-
-func ToBusinessResponse(b *business.Business) *BusinessResponse {
-	return &BusinessResponse{
-		ID:              b.ID.String(),
-		Name:            b.Name,
-		Phone:           b.Phone,
-		OwnerID:         b.OwnerID.String(),
-		Industry:        b.Industry,
-		ServiceCategory: b.ServiceCategory,
-		BusinessType:    string(b.BusinessType),
-		IsActive:        b.IsActive,
-		CreatedAt:       b.CreatedAt.Format(time.RFC3339),
+func (request *CreateMultiBusinessHTTPRequest) ToCreateBusinessRequest() *business.CreateBusinessRequest {
+	return &business.CreateBusinessRequest{
+		Name:            request.Name,
+		Industry:        request.Industry,
+		Phone:           request.Phone,
+		BusinessType:    business.BusinessTypeMulti,
+		ServiceCategory: "",
 	}
 }
 
-func ToInviteResponse(token string, expiresAt time.Time) *InviteResponse {
-	return &InviteResponse{
-		Token:     token,
-		ExpiresAt: expiresAt.Format(time.RFC3339),
-		Message:   "Invite created successfully. Send this token to the invitee.",
+func (request *UpdateBusinessHTTPRequest) ToUpdateBusinessRequest() *business.UpdateBusinessRequest {
+	return &business.UpdateBusinessRequest{
+		Name:     request.Name,
+		Industry: request.Industry,
+		Phone:    request.Phone,
 	}
 }
-
-// var (
-// 	ErrInvalidRole       = &ErrorResponse{Success: false, Error: "Invalid role. Valid values: admin, manager, staff"}
-// 	ErrInvalidLocationID = &ErrorResponse{Success: false, Error: "Invalid location_id format"}
-// )
