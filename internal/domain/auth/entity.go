@@ -30,10 +30,6 @@ const (
 	StaffRoleAdministrator StaffRole = "admin"
 )
 
-// func (ur UserRole) String() string {
-//  return string(ur)
-// }
-
 type User struct {
 	ID            uuid.UUID  `db:"id" json:"id"`
 	Email         string     `db:"email" json:"email"`

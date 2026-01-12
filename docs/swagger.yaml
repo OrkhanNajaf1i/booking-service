@@ -26,11 +26,21 @@ definitions:
       success:
         type: boolean
     type: object
+  auth.ForgotPasswordHTTPRequest:
+    properties:
+      email:
+        type: string
+    type: object
   auth.LoginHTTPRequest:
     properties:
       email:
         type: string
       password:
+        type: string
+    type: object
+  auth.RefreshTokenHTTPRequest:
+    properties:
+      refresh_token:
         type: string
     type: object
   auth.RegisterHTTPRequest:
@@ -47,6 +57,21 @@ definitions:
       phone:
         example: "+994501234567"
         type: string
+    type: object
+  auth.ResetPasswordHTTPRequest:
+    properties:
+      password:
+        type: string
+      token:
+        type: string
+    type: object
+  auth.SuccessResponseDTO:
+    properties:
+      data: {}
+      message:
+        type: string
+      success:
+        type: boolean
     type: object
   auth.UserResponseDTO:
     properties:
@@ -85,6 +110,214 @@ definitions:
     - UserTypeOwner
     - UserTypeStaff
     - UserTypeSoloPractitioner
+  business.BusinessHTTPResponse:
+    properties:
+      business_type:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      industry:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      owner_id:
+        type: string
+      phone:
+        type: string
+      service_category:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  business.CreateMultiBusinessHTTPRequest:
+    properties:
+      industry:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+    type: object
+  business.CreateSoloBusinessHTTPRequest:
+    properties:
+      name:
+        type: string
+      phone:
+        type: string
+      service_category:
+        type: string
+    type: object
+  business.ErrorHTTPResponse:
+    properties:
+      code:
+        type: string
+      error:
+        type: string
+      message:
+        type: string
+    type: object
+  business.SuccessHTTPResponse:
+    properties:
+      data: {}
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  business.UpdateBusinessHTTPRequest:
+    properties:
+      industry:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+    type: object
+  location.CreateLocationHTTPRequest:
+    properties:
+      address:
+        type: string
+      city:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+    required:
+    - name
+    type: object
+  location.ErrorResponse:
+    properties:
+      details: {}
+      error:
+        type: string
+      success:
+        type: boolean
+    type: object
+  location.SuccessResponse:
+    properties:
+      data: {}
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  location.UpdateLocationHTTPRequest:
+    properties:
+      address:
+        type: string
+      city:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+    required:
+    - name
+    type: object
+  service.AssignServicesHTTPRequest:
+    properties:
+      service_ids:
+        items:
+          type: string
+        type: array
+    type: object
+  service.ErrorResponse:
+    properties:
+      details: {}
+      error:
+        type: string
+      success:
+        type: boolean
+    type: object
+  service.SuccessResponse:
+    properties:
+      data: {}
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  service.UpdateServiceHTTPRequest:
+    properties:
+      description:
+        type: string
+      duration_minutes:
+        type: integer
+      name:
+        type: string
+      price:
+        type: number
+    type: object
+  staff.AcceptInviteHTTPRequest:
+    properties:
+      password:
+        type: string
+      token:
+        type: string
+    type: object
+  staff.CreateStaffHTTPRequest:
+    properties:
+      location_id:
+        type: string
+      role:
+        type: string
+      title:
+        type: string
+      user_id:
+        type: string
+    type: object
+  staff.ErrorResponse:
+    properties:
+      details: {}
+      error:
+        type: string
+      success:
+        type: boolean
+    type: object
+  staff.InviteStaffHTTPRequest:
+    properties:
+      email:
+        type: string
+      location_id:
+        type: string
+      phone:
+        type: string
+      role:
+        type: string
+    type: object
+  staff.SuccessResponse:
+    properties:
+      data: {}
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  staff.UpdateStaffHTTPRequest:
+    properties:
+      bio:
+        type: string
+      department:
+        type: string
+      hourly_rate:
+        type: number
+      location_id:
+        type: string
+      role:
+        type: string
+      title:
+        type: string
+    type: object
+  staff.ValidateInviteHTTPRequest:
+    properties:
+      token:
+        type: string
+    type: object
 host: booking-service-sld9.onrender.com
 info:
   contact: {}
@@ -92,13 +325,47 @@ info:
   title: Booking Service API
   version: "1.0"
 paths:
-  /auth/login:
+  /api/v1/auth/forgot-password:
     post:
       consumes:
       - application/json
-      description: Email və şifrə ilə giriş edərək JWT tokenlərini alır.
+      description: Initiates password reset process. Sends password reset link to
+        user email. Reset link contains unique token valid for limited time (typically
+        1 hour).
       parameters:
-      - description: Giriş məlumatları
+      - description: User email address
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.ForgotPasswordHTTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Password reset email sent successfully
+          schema:
+            $ref: '#/definitions/auth.SuccessResponseDTO'
+        "400":
+          description: Validation error - invalid email format
+          schema:
+            $ref: '#/definitions/auth.ErrorResponseDTO'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/auth.ErrorResponseDTO'
+      summary: Forgot Password
+      tags:
+      - Auth
+  /api/v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates user using email and password. Returns JWT access
+        and refresh tokens. On successful login, if user is owner, onboarding wizard
+        triggered (if not completed).
+      parameters:
+      - description: Login credentials (Email, Password)
         in: body
         name: request
         required: true
@@ -108,23 +375,104 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Authentication successful, tokens returned
           schema:
             $ref: '#/definitions/auth.AuthResponseDTO'
-        "401":
-          description: Unauthorized
+        "400":
+          description: Validation error
           schema:
             $ref: '#/definitions/auth.ErrorResponseDTO'
-      summary: Giriş (Login)
+        "401":
+          description: Invalid credentials
+          schema:
+            $ref: '#/definitions/auth.ErrorResponseDTO'
+        "403":
+          description: User account is inactive
+          schema:
+            $ref: '#/definitions/auth.ErrorResponseDTO'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/auth.ErrorResponseDTO'
+      summary: User Login
       tags:
       - Auth
-  /auth/register:
+  /api/v1/auth/logout:
     post:
       consumes:
       - application/json
-      description: Yeni istifadəçi hesabı yaradır (account-first).
+      description: Revokes user refresh token, effectively ending session. After logout,
+        refresh token cannot be used to obtain new access tokens. User must log in
+        again to get new tokens.
       parameters:
-      - description: Qeydiyyat məlumatları
+      - description: Refresh token to revoke
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.RefreshTokenHTTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Logout successful, refresh token revoked
+          schema:
+            $ref: '#/definitions/auth.SuccessResponseDTO'
+        "400":
+          description: Validation error or invalid refresh token
+          schema:
+            $ref: '#/definitions/auth.ErrorResponseDTO'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/auth.ErrorResponseDTO'
+      summary: User Logout
+      tags:
+      - Auth
+  /api/v1/auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Generates new access token using valid refresh token. Refresh token
+        must not be expired or revoked. Used to maintain user sessions without re-authentication.
+      parameters:
+      - description: Refresh token (RefreshToken field)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.RefreshTokenHTTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: New access token generated successfully with 15-minute expiration
+          schema:
+            $ref: '#/definitions/auth.SuccessResponseDTO'
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/auth.ErrorResponseDTO'
+        "401":
+          description: Invalid, expired, or revoked refresh token; User not found
+          schema:
+            $ref: '#/definitions/auth.ErrorResponseDTO'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/auth.ErrorResponseDTO'
+      summary: Refresh Access Token
+      tags:
+      - Auth
+  /api/v1/auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user account (account-first registration). Initializes
+        a user without a business. After successful registration, user must complete
+        onboarding wizard to create business.
+      parameters:
+      - description: Registration data (Email, Password, FullName, Phone)
         in: body
         name: request
         required: true
@@ -134,20 +482,1040 @@ paths:
       - application/json
       responses:
         "201":
-          description: Created
+          description: User account created successfully with JWT tokens
           schema:
             $ref: '#/definitions/auth.AuthResponseDTO'
         "400":
-          description: Bad Request
+          description: Validation error - missing fields, invalid format, password
+            too short
           schema:
             $ref: '#/definitions/auth.ErrorResponseDTO'
         "409":
-          description: Conflict
+          description: Email already exists
           schema:
             $ref: '#/definitions/auth.ErrorResponseDTO'
-      summary: İstifadəçi qeydiyyatı
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/auth.ErrorResponseDTO'
+      summary: User Registration
       tags:
       - Auth
+  /api/v1/auth/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Completes password reset process using reset token and new password.
+        Reset token generated by ForgotPassword endpoint expires after 1 hour. Token
+        cannot be reused after first successful use.
+      parameters:
+      - description: Reset token and new password
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.ResetPasswordHTTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Password reset successfully
+          schema:
+            $ref: '#/definitions/auth.SuccessResponseDTO'
+        "400":
+          description: Invalid or expired token; Password validation failure; User
+            not found
+          schema:
+            $ref: '#/definitions/auth.ErrorResponseDTO'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/auth.ErrorResponseDTO'
+      summary: Reset Password
+      tags:
+      - Auth
+  /api/v1/business:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the authenticated user's business information. User must
+        be a business owner. Returns full business details including location, staff,
+        and service information.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Business details retrieved successfully
+          schema:
+            $ref: '#/definitions/business.BusinessHTTPResponse'
+        "401":
+          description: Unauthorized - user not authenticated
+          schema:
+            $ref: '#/definitions/business.ErrorHTTPResponse'
+        "404":
+          description: Business not found for user
+          schema:
+            $ref: '#/definitions/business.ErrorHTTPResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/business.ErrorHTTPResponse'
+      security:
+      - BearerAuth: []
+      summary: Get My Business
+      tags:
+      - Business
+    put:
+      consumes:
+      - application/json
+      description: Updates the authenticated user's business information. Only business
+        owner can update. Updates business name, phone, service category, and industry
+        fields. Validation applied to all fields.
+      parameters:
+      - description: Business update data (BusinessName, Phone, ServiceCategory, Industry
+          - all optional)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/business.UpdateBusinessHTTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Business updated successfully
+          schema:
+            $ref: '#/definitions/business.SuccessHTTPResponse'
+        "400":
+          description: Validation error - invalid field values
+          schema:
+            $ref: '#/definitions/business.ErrorHTTPResponse'
+        "401":
+          description: Unauthorized - user not authenticated or not owner
+          schema:
+            $ref: '#/definitions/business.ErrorHTTPResponse'
+        "404":
+          description: Business not found
+          schema:
+            $ref: '#/definitions/business.ErrorHTTPResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/business.ErrorHTTPResponse'
+      security:
+      - BearerAuth: []
+      summary: Update Business
+      tags:
+      - Business
+  /api/v1/businesses/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves business information by business ID. Can be accessed
+        by any authenticated user (public business view). Returns business profile,
+        location, and active staff information.
+      parameters:
+      - description: Business ID (UUID format)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Business details retrieved successfully
+          schema:
+            $ref: '#/definitions/business.BusinessHTTPResponse'
+        "400":
+          description: Invalid business ID format
+          schema:
+            $ref: '#/definitions/business.ErrorHTTPResponse'
+        "401":
+          description: Unauthorized - user not authenticated
+          schema:
+            $ref: '#/definitions/business.ErrorHTTPResponse'
+        "404":
+          description: Business not found
+          schema:
+            $ref: '#/definitions/business.ErrorHTTPResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/business.ErrorHTTPResponse'
+      security:
+      - BearerAuth: []
+      summary: Get Business by ID
+      tags:
+      - Business
+  /api/v1/businesses/multi:
+    post:
+      consumes:
+      - application/json
+      description: Creates a multi-staff business for the authenticated user. Owner
+        can invite staff members later. Staff management handled through separate
+        endpoints.
+      parameters:
+      - description: Multi-staff business data (BusinessName, Phone, ServiceCategory,
+          Industry)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/business.CreateMultiBusinessHTTPRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Multi-staff business created successfully
+          schema:
+            $ref: '#/definitions/business.BusinessHTTPResponse'
+        "400":
+          description: Validation error - invalid or missing required fields
+          schema:
+            $ref: '#/definitions/business.ErrorHTTPResponse'
+        "401":
+          description: Unauthorized - user not authenticated
+          schema:
+            $ref: '#/definitions/business.ErrorHTTPResponse'
+        "409":
+          description: Conflict - business already exists for user
+          schema:
+            $ref: '#/definitions/business.ErrorHTTPResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/business.ErrorHTTPResponse'
+      security:
+      - BearerAuth: []
+      summary: Create Multi-Staff Business
+      tags:
+      - Business
+  /api/v1/businesses/solo:
+    post:
+      consumes:
+      - application/json
+      description: Creates a solo practitioner business for the authenticated user.
+        Automatically generates business, location, and active staff records. User
+        role set to solo_practitioner.
+      parameters:
+      - description: Solo business data (BusinessName, Phone, ServiceCategory, Industry)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/business.CreateSoloBusinessHTTPRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Solo business created successfully
+          schema:
+            $ref: '#/definitions/business.BusinessHTTPResponse'
+        "400":
+          description: Validation error - invalid or missing required fields
+          schema:
+            $ref: '#/definitions/business.ErrorHTTPResponse'
+        "401":
+          description: Unauthorized - user not authenticated
+          schema:
+            $ref: '#/definitions/business.ErrorHTTPResponse'
+        "409":
+          description: Conflict - business already exists for user
+          schema:
+            $ref: '#/definitions/business.ErrorHTTPResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/business.ErrorHTTPResponse'
+      security:
+      - BearerAuth: []
+      summary: Create Solo Business
+      tags:
+      - Business
+  /api/v1/locations:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all locations for the authenticated business. Returns
+        complete list of active and inactive locations with full details.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Locations retrieved successfully (array of LocationHTTPResponse)
+          schema:
+            $ref: '#/definitions/location.SuccessResponse'
+        "401":
+          description: Unauthorized - user not authenticated or business_id missing
+          schema:
+            $ref: '#/definitions/location.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/location.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List All Locations
+      tags:
+      - Location
+    post:
+      consumes:
+      - application/json
+      description: Creates a new location for the authenticated business. Location
+        is address where services are provided. Each business can have multiple locations
+        (main office, branch, etc).
+      parameters:
+      - description: Location data (Name, Address, City, State, Country, PostalCode,
+          Latitude, Longitude, PhoneNumber)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/location.CreateLocationHTTPRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Location created successfully with generated UUID
+          schema:
+            $ref: '#/definitions/location.SuccessResponse'
+        "400":
+          description: Validation error - invalid or missing required fields
+          schema:
+            $ref: '#/definitions/location.ErrorResponse'
+        "401":
+          description: Unauthorized - user not authenticated or business_id missing
+          schema:
+            $ref: '#/definitions/location.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/location.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create Location
+      tags:
+      - Location
+  /api/v1/locations/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft-deletes a location by marking it as inactive. Location is
+        not permanently deleted - it remains in database for historical records. Deactivated
+        locations cannot be used for new bookings. Location must belong to authenticated
+        business.
+      parameters:
+      - description: Location ID (UUID format)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Location deactivated successfully
+          schema:
+            $ref: '#/definitions/location.SuccessResponse'
+        "400":
+          description: Validation error or invalid location ID format
+          schema:
+            $ref: '#/definitions/location.ErrorResponse'
+        "401":
+          description: Unauthorized - user not authenticated or business_id missing
+          schema:
+            $ref: '#/definitions/location.ErrorResponse'
+        "404":
+          description: Location not found
+          schema:
+            $ref: '#/definitions/location.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/location.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Deactivate Location
+      tags:
+      - Location
+    get:
+      consumes:
+      - application/json
+      description: Retrieves specific location details by location ID. Location must
+        belong to authenticated business (multi-tenancy filtering applied).
+      parameters:
+      - description: Location ID (UUID format)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Location details retrieved successfully
+          schema:
+            $ref: '#/definitions/location.SuccessResponse'
+        "400":
+          description: Invalid location ID format
+          schema:
+            $ref: '#/definitions/location.ErrorResponse'
+        "401":
+          description: Unauthorized - user not authenticated or business_id missing
+          schema:
+            $ref: '#/definitions/location.ErrorResponse'
+        "404":
+          description: Location not found
+          schema:
+            $ref: '#/definitions/location.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/location.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get Location by ID
+      tags:
+      - Location
+    put:
+      consumes:
+      - application/json
+      description: Updates location details for authenticated business. Supports partial
+        updates - only provided fields are updated. Location must belong to business
+        (multi-tenancy filtering applied).
+      parameters:
+      - description: Location ID (UUID format)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Location update data (all fields optional - Name, Address, City,
+          State, Country, PostalCode, Latitude, Longitude, PhoneNumber)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/location.UpdateLocationHTTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Location updated successfully
+          schema:
+            $ref: '#/definitions/location.SuccessResponse'
+        "400":
+          description: Validation error - invalid field values or invalid location
+            ID format
+          schema:
+            $ref: '#/definitions/location.ErrorResponse'
+        "401":
+          description: Unauthorized - user not authenticated or business_id missing
+          schema:
+            $ref: '#/definitions/location.ErrorResponse'
+        "404":
+          description: Location not found
+          schema:
+            $ref: '#/definitions/location.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/location.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update Location
+      tags:
+      - Location
+  /api/v1/services:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all services offered by the authenticated business. Returns
+        complete list of active and inactive services with pricing, duration, and
+        staff assignment information.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Services retrieved successfully (array of ServiceHTTPResponse)
+          schema:
+            $ref: '#/definitions/service.SuccessResponse'
+        "401":
+          description: Unauthorized - user not authenticated or business_id missing
+          schema:
+            $ref: '#/definitions/service.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/service.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List All Services
+      tags:
+      - Service
+  /api/v1/services/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft-deletes a service by marking it as inactive. Service is not
+        permanently deleted - remains in database for historical records. Deactivated
+        services cannot be booked. Service must belong to authenticated business.
+      parameters:
+      - description: Service ID (UUID format)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Service deactivated successfully
+          schema:
+            $ref: '#/definitions/service.SuccessResponse'
+        "400":
+          description: Validation error or invalid service ID format
+          schema:
+            $ref: '#/definitions/service.ErrorResponse'
+        "401":
+          description: Unauthorized - user not authenticated or business_id missing
+          schema:
+            $ref: '#/definitions/service.ErrorResponse'
+        "404":
+          description: Service not found
+          schema:
+            $ref: '#/definitions/service.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/service.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Deactivate Service
+      tags:
+      - Service
+    get:
+      consumes:
+      - application/json
+      description: Retrieves specific service details by service ID. Service must
+        belong to authenticated business. Returns service name, description, duration,
+        price, and staff assignments.
+      parameters:
+      - description: Service ID (UUID format)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Service details retrieved successfully
+          schema:
+            $ref: '#/definitions/service.SuccessResponse'
+        "400":
+          description: Invalid service ID format
+          schema:
+            $ref: '#/definitions/service.ErrorResponse'
+        "401":
+          description: Unauthorized - user not authenticated or business_id missing
+          schema:
+            $ref: '#/definitions/service.ErrorResponse'
+        "404":
+          description: Service not found
+          schema:
+            $ref: '#/definitions/service.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/service.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get Service by ID
+      tags:
+      - Service
+    put:
+      consumes:
+      - application/json
+      description: Updates service details for authenticated business. Supports partial
+        updates - only provided fields are modified. Service must belong to business.
+        Updates name, description, duration, pricing, and status.
+      parameters:
+      - description: Service ID (UUID format)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Service update data (all fields optional - Name, Description,
+          Duration, Price, IsActive)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/service.UpdateServiceHTTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Service updated successfully
+          schema:
+            $ref: '#/definitions/service.SuccessResponse'
+        "400":
+          description: Validation error - invalid field values or invalid service
+            ID format
+          schema:
+            $ref: '#/definitions/service.ErrorResponse'
+        "401":
+          description: Unauthorized - user not authenticated or business_id missing
+          schema:
+            $ref: '#/definitions/service.ErrorResponse'
+        "404":
+          description: Service not found
+          schema:
+            $ref: '#/definitions/service.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/service.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update Service
+      tags:
+      - Service
+  /api/v1/staff:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all staff members for the authenticated business. Returns
+        complete list of active and inactive staff with user associations, specializations,
+        and availability status.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Staff list retrieved successfully (array of StaffWithUserHTTPResponse)
+          schema:
+            $ref: '#/definitions/staff.SuccessResponse'
+        "401":
+          description: Unauthorized - user not authenticated or business_id missing
+          schema:
+            $ref: '#/definitions/staff.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/staff.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List All Staff Members
+      tags:
+      - Staff
+    post:
+      consumes:
+      - application/json
+      description: Creates a new staff member profile for multi-staff business. Used
+        when directly adding staff without invitation flow (admin creates profile).
+        Staff member becomes available for service assignment. Only available for
+        multi-staff businesses.
+      parameters:
+      - description: Staff profile data (FirstName, LastName, Email, Phone, Specializations
+          - optional)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/staff.CreateStaffHTTPRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Staff profile created successfully with generated UUID
+          schema:
+            $ref: '#/definitions/staff.SuccessResponse'
+        "400":
+          description: Validation error - invalid or missing required fields
+          schema:
+            $ref: '#/definitions/staff.ErrorResponse'
+        "401":
+          description: Unauthorized - user not authenticated or business_id missing
+          schema:
+            $ref: '#/definitions/staff.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/staff.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create Staff Profile
+      tags:
+      - Staff
+  /api/v1/staff/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft-deletes a staff member by marking as inactive. Staff member
+        is not permanently deleted - remains in database for historical booking records.
+        Deactivated staff cannot book new appointments. Staff member must belong to
+        authenticated business.
+      parameters:
+      - description: Staff ID (UUID format)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Staff member deactivated successfully
+          schema:
+            $ref: '#/definitions/staff.SuccessResponse'
+        "400":
+          description: Validation error or invalid staff ID format
+          schema:
+            $ref: '#/definitions/staff.ErrorResponse'
+        "401":
+          description: Unauthorized - user not authenticated or business_id missing
+          schema:
+            $ref: '#/definitions/staff.ErrorResponse'
+        "404":
+          description: Staff member not found
+          schema:
+            $ref: '#/definitions/staff.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/staff.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Deactivate Staff Member
+      tags:
+      - Staff
+    get:
+      consumes:
+      - application/json
+      description: Retrieves specific staff member details by staff ID. Includes services
+        assigned, specializations, user account info, and availability status. Staff
+        member must belong to authenticated business.
+      parameters:
+      - description: Staff ID (UUID format)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Staff details retrieved successfully
+          schema:
+            $ref: '#/definitions/staff.SuccessResponse'
+        "400":
+          description: Invalid staff ID format
+          schema:
+            $ref: '#/definitions/staff.ErrorResponse'
+        "401":
+          description: Unauthorized - user not authenticated or business_id missing
+          schema:
+            $ref: '#/definitions/staff.ErrorResponse'
+        "404":
+          description: Staff member not found
+          schema:
+            $ref: '#/definitions/staff.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/staff.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get Staff Member Details
+      tags:
+      - Staff
+    put:
+      consumes:
+      - application/json
+      description: Updates staff member details for authenticated business. Supports
+        partial updates - only provided fields are modified. Updates name, email,
+        phone, specializations, and availability status. Staff member must belong
+        to business.
+      parameters:
+      - description: Staff ID (UUID format)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Staff update data (all fields optional - FirstName, LastName,
+          Email, Phone, Specializations, IsActive)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/staff.UpdateStaffHTTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Staff member updated successfully
+          schema:
+            $ref: '#/definitions/staff.SuccessResponse'
+        "400":
+          description: Validation error - invalid field values or invalid staff ID
+            format
+          schema:
+            $ref: '#/definitions/staff.ErrorResponse'
+        "401":
+          description: Unauthorized - user not authenticated or business_id missing
+          schema:
+            $ref: '#/definitions/staff.ErrorResponse'
+        "404":
+          description: Staff member not found
+          schema:
+            $ref: '#/definitions/staff.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/staff.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update Staff Member
+      tags:
+      - Staff
+  /api/v1/staff/{staff_id}/services:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all services assigned to a specific staff member. Returns
+        services the staff member is qualified and available to provide. Staff member
+        must belong to authenticated business.
+      parameters:
+      - description: Staff Member ID (UUID format)
+        in: path
+        name: staff_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Staff services retrieved successfully (array of ServiceHTTPResponse)
+          schema:
+            $ref: '#/definitions/service.SuccessResponse'
+        "400":
+          description: Invalid staff ID format
+          schema:
+            $ref: '#/definitions/service.ErrorResponse'
+        "401":
+          description: Unauthorized - user not authenticated or business_id missing
+          schema:
+            $ref: '#/definitions/service.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/service.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get Staff Services
+      tags:
+      - Service
+    post:
+      consumes:
+      - application/json
+      description: Assigns multiple services to a staff member. Staff member becomes
+        available to book appointments for assigned services. All services must exist
+        and belong to authenticated business. Staff member must belong to business.
+      parameters:
+      - description: Staff Member ID (UUID format)
+        in: path
+        name: staff_id
+        required: true
+        type: string
+      - description: Service IDs to assign (ServiceIDs array of UUID strings)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/service.AssignServicesHTTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Services assigned to staff successfully
+          schema:
+            $ref: '#/definitions/service.SuccessResponse'
+        "400":
+          description: Validation error - invalid staff ID format, invalid service
+            IDs, or staff/service not found
+          schema:
+            $ref: '#/definitions/service.ErrorResponse'
+        "401":
+          description: Unauthorized - user not authenticated or business_id missing
+          schema:
+            $ref: '#/definitions/service.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/service.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Assign Services to Staff
+      tags:
+      - Service
+  /api/v1/staff/{staff_id}/services/{service_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Removes a specific service from a staff member's service list.
+        Staff member becomes unavailable to book appointments for this service. Service
+        assignment removed but service and staff member remain active.
+      parameters:
+      - description: Staff Member ID (UUID format)
+        in: path
+        name: staff_id
+        required: true
+        type: string
+      - description: Service ID (UUID format)
+        in: path
+        name: service_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Service removed from staff successfully
+          schema:
+            $ref: '#/definitions/service.SuccessResponse'
+        "400":
+          description: Validation error - invalid staff/service ID format or service
+            not assigned to staff
+          schema:
+            $ref: '#/definitions/service.ErrorResponse'
+        "401":
+          description: Unauthorized - user not authenticated or business_id missing
+          schema:
+            $ref: '#/definitions/service.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/service.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Remove Service from Staff
+      tags:
+      - Service
+  /api/v1/staff/invites:
+    post:
+      consumes:
+      - application/json
+      description: Sends invitation to join business as staff member (zero-knowledge
+        invitation flow). Generates unique invitation token valid for 7 days. Invitee
+        receives token and can accept by creating password and joining business. Used
+        for multi-staff businesses to onboard team members.
+      parameters:
+      - description: Invitation details (FirstName, LastName, Email, Phone, Role -
+          provider_owner, staff, customer)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/staff.InviteStaffHTTPRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Invitation created successfully with token and expiration
+          schema:
+            $ref: '#/definitions/staff.SuccessResponse'
+        "400":
+          description: Validation error - invalid email format or staff already invited
+          schema:
+            $ref: '#/definitions/staff.ErrorResponse'
+        "401":
+          description: Unauthorized - user not authenticated or business_id missing
+          schema:
+            $ref: '#/definitions/staff.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/staff.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Invite Staff Member
+      tags:
+      - Staff
+  /api/v1/staff/invites/accept:
+    post:
+      consumes:
+      - application/json
+      description: Completes staff member onboarding by accepting invitation and setting
+        password. User must be authenticated (user_id from context). Uses zero-knowledge
+        invitation flow - staff sets their own password without server storing temporary
+        passwords. Staff becomes active member after acceptance. Token is marked as
+        used and cannot be reused.
+      parameters:
+      - description: Invitation token and password for account setup
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/staff.AcceptInviteHTTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Invitation accepted successfully, staff member activated
+          schema:
+            $ref: '#/definitions/staff.SuccessResponse'
+        "400":
+          description: Invalid or expired token, password validation failure
+          schema:
+            $ref: '#/definitions/staff.ErrorResponse'
+        "401":
+          description: Unauthorized - user not authenticated or user_id missing
+          schema:
+            $ref: '#/definitions/staff.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/staff.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Accept Invitation (Staff Onboarding)
+      tags:
+      - Staff
+  /api/v1/staff/invites/validate:
+    post:
+      consumes:
+      - application/json
+      description: Validates staff invitation token before acceptance. Returns invitation
+        details if token is valid and not expired. No authentication required - used
+        during invitation onboarding flow. Token must be valid and within 7-day expiration
+        window.
+      parameters:
+      - description: Invitation token to validate
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/staff.ValidateInviteHTTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token is valid with invitation details (FirstName, LastName,
+            Email, BusinessName)
+          schema:
+            $ref: '#/definitions/staff.SuccessResponse'
+        "400":
+          description: Invalid, expired, or already-used invitation token
+          schema:
+            $ref: '#/definitions/staff.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/staff.ErrorResponse'
+      summary: Validate Invitation Token
+      tags:
+      - Staff
 schemes:
 - https
 securityDefinitions:
