@@ -606,6 +606,249 @@
                 }
             }
         },
+        "/api/v1/customers": {
+            "get": {
+                "description": "Retrieves paginated list of customers for the business. Supports pagination with page and page_size query parameters. Filters applied per business_id for multi-tenant isolation.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Customer"
+                ],
+                "summary": "List Customers",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number (default: 1, must be \u003e= 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size (default: 20, max: 100)",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated customer list retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/customer.ListCustomersResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid query parameters",
+                        "schema": {
+                            "$ref": "#/definitions/customer.ErrorResponseDTO"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - business_id not found",
+                        "schema": {
+                            "$ref": "#/definitions/customer.ErrorResponseDTO"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/customer.ErrorResponseDTO"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Updates customer information (partial update supported). Only accessible within the same business. Email must be unique within business if changed.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Customer"
+                ],
+                "summary": "Update Customer",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Customer ID (UUID format)",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "description": "Customer update data (all fields optional)",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_customer.UpdateCustomerRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Customer updated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_customer.CustomerResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error or invalid customer ID",
+                        "schema": {
+                            "$ref": "#/definitions/customer.ErrorResponseDTO"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - business_id not found",
+                        "schema": {
+                            "$ref": "#/definitions/customer.ErrorResponseDTO"
+                        }
+                    },
+                    "403": {
+                        "description": "Access denied - customer not in this business",
+                        "schema": {
+                            "$ref": "#/definitions/customer.ErrorResponseDTO"
+                        }
+                    },
+                    "404": {
+                        "description": "Customer not found",
+                        "schema": {
+                            "$ref": "#/definitions/customer.ErrorResponseDTO"
+                        }
+                    },
+                    "409": {
+                        "description": "Email already exists in this business",
+                        "schema": {
+                            "$ref": "#/definitions/customer.ErrorResponseDTO"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/customer.ErrorResponseDTO"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates a new customer in the business. Only business owner and staff can create customers. Account-first: Customer can be created with or without user account.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Customer"
+                ],
+                "summary": "Create Customer",
+                "parameters": [
+                    {
+                        "description": "Customer data (FullName, Email, Phone, Notes optional)",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_customer.CreateCustomerRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Customer created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_customer.CustomerResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error - missing fields, invalid format",
+                        "schema": {
+                            "$ref": "#/definitions/customer.ErrorResponseDTO"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - business_id not found",
+                        "schema": {
+                            "$ref": "#/definitions/customer.ErrorResponseDTO"
+                        }
+                    },
+                    "409": {
+                        "description": "Email already exists in this business",
+                        "schema": {
+                            "$ref": "#/definitions/customer.ErrorResponseDTO"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/customer.ErrorResponseDTO"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Soft deletes a customer (status changed to 'inactive'). Customer data is retained for historical records and booking history. Hard deletion is not performed to maintain referential integrity.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Customer"
+                ],
+                "summary": "Delete Customer",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Customer ID (UUID format)",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Customer deleted successfully (no content)"
+                    },
+                    "400": {
+                        "description": "Invalid customer ID format",
+                        "schema": {
+                            "$ref": "#/definitions/customer.ErrorResponseDTO"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - business_id not found",
+                        "schema": {
+                            "$ref": "#/definitions/customer.ErrorResponseDTO"
+                        }
+                    },
+                    "403": {
+                        "description": "Access denied - customer not in this business",
+                        "schema": {
+                            "$ref": "#/definitions/customer.ErrorResponseDTO"
+                        }
+                    },
+                    "404": {
+                        "description": "Customer not found",
+                        "schema": {
+                            "$ref": "#/definitions/customer.ErrorResponseDTO"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/customer.ErrorResponseDTO"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/locations": {
             "get": {
                 "security": [
@@ -2002,6 +2245,120 @@
                     "type": "string"
                 },
                 "phone": {
+                    "type": "string"
+                }
+            }
+        },
+        "customer.ErrorResponseDTO": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "customer.ListCustomersResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_http_handlers_customer.CustomerResponse"
+                    }
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "total_pages": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_http_handlers_customer.CreateCustomerRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "full_name",
+                "phone"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "full_name": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_http_handlers_customer.CustomerResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "full_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "last_booking_at": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "total_bookings": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_http_handlers_customer.UpdateCustomerRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "full_name": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "status": {
                     "type": "string"
                 }
             }
