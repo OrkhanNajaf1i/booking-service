@@ -152,7 +152,7 @@ func (s *Service) ForgotPassword(ctx context.Context, req *ForgotPasswordRequest
 	if err := s.repo.SavePasswordReset(ctx, reset); err != nil {
 		return &RegistrationError{Code: "RESET_TOKEN_SAVE_FAILED", Message: "Failed to save reset token"}
 	}
-	resetURL := fmt.Sprintf("https://bronet.com/reset-password?token=%s", resetToken)
+	resetURL := fmt.Sprintf("https://bronet.com.az/reset-password?token=%s", resetToken)
 	if err := s.emailService.SendPasswordResetEmail(user.Email, resetURL); err != nil {
 		fmt.Printf("Email send failed for %s: %v", user.Email, err)
 	}
