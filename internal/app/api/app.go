@@ -46,13 +46,24 @@ func New(cfg *config.AppConfig, appLogger logger.Logger) (*App, error) {
 	authRepo := postgres.NewAuthRepository(db)
 	passwordHasher := crypto.NewBcryptPasswordHasher()
 	tokenManager := crypto.NewJWTSigner(cfg.JWTSecret)
-	emailService := email.NewSMTPService(
-		cfg.SMTPHost,
-		cfg.SMTPPort,
-		cfg.SMTPUser,
-		cfg.SMTPPass,
-		cfg.SMTPFrom,
-	)
+
+	var emailService auth.EmailService
+	switch cfg.EmailProvider {
+	case "brevo":
+		emailService = email.NewBrevoAdapter(
+			cfg.BrevoAPIKey,
+			cfg.BrevoSenderEmail,
+		)
+	default:
+		emailService = email.NewSMTPService(
+			cfg.SMTPHost,
+			cfg.SMTPPort,
+			cfg.SMTPUser,
+			cfg.SMTPPass,
+			cfg.SMTPFrom,
+		)
+	}
+
 	authSvc := auth.NewAuthService(
 		authRepo,
 		passwordHasher,
