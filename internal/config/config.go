@@ -30,6 +30,11 @@ type AppConfig struct {
 	SMTPUser string
 	SMTPPass string
 	SMTPFrom string
+
+	EmailProvider    string
+	BrevoAPIKey      string
+	BrevoSenderEmail string
+	BaseURL          string
 }
 
 func Load() (*AppConfig, error) {
@@ -116,6 +121,7 @@ func LoadDatabaseConfig(cfg *AppConfig) error {
 }
 
 func LoadEmailConfig(cfg *AppConfig) error {
+	// SMTP hissəsi – səndə olan kod
 	cfg.SMTPHost = os.Getenv("SMTP_HOST")
 	cfg.SMTPUser = os.Getenv("SMTP_USER")
 	cfg.SMTPPass = os.Getenv("SMTP_PASS")
@@ -132,9 +138,70 @@ func LoadEmailConfig(cfg *AppConfig) error {
 		cfg.SMTPPort = port
 	}
 
-	if cfg.SMTPHost == "" || cfg.SMTPUser == "" || cfg.SMTPPass == "" {
-		return errors.New("missing required SMTP environment variables")
+	// ==== BURADAN AŞAĞI BREVO + PROVIDER HİSSƏSİDİR ====
+
+	// E-mail provider seçimi (smtp və ya brevo)
+	cfg.EmailProvider = strings.TrimSpace(os.Getenv("EMAIL_PROVIDER"))
+	if cfg.EmailProvider == "" {
+		cfg.EmailProvider = "smtp"
+	}
+
+	// Brevo üçün əlavə konfiq
+	cfg.BrevoAPIKey = strings.TrimSpace(os.Getenv("BREVO_API_KEY"))
+	cfg.BrevoSenderEmail = strings.TrimSpace(os.Getenv("BREVO_SENDER_EMAIL"))
+	if cfg.BrevoSenderEmail == "" {
+		// Əgər ayrıca verməmisənsə, SMTP_FROM-u fallback kimi istifadə et
+		cfg.BrevoSenderEmail = cfg.SMTPFrom
+	}
+
+	cfg.BaseURL = strings.TrimSpace(os.Getenv("APP_BASE_URL"))
+
+	// Əgər provider brevo-dursa, API key məcburidir
+	if cfg.EmailProvider == "brevo" && cfg.BrevoAPIKey == "" {
+		return errors.New("BREVO_API_KEY required when EMAIL_PROVIDER=brevo")
+	}
+
+	// SMTP env-ləri boş ola bilər, əgər yalnız brevo istifadə edirsənsə.
+	// Ona görə əvvəlki "missing required SMTP env" checkini ya sil,
+	// ya da yalnız provider=smtp olanda elə:
+	if cfg.EmailProvider == "smtp" {
+		if cfg.SMTPHost == "" || cfg.SMTPUser == "" || cfg.SMTPPass == "" {
+			return errors.New("missing required SMTP environment variables")
+		}
 	}
 
 	return nil
 }
+
+// func LoadEmailConfig(cfg *AppConfig) error {
+
+// 	cfg.EmailProvider = os.Getenv("EMAIL_PROVIDER")
+// 	cfg.BrevoAPIKey = os.Getenv("BREVO_API_KEY")
+// 	cfg.BrevoSender = os.Getenv("BREVO_SENDER_EMAIL")
+// 	cfg.BaseURL = os.Getenv("APP_BASE_URL")
+// 	if cfg.EmailProvider == "brevo" && cfg.BrevoAPIKey == "" {
+// 		return errors.New("BREVO_API_KEY required")
+// 	}
+
+// 	cfg.SMTPHost = os.Getenv("SMTP_HOST")
+// 	cfg.SMTPUser = os.Getenv("SMTP_USER")
+// 	cfg.SMTPPass = os.Getenv("SMTP_PASS")
+// 	cfg.SMTPFrom = os.Getenv("SMTP_FROM")
+
+// 	portStr := os.Getenv("SMTP_PORT")
+// 	if portStr == "" {
+// 		cfg.SMTPPort = 587
+// 	} else {
+// 		port, err := strconv.Atoi(portStr)
+// 		if err != nil {
+// 			return fmt.Errorf("SMTP_PORT must be a number: %w", err)
+// 		}
+// 		cfg.SMTPPort = port
+// 	}
+
+// 	if cfg.SMTPHost == "" || cfg.SMTPUser == "" || cfg.SMTPPass == "" {
+// 		return errors.New("missing required SMTP environment variables")
+// 	}
+
+// 	return nil
+// }
