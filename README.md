@@ -1,4 +1,63 @@
 # booking-service
+# booking-service (Go + PostgreSQL)
+
+Bu repo **multi-tenant** booking platformasının backend hissəsidir (API + background worker) və Hexagonal Architecture (Ports & Adapters) prinsipi ilə qurulub.  
+API entrypoint: `cmd/api/main.go`, Worker entrypoint: `cmd/worker/main.go`.  
+Konfiqurasiya `.env` / sistem env-ləri ilə oxunur; `.env` yoxdursa proqram log-da bunu qeyd edir və system env-lərlə davam edir.  
+
+---
+
+## Sistemdə nələr var?
+
+### Biznes modelləri (domain)
+Layihə “account-first registration” modelinə uyğundur: əvvəl user yaranır, sonra onboarding ilə business flow işləyir.  
+Domain modulları (qovluqlar):  
+- `internal/domain/auth/` — register/login/refresh/forgot-reset password, JWT claims və role-lar  
+- `internal/domain/business/` — business yaratmaq (solo/multi), get/update  
+- `internal/domain/staff/` — staff profilləri, invite flow (token-based)  
+- `internal/domain/customer/` — customer CRUD + pagination, email uniqueness (business daxilində)  
+- `internal/domain/location/` — location CRUD + default location  
+- `internal/domain/service/` — service catalog CRUD + staff-services assign  
+- `internal/domain/booking/` — booking create/update/cancel + status transitions  
+- (mövcuddursa) `internal/domain/slot/` — slot/availability logic (routing hissəsi görünür)
+
+### Multi-tenancy (kritik)
+Demək olar bütün entity-lərdə `BusinessID` var və repository-lər query-lərdə business üzrə filter edir.  
+HTTP qatında isə protected route-larda business konteksti **JWT claim**-dən alınır (Auth middleware request context-ə `businessid`, `userid`, `role` yazır).
+
+---
+
+## Qovluq strukturu (Hexagonal)
+
+- `internal/domain/<module>/`
+  - `entity.go` — domain entity-lər (məs: `Booking`, `Customer`, `Business`)
+  - `ports.go` — Port interfeyslər (Repo, external service interface-lər)
+  - `service.go` — use-case / business rules
+- `internal/infrastructure/`
+  - `postgres/` — Port-ların Postgres adapter implementasiyası (sqlx)
+  - `crypto/` — bcrypt, JWT signer və s.
+  - `email/` — SMTP adapter və digər email adapterləri
+- `internal/http/`
+  - `handlers/` — HTTP handlers (DTO -> domain request -> service -> response)
+  - `routes/` — route register-ləri
+  - `router` — router compose + middleware wiring
+- `internal/httpmiddleware/`
+  - `auth.go` — `AuthMiddleware`, `RoleMiddleware` və context key-ləri
+
+---
+
+## Tez start (Local)
+
+### 1) Repo-nu klonla
+```bash
+git clone https://github.com/OrkhanNajaf1i/booking-service.git
+cd booking-service
+
+### run commands
+go run cmd/api/main.go
+go run cmd/worker/main.go
+
+
 
 <!--
 
