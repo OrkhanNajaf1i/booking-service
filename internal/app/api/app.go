@@ -10,6 +10,8 @@ import (
 	"github.com/OrkhanNajaf1i/booking-service/internal/domain/business"
 	httpapi "github.com/OrkhanNajaf1i/booking-service/internal/http"
 
+	"github.com/OrkhanNajaf1i/booking-service/internal/http/middleware"
+
 	authHandler "github.com/OrkhanNajaf1i/booking-service/internal/http/handlers/auth"
 	businessHandler "github.com/OrkhanNajaf1i/booking-service/internal/http/handlers/business"
 
@@ -42,7 +44,6 @@ func New(cfg *config.AppConfig, appLogger logger.Logger) (*App, error) {
 	businessRepo := postgres.NewBusinessRepository(db)
 	businessSvc := business.NewService(businessRepo)
 
-	// Auth repo + service
 	authRepo := postgres.NewAuthRepository(db)
 	passwordHasher := crypto.NewBcryptPasswordHasher()
 	tokenManager := crypto.NewJWTSigner(cfg.JWTSecret)
@@ -79,10 +80,12 @@ func New(cfg *config.AppConfig, appLogger logger.Logger) (*App, error) {
 		Auth:     authH,
 	}, tokenManager)
 
+	handlerWithCORS := middleware.CORSMiddleware(router)
+
 	addr := fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
 	server := &http.Server{
 		Addr:    addr,
-		Handler: router,
+		Handler: handlerWithCORS,
 	}
 
 	return &App{
