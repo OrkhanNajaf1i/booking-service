@@ -120,10 +120,13 @@ func AuthMiddleware(tokenManager authDomain.TokenManager) func(http.Handler) htt
 				return
 			}
 
-			// ✅ uuid.UUID deyil, STRING olaraq yaz
+			businessIDStr := ""
+			if claims.BusinessID != nil {
+				businessIDStr = claims.BusinessID.String()
+			}
 			ctx := context.WithValue(r.Context(), UserIDKey, claims.UserID.String())
 			ctx = context.WithValue(ctx, RoleKey, string(claims.Role))
-			ctx = context.WithValue(ctx, BusinessKey, claims.BusinessID.String())
+			ctx = context.WithValue(ctx, BusinessKey, businessIDStr)
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
