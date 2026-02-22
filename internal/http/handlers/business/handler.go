@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/OrkhanNajaf1i/booking-service/internal/domain/business"
+	"github.com/OrkhanNajaf1i/booking-service/internal/http/middleware"
 	"github.com/google/uuid"
 )
 
@@ -248,13 +249,14 @@ func (handler *BusinessHandler) extractIDFromPath(path, prefix string) string {
 }
 
 func (handler *BusinessHandler) extractUserIDFromContext(ctx context.Context) (uuid.UUID, error) {
-	userIDValue := ctx.Value("user_id")
+	// ✅ "user_id" string deyil, middleware.UserIDKey (contextKey tipi) ilə oxu
+	userIDValue := ctx.Value(middleware.UserIDKey)
 	if userIDValue == nil {
 		return uuid.Nil, fmt.Errorf("user ID not found in context")
 	}
 
 	userIDString, ok := userIDValue.(string)
-	if !ok {
+	if !ok || userIDString == "" {
 		return uuid.Nil, fmt.Errorf("user ID has invalid type")
 	}
 
@@ -267,7 +269,7 @@ func (handler *BusinessHandler) extractUserIDFromContext(ctx context.Context) (u
 }
 
 func (handler *BusinessHandler) extractBusinessIDFromContext(ctx context.Context) (uuid.UUID, error) {
-	businessIDValue := ctx.Value("business_id")
+	businessIDValue := ctx.Value(middleware.BusinessKey)
 	if businessIDValue == nil {
 		return uuid.Nil, fmt.Errorf("business ID not found in context")
 	}
