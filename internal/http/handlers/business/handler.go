@@ -155,7 +155,7 @@ func (handler *BusinessHandler) GetBusiness(writer http.ResponseWriter, request 
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Success      200  {object}  SuccessHTTPResponse "Businesses retrieved successfully"
+// @Success 	 200 {object} ListBusinessesHTTPResponse "Businesses retrieved successfully"
 // @Failure      401  {object}  ErrorHTTPResponse "Unauthorized - user not authenticated"
 // @Failure      500  {object}  ErrorHTTPResponse "Internal server error"
 // @Router       /api/v1/businesses [get]
