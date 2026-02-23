@@ -18,6 +18,7 @@ func RegisterBusinessRoutes(
 	mux.Handle("POST /api/v1/businesses/solo", protected(handler.CreateSoloBusiness))
 	mux.Handle("POST /api/v1/businesses/multi", protected(handler.CreateMultiBusiness))
 	mux.Handle("GET /api/v1/business", protected(handler.GetBusiness))
+	mux.Handle("GET /api/v1/businesses", protected(handler.GetBusinesses))
 	mux.Handle("GET /api/v1/businesses/{id}", protected(handler.GetBusinessByID))
 	mux.Handle("PUT /api/v1/business", protected(handler.UpdateBusiness))
 }

@@ -97,7 +97,29 @@ func (repository *BusinessRepository) GetByOwnerID(ctx context.Context, ownerID 
 
 	return &businessEntity, nil
 }
+func (repository *BusinessRepository) ListBusinesses(ctx context.Context) ([]*business.Business, error) {
+	query := `
+		SELECT 
+			id, name, owner_id, industry, service_category,
+			phone, business_type, is_active, created_at, updated_at
+		FROM businesses
+		ORDER BY created_at DESC
+	`
+	var businesses []*business.Business
+	err := repository.database.SelectContext(ctx, &businesses, query)
 
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("postgres: failed to get business by owner ID: %w", err)
+	}
+	if businesses == nil {
+		return []*business.Business{}, nil
+	}
+	return businesses, nil
+}
 func (repository *BusinessRepository) Update(ctx context.Context, business *business.Business) error {
 	query := `
 		UPDATE businesses
