@@ -13,11 +13,13 @@ type Repository interface {
 	GetByOwnerID(ctx context.Context, ownerID uuid.UUID) (*Business, error)
 	Update(ctx context.Context, business *Business) error
 	UpdateOwner(ctx context.Context, businessID, ownerID uuid.UUID) error
+	ListBusinesses(ctx context.Context) ([]*Business, error)
 }
 
 type Service interface {
 	CreateBusiness(ctx context.Context, ownerID uuid.UUID, request *CreateBusinessRequest) (*Business, error)
 	GetBusinessByID(ctx context.Context, id uuid.UUID) (*Business, error)
 	GetBusinessByOwner(ctx context.Context, ownerID uuid.UUID) (*Business, error)
+	ListBusinesses(ctx context.Context) ([]*Business, error)
 	UpdateBusiness(ctx context.Context, businessID uuid.UUID, request *UpdateBusinessRequest) error
 }

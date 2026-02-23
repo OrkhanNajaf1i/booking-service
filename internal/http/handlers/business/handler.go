@@ -149,6 +149,35 @@ func (handler *BusinessHandler) GetBusiness(writer http.ResponseWriter, request 
 	handler.respondWithJSON(writer, http.StatusOK, response)
 }
 
+// @Summary      List All Businesses
+// @Description  Retrieves all registered businesses in the system.
+// @Tags         Businesses
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  SuccessHTTPResponse "Businesses retrieved successfully"
+// @Failure      401  {object}  ErrorHTTPResponse "Unauthorized - user not authenticated"
+// @Failure      500  {object}  ErrorHTTPResponse "Internal server error"
+// @Router       /api/v1/businesses [get]
+func (handler *BusinessHandler) GetBusinesses(writer http.ResponseWriter, request *http.Request) {
+	if request.Method != http.MethodGet {
+		handler.respondWithError(writer, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "Method not allowed")
+		return
+	}
+	ctx := request.Context()
+	businesses, err := handler.businessService.ListBusinesses(ctx)
+	if err != nil {
+		handler.handleDomainError(writer, err)
+		return
+	}
+	response := ToBusinessesHTTPResponse(businesses)
+
+	handler.respondWithJSON(writer, http.StatusOK, SuccessHTTPResponse{
+		Success: true,
+		Data:    response,
+	})
+}
+
 // @Summary      Get Business by ID
 // @Description  Retrieves business information by business ID. Can be accessed by any authenticated user (public business view). Returns business profile, location, and active staff information.
 // @Tags         Business
@@ -249,7 +278,6 @@ func (handler *BusinessHandler) extractIDFromPath(path, prefix string) string {
 }
 
 func (handler *BusinessHandler) extractUserIDFromContext(ctx context.Context) (uuid.UUID, error) {
-	// ✅ "user_id" string deyil, middleware.UserIDKey (contextKey tipi) ilə oxu
 	userIDValue := ctx.Value(middleware.UserIDKey)
 	if userIDValue == nil {
 		return uuid.Nil, fmt.Errorf("user ID not found in context")
