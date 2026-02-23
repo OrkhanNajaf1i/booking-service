@@ -51,6 +51,13 @@ type SuccessHTTPResponse struct {
 	Message string      `json:"message,omitempty"`
 }
 
+func ToBusinessesHTTPResponse(businesses []*business.Business) []*BusinessHTTPResponse {
+	responses := make([]*BusinessHTTPResponse, 0, len(businesses))
+	for _, b := range businesses {
+		responses = append(responses, ToBusinessHTTPResponse(b))
+	}
+	return responses
+}
 func ToBusinessHTTPResponse(business *business.Business) *BusinessHTTPResponse {
 	if business == nil {
 		return nil

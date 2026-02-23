@@ -88,7 +88,18 @@ func (service *BusinessService) GetBusinessByOwner(ctx context.Context, ownerID 
 
 	return business, nil
 }
+func (service *BusinessService) ListBusinesses(ctx context.Context) ([]*Business, error) {
+	businesses, err := service.repository.ListBusinesses(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get business list: %w", err)
+	}
 
+	if businesses == nil {
+		return nil, NewBusinessError("BUSINESS_NOT_FOUND", "No businesses found")
+	}
+
+	return businesses, nil
+}
 func (service *BusinessService) UpdateBusiness(
 	ctx context.Context,
 	businessID uuid.UUID,
