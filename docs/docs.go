@@ -437,14 +437,14 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Businesses"
+                    "Business"
                 ],
                 "summary": "List All Businesses",
                 "responses": {
                     "200": {
                         "description": "Businesses retrieved successfully",
                         "schema": {
-                            "$ref": "#/definitions/internal_http_handlers_business.SuccessHTTPResponse"
+                            "$ref": "#/definitions/internal_http_handlers_business.ListBusinessesHTTPResponse"
                         }
                     },
                     "401": {
@@ -2263,6 +2263,23 @@ const docTemplate = `{
                 },
                 "message": {
                     "type": "string"
+                }
+            }
+        },
+        "internal_http_handlers_business.ListBusinessesHTTPResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_http_handlers_business.BusinessHTTPResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
                 }
             }
         },
