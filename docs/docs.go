@@ -35,7 +35,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/auth.ForgotPasswordHTTPRequest"
+                            "$ref": "#/definitions/internal_http_handlers_auth.ForgotPasswordHTTPRequest"
                         }
                     }
                 ],
@@ -43,19 +43,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Password reset email sent successfully",
                         "schema": {
-                            "$ref": "#/definitions/auth.SuccessResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_auth.SuccessResponseDTO"
                         }
                     },
                     "400": {
                         "description": "Validation error - invalid email format",
                         "schema": {
-                            "$ref": "#/definitions/auth.ErrorResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_auth.ErrorResponseDTO"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/auth.ErrorResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_auth.ErrorResponseDTO"
                         }
                     }
                 }
@@ -81,7 +81,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/auth.LoginHTTPRequest"
+                            "$ref": "#/definitions/internal_http_handlers_auth.LoginHTTPRequest"
                         }
                     }
                 ],
@@ -89,31 +89,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Authentication successful, tokens returned",
                         "schema": {
-                            "$ref": "#/definitions/auth.AuthResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_auth.AuthResponseDTO"
                         }
                     },
                     "400": {
                         "description": "Validation error",
                         "schema": {
-                            "$ref": "#/definitions/auth.ErrorResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_auth.ErrorResponseDTO"
                         }
                     },
                     "401": {
                         "description": "Invalid credentials",
                         "schema": {
-                            "$ref": "#/definitions/auth.ErrorResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_auth.ErrorResponseDTO"
                         }
                     },
                     "403": {
                         "description": "User account is inactive",
                         "schema": {
-                            "$ref": "#/definitions/auth.ErrorResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_auth.ErrorResponseDTO"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/auth.ErrorResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_auth.ErrorResponseDTO"
                         }
                     }
                 }
@@ -139,7 +139,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/auth.RefreshTokenHTTPRequest"
+                            "$ref": "#/definitions/internal_http_handlers_auth.RefreshTokenHTTPRequest"
                         }
                     }
                 ],
@@ -147,19 +147,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Logout successful, refresh token revoked",
                         "schema": {
-                            "$ref": "#/definitions/auth.SuccessResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_auth.SuccessResponseDTO"
                         }
                     },
                     "400": {
                         "description": "Validation error or invalid refresh token",
                         "schema": {
-                            "$ref": "#/definitions/auth.ErrorResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_auth.ErrorResponseDTO"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/auth.ErrorResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_auth.ErrorResponseDTO"
                         }
                     }
                 }
@@ -185,7 +185,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/auth.RefreshTokenHTTPRequest"
+                            "$ref": "#/definitions/internal_http_handlers_auth.RefreshTokenHTTPRequest"
                         }
                     }
                 ],
@@ -193,25 +193,25 @@ const docTemplate = `{
                     "200": {
                         "description": "New access token generated successfully with 15-minute expiration",
                         "schema": {
-                            "$ref": "#/definitions/auth.SuccessResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_auth.SuccessResponseDTO"
                         }
                     },
                     "400": {
                         "description": "Validation error",
                         "schema": {
-                            "$ref": "#/definitions/auth.ErrorResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_auth.ErrorResponseDTO"
                         }
                     },
                     "401": {
                         "description": "Invalid, expired, or revoked refresh token; User not found",
                         "schema": {
-                            "$ref": "#/definitions/auth.ErrorResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_auth.ErrorResponseDTO"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/auth.ErrorResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_auth.ErrorResponseDTO"
                         }
                     }
                 }
@@ -237,7 +237,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/auth.RegisterHTTPRequest"
+                            "$ref": "#/definitions/internal_http_handlers_auth.RegisterHTTPRequest"
                         }
                     }
                 ],
@@ -245,25 +245,25 @@ const docTemplate = `{
                     "201": {
                         "description": "User account created successfully with JWT tokens",
                         "schema": {
-                            "$ref": "#/definitions/auth.AuthResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_auth.AuthResponseDTO"
                         }
                     },
                     "400": {
                         "description": "Validation error - missing fields, invalid format, password too short",
                         "schema": {
-                            "$ref": "#/definitions/auth.ErrorResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_auth.ErrorResponseDTO"
                         }
                     },
                     "409": {
                         "description": "Email already exists",
                         "schema": {
-                            "$ref": "#/definitions/auth.ErrorResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_auth.ErrorResponseDTO"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/auth.ErrorResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_auth.ErrorResponseDTO"
                         }
                     }
                 }
@@ -289,7 +289,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/auth.ResetPasswordHTTPRequest"
+                            "$ref": "#/definitions/internal_http_handlers_auth.ResetPasswordHTTPRequest"
                         }
                     }
                 ],
@@ -297,19 +297,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Password reset successfully",
                         "schema": {
-                            "$ref": "#/definitions/auth.SuccessResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_auth.SuccessResponseDTO"
                         }
                     },
                     "400": {
                         "description": "Invalid or expired token; Password validation failure; User not found",
                         "schema": {
-                            "$ref": "#/definitions/auth.ErrorResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_auth.ErrorResponseDTO"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/auth.ErrorResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_auth.ErrorResponseDTO"
                         }
                     }
                 }
@@ -337,25 +337,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Business details retrieved successfully",
                         "schema": {
-                            "$ref": "#/definitions/business.BusinessHTTPResponse"
+                            "$ref": "#/definitions/internal_http_handlers_business.BusinessHTTPResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized - user not authenticated",
                         "schema": {
-                            "$ref": "#/definitions/business.ErrorHTTPResponse"
+                            "$ref": "#/definitions/internal_http_handlers_business.ErrorHTTPResponse"
                         }
                     },
                     "404": {
                         "description": "Business not found for user",
                         "schema": {
-                            "$ref": "#/definitions/business.ErrorHTTPResponse"
+                            "$ref": "#/definitions/internal_http_handlers_business.ErrorHTTPResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/business.ErrorHTTPResponse"
+                            "$ref": "#/definitions/internal_http_handlers_business.ErrorHTTPResponse"
                         }
                     }
                 }
@@ -384,7 +384,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/business.UpdateBusinessHTTPRequest"
+                            "$ref": "#/definitions/internal_http_handlers_business.UpdateBusinessHTTPRequest"
                         }
                     }
                 ],
@@ -392,31 +392,71 @@ const docTemplate = `{
                     "200": {
                         "description": "Business updated successfully",
                         "schema": {
-                            "$ref": "#/definitions/business.SuccessHTTPResponse"
+                            "$ref": "#/definitions/internal_http_handlers_business.SuccessHTTPResponse"
                         }
                     },
                     "400": {
                         "description": "Validation error - invalid field values",
                         "schema": {
-                            "$ref": "#/definitions/business.ErrorHTTPResponse"
+                            "$ref": "#/definitions/internal_http_handlers_business.ErrorHTTPResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized - user not authenticated or not owner",
                         "schema": {
-                            "$ref": "#/definitions/business.ErrorHTTPResponse"
+                            "$ref": "#/definitions/internal_http_handlers_business.ErrorHTTPResponse"
                         }
                     },
                     "404": {
                         "description": "Business not found",
                         "schema": {
-                            "$ref": "#/definitions/business.ErrorHTTPResponse"
+                            "$ref": "#/definitions/internal_http_handlers_business.ErrorHTTPResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/business.ErrorHTTPResponse"
+                            "$ref": "#/definitions/internal_http_handlers_business.ErrorHTTPResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/businesses": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves all registered businesses in the system.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Businesses"
+                ],
+                "summary": "List All Businesses",
+                "responses": {
+                    "200": {
+                        "description": "Businesses retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_business.SuccessHTTPResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - user not authenticated",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_business.ErrorHTTPResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_business.ErrorHTTPResponse"
                         }
                     }
                 }
@@ -447,7 +487,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/business.CreateMultiBusinessHTTPRequest"
+                            "$ref": "#/definitions/internal_http_handlers_business.CreateMultiBusinessHTTPRequest"
                         }
                     }
                 ],
@@ -455,31 +495,31 @@ const docTemplate = `{
                     "201": {
                         "description": "Multi-staff business created successfully",
                         "schema": {
-                            "$ref": "#/definitions/business.BusinessHTTPResponse"
+                            "$ref": "#/definitions/internal_http_handlers_business.BusinessHTTPResponse"
                         }
                     },
                     "400": {
                         "description": "Validation error - invalid or missing required fields",
                         "schema": {
-                            "$ref": "#/definitions/business.ErrorHTTPResponse"
+                            "$ref": "#/definitions/internal_http_handlers_business.ErrorHTTPResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized - user not authenticated",
                         "schema": {
-                            "$ref": "#/definitions/business.ErrorHTTPResponse"
+                            "$ref": "#/definitions/internal_http_handlers_business.ErrorHTTPResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict - business already exists for user",
                         "schema": {
-                            "$ref": "#/definitions/business.ErrorHTTPResponse"
+                            "$ref": "#/definitions/internal_http_handlers_business.ErrorHTTPResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/business.ErrorHTTPResponse"
+                            "$ref": "#/definitions/internal_http_handlers_business.ErrorHTTPResponse"
                         }
                     }
                 }
@@ -510,7 +550,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/business.CreateSoloBusinessHTTPRequest"
+                            "$ref": "#/definitions/internal_http_handlers_business.CreateSoloBusinessHTTPRequest"
                         }
                     }
                 ],
@@ -518,31 +558,31 @@ const docTemplate = `{
                     "201": {
                         "description": "Solo business created successfully",
                         "schema": {
-                            "$ref": "#/definitions/business.BusinessHTTPResponse"
+                            "$ref": "#/definitions/internal_http_handlers_business.BusinessHTTPResponse"
                         }
                     },
                     "400": {
                         "description": "Validation error - invalid or missing required fields",
                         "schema": {
-                            "$ref": "#/definitions/business.ErrorHTTPResponse"
+                            "$ref": "#/definitions/internal_http_handlers_business.ErrorHTTPResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized - user not authenticated",
                         "schema": {
-                            "$ref": "#/definitions/business.ErrorHTTPResponse"
+                            "$ref": "#/definitions/internal_http_handlers_business.ErrorHTTPResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict - business already exists for user",
                         "schema": {
-                            "$ref": "#/definitions/business.ErrorHTTPResponse"
+                            "$ref": "#/definitions/internal_http_handlers_business.ErrorHTTPResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/business.ErrorHTTPResponse"
+                            "$ref": "#/definitions/internal_http_handlers_business.ErrorHTTPResponse"
                         }
                     }
                 }
@@ -579,31 +619,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Business details retrieved successfully",
                         "schema": {
-                            "$ref": "#/definitions/business.BusinessHTTPResponse"
+                            "$ref": "#/definitions/internal_http_handlers_business.BusinessHTTPResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid business ID format",
                         "schema": {
-                            "$ref": "#/definitions/business.ErrorHTTPResponse"
+                            "$ref": "#/definitions/internal_http_handlers_business.ErrorHTTPResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized - user not authenticated",
                         "schema": {
-                            "$ref": "#/definitions/business.ErrorHTTPResponse"
+                            "$ref": "#/definitions/internal_http_handlers_business.ErrorHTTPResponse"
                         }
                     },
                     "404": {
                         "description": "Business not found",
                         "schema": {
-                            "$ref": "#/definitions/business.ErrorHTTPResponse"
+                            "$ref": "#/definitions/internal_http_handlers_business.ErrorHTTPResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/business.ErrorHTTPResponse"
+                            "$ref": "#/definitions/internal_http_handlers_business.ErrorHTTPResponse"
                         }
                     }
                 }
@@ -640,25 +680,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Paginated customer list retrieved successfully",
                         "schema": {
-                            "$ref": "#/definitions/customer.ListCustomersResponse"
+                            "$ref": "#/definitions/internal_http_handlers_customer.ListCustomersResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid query parameters",
                         "schema": {
-                            "$ref": "#/definitions/customer.ErrorResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_customer.ErrorResponseDTO"
                         }
                     },
                     "401": {
                         "description": "Unauthorized - business_id not found",
                         "schema": {
-                            "$ref": "#/definitions/customer.ErrorResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_customer.ErrorResponseDTO"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/customer.ErrorResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_customer.ErrorResponseDTO"
                         }
                     }
                 }
@@ -703,37 +743,37 @@ const docTemplate = `{
                     "400": {
                         "description": "Validation error or invalid customer ID",
                         "schema": {
-                            "$ref": "#/definitions/customer.ErrorResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_customer.ErrorResponseDTO"
                         }
                     },
                     "401": {
                         "description": "Unauthorized - business_id not found",
                         "schema": {
-                            "$ref": "#/definitions/customer.ErrorResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_customer.ErrorResponseDTO"
                         }
                     },
                     "403": {
                         "description": "Access denied - customer not in this business",
                         "schema": {
-                            "$ref": "#/definitions/customer.ErrorResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_customer.ErrorResponseDTO"
                         }
                     },
                     "404": {
                         "description": "Customer not found",
                         "schema": {
-                            "$ref": "#/definitions/customer.ErrorResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_customer.ErrorResponseDTO"
                         }
                     },
                     "409": {
                         "description": "Email already exists in this business",
                         "schema": {
-                            "$ref": "#/definitions/customer.ErrorResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_customer.ErrorResponseDTO"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/customer.ErrorResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_customer.ErrorResponseDTO"
                         }
                     }
                 }
@@ -771,25 +811,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Validation error - missing fields, invalid format",
                         "schema": {
-                            "$ref": "#/definitions/customer.ErrorResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_customer.ErrorResponseDTO"
                         }
                     },
                     "401": {
                         "description": "Unauthorized - business_id not found",
                         "schema": {
-                            "$ref": "#/definitions/customer.ErrorResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_customer.ErrorResponseDTO"
                         }
                     },
                     "409": {
                         "description": "Email already exists in this business",
                         "schema": {
-                            "$ref": "#/definitions/customer.ErrorResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_customer.ErrorResponseDTO"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/customer.ErrorResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_customer.ErrorResponseDTO"
                         }
                     }
                 }
@@ -822,31 +862,31 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid customer ID format",
                         "schema": {
-                            "$ref": "#/definitions/customer.ErrorResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_customer.ErrorResponseDTO"
                         }
                     },
                     "401": {
                         "description": "Unauthorized - business_id not found",
                         "schema": {
-                            "$ref": "#/definitions/customer.ErrorResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_customer.ErrorResponseDTO"
                         }
                     },
                     "403": {
                         "description": "Access denied - customer not in this business",
                         "schema": {
-                            "$ref": "#/definitions/customer.ErrorResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_customer.ErrorResponseDTO"
                         }
                     },
                     "404": {
                         "description": "Customer not found",
                         "schema": {
-                            "$ref": "#/definitions/customer.ErrorResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_customer.ErrorResponseDTO"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/customer.ErrorResponseDTO"
+                            "$ref": "#/definitions/internal_http_handlers_customer.ErrorResponseDTO"
                         }
                     }
                 }
@@ -874,19 +914,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Locations retrieved successfully (array of LocationHTTPResponse)",
                         "schema": {
-                            "$ref": "#/definitions/location.SuccessResponse"
+                            "$ref": "#/definitions/internal_http_handlers_location.SuccessResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized - user not authenticated or business_id missing",
                         "schema": {
-                            "$ref": "#/definitions/location.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_location.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/location.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_location.ErrorResponse"
                         }
                     }
                 }
@@ -915,7 +955,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/location.CreateLocationHTTPRequest"
+                            "$ref": "#/definitions/internal_http_handlers_location.CreateLocationHTTPRequest"
                         }
                     }
                 ],
@@ -923,25 +963,25 @@ const docTemplate = `{
                     "201": {
                         "description": "Location created successfully with generated UUID",
                         "schema": {
-                            "$ref": "#/definitions/location.SuccessResponse"
+                            "$ref": "#/definitions/internal_http_handlers_location.SuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Validation error - invalid or missing required fields",
                         "schema": {
-                            "$ref": "#/definitions/location.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_location.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized - user not authenticated or business_id missing",
                         "schema": {
-                            "$ref": "#/definitions/location.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_location.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/location.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_location.ErrorResponse"
                         }
                     }
                 }
@@ -978,31 +1018,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Location details retrieved successfully",
                         "schema": {
-                            "$ref": "#/definitions/location.SuccessResponse"
+                            "$ref": "#/definitions/internal_http_handlers_location.SuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid location ID format",
                         "schema": {
-                            "$ref": "#/definitions/location.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_location.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized - user not authenticated or business_id missing",
                         "schema": {
-                            "$ref": "#/definitions/location.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_location.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Location not found",
                         "schema": {
-                            "$ref": "#/definitions/location.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_location.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/location.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_location.ErrorResponse"
                         }
                     }
                 }
@@ -1038,7 +1078,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/location.UpdateLocationHTTPRequest"
+                            "$ref": "#/definitions/internal_http_handlers_location.UpdateLocationHTTPRequest"
                         }
                     }
                 ],
@@ -1046,31 +1086,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Location updated successfully",
                         "schema": {
-                            "$ref": "#/definitions/location.SuccessResponse"
+                            "$ref": "#/definitions/internal_http_handlers_location.SuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Validation error - invalid field values or invalid location ID format",
                         "schema": {
-                            "$ref": "#/definitions/location.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_location.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized - user not authenticated or business_id missing",
                         "schema": {
-                            "$ref": "#/definitions/location.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_location.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Location not found",
                         "schema": {
-                            "$ref": "#/definitions/location.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_location.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/location.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_location.ErrorResponse"
                         }
                     }
                 }
@@ -1105,31 +1145,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Location deactivated successfully",
                         "schema": {
-                            "$ref": "#/definitions/location.SuccessResponse"
+                            "$ref": "#/definitions/internal_http_handlers_location.SuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Validation error or invalid location ID format",
                         "schema": {
-                            "$ref": "#/definitions/location.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_location.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized - user not authenticated or business_id missing",
                         "schema": {
-                            "$ref": "#/definitions/location.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_location.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Location not found",
                         "schema": {
-                            "$ref": "#/definitions/location.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_location.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/location.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_location.ErrorResponse"
                         }
                     }
                 }
@@ -1157,19 +1197,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Services retrieved successfully (array of ServiceHTTPResponse)",
                         "schema": {
-                            "$ref": "#/definitions/service.SuccessResponse"
+                            "$ref": "#/definitions/internal_http_handlers_service.SuccessResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized - user not authenticated or business_id missing",
                         "schema": {
-                            "$ref": "#/definitions/service.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_service.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/service.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_service.ErrorResponse"
                         }
                     }
                 }
@@ -1206,31 +1246,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Service details retrieved successfully",
                         "schema": {
-                            "$ref": "#/definitions/service.SuccessResponse"
+                            "$ref": "#/definitions/internal_http_handlers_service.SuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid service ID format",
                         "schema": {
-                            "$ref": "#/definitions/service.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_service.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized - user not authenticated or business_id missing",
                         "schema": {
-                            "$ref": "#/definitions/service.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_service.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Service not found",
                         "schema": {
-                            "$ref": "#/definitions/service.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_service.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/service.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_service.ErrorResponse"
                         }
                     }
                 }
@@ -1266,7 +1306,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/service.UpdateServiceHTTPRequest"
+                            "$ref": "#/definitions/internal_http_handlers_service.UpdateServiceHTTPRequest"
                         }
                     }
                 ],
@@ -1274,31 +1314,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Service updated successfully",
                         "schema": {
-                            "$ref": "#/definitions/service.SuccessResponse"
+                            "$ref": "#/definitions/internal_http_handlers_service.SuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Validation error - invalid field values or invalid service ID format",
                         "schema": {
-                            "$ref": "#/definitions/service.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_service.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized - user not authenticated or business_id missing",
                         "schema": {
-                            "$ref": "#/definitions/service.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_service.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Service not found",
                         "schema": {
-                            "$ref": "#/definitions/service.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_service.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/service.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_service.ErrorResponse"
                         }
                     }
                 }
@@ -1333,31 +1373,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Service deactivated successfully",
                         "schema": {
-                            "$ref": "#/definitions/service.SuccessResponse"
+                            "$ref": "#/definitions/internal_http_handlers_service.SuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Validation error or invalid service ID format",
                         "schema": {
-                            "$ref": "#/definitions/service.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_service.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized - user not authenticated or business_id missing",
                         "schema": {
-                            "$ref": "#/definitions/service.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_service.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Service not found",
                         "schema": {
-                            "$ref": "#/definitions/service.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_service.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/service.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_service.ErrorResponse"
                         }
                     }
                 }
@@ -1385,19 +1425,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Staff list retrieved successfully (array of StaffWithUserHTTPResponse)",
                         "schema": {
-                            "$ref": "#/definitions/staff.SuccessResponse"
+                            "$ref": "#/definitions/internal_http_handlers_staff.SuccessResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized - user not authenticated or business_id missing",
                         "schema": {
-                            "$ref": "#/definitions/staff.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_staff.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/staff.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_staff.ErrorResponse"
                         }
                     }
                 }
@@ -1426,7 +1466,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/staff.CreateStaffHTTPRequest"
+                            "$ref": "#/definitions/internal_http_handlers_staff.CreateStaffHTTPRequest"
                         }
                     }
                 ],
@@ -1434,25 +1474,25 @@ const docTemplate = `{
                     "201": {
                         "description": "Staff profile created successfully with generated UUID",
                         "schema": {
-                            "$ref": "#/definitions/staff.SuccessResponse"
+                            "$ref": "#/definitions/internal_http_handlers_staff.SuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Validation error - invalid or missing required fields",
                         "schema": {
-                            "$ref": "#/definitions/staff.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_staff.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized - user not authenticated or business_id missing",
                         "schema": {
-                            "$ref": "#/definitions/staff.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_staff.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/staff.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_staff.ErrorResponse"
                         }
                     }
                 }
@@ -1483,7 +1523,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/staff.InviteStaffHTTPRequest"
+                            "$ref": "#/definitions/internal_http_handlers_staff.InviteStaffHTTPRequest"
                         }
                     }
                 ],
@@ -1491,25 +1531,25 @@ const docTemplate = `{
                     "201": {
                         "description": "Invitation created successfully with token and expiration",
                         "schema": {
-                            "$ref": "#/definitions/staff.SuccessResponse"
+                            "$ref": "#/definitions/internal_http_handlers_staff.SuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Validation error - invalid email format or staff already invited",
                         "schema": {
-                            "$ref": "#/definitions/staff.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_staff.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized - user not authenticated or business_id missing",
                         "schema": {
-                            "$ref": "#/definitions/staff.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_staff.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/staff.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_staff.ErrorResponse"
                         }
                     }
                 }
@@ -1540,7 +1580,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/staff.AcceptInviteHTTPRequest"
+                            "$ref": "#/definitions/internal_http_handlers_staff.AcceptInviteHTTPRequest"
                         }
                     }
                 ],
@@ -1548,25 +1588,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Invitation accepted successfully, staff member activated",
                         "schema": {
-                            "$ref": "#/definitions/staff.SuccessResponse"
+                            "$ref": "#/definitions/internal_http_handlers_staff.SuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid or expired token, password validation failure",
                         "schema": {
-                            "$ref": "#/definitions/staff.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_staff.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized - user not authenticated or user_id missing",
                         "schema": {
-                            "$ref": "#/definitions/staff.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_staff.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/staff.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_staff.ErrorResponse"
                         }
                     }
                 }
@@ -1592,7 +1632,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/staff.ValidateInviteHTTPRequest"
+                            "$ref": "#/definitions/internal_http_handlers_staff.ValidateInviteHTTPRequest"
                         }
                     }
                 ],
@@ -1600,19 +1640,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Token is valid with invitation details (FirstName, LastName, Email, BusinessName)",
                         "schema": {
-                            "$ref": "#/definitions/staff.SuccessResponse"
+                            "$ref": "#/definitions/internal_http_handlers_staff.SuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid, expired, or already-used invitation token",
                         "schema": {
-                            "$ref": "#/definitions/staff.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_staff.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/staff.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_staff.ErrorResponse"
                         }
                     }
                 }
@@ -1649,31 +1689,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Staff details retrieved successfully",
                         "schema": {
-                            "$ref": "#/definitions/staff.SuccessResponse"
+                            "$ref": "#/definitions/internal_http_handlers_staff.SuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid staff ID format",
                         "schema": {
-                            "$ref": "#/definitions/staff.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_staff.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized - user not authenticated or business_id missing",
                         "schema": {
-                            "$ref": "#/definitions/staff.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_staff.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Staff member not found",
                         "schema": {
-                            "$ref": "#/definitions/staff.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_staff.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/staff.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_staff.ErrorResponse"
                         }
                     }
                 }
@@ -1709,7 +1749,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/staff.UpdateStaffHTTPRequest"
+                            "$ref": "#/definitions/internal_http_handlers_staff.UpdateStaffHTTPRequest"
                         }
                     }
                 ],
@@ -1717,31 +1757,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Staff member updated successfully",
                         "schema": {
-                            "$ref": "#/definitions/staff.SuccessResponse"
+                            "$ref": "#/definitions/internal_http_handlers_staff.SuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Validation error - invalid field values or invalid staff ID format",
                         "schema": {
-                            "$ref": "#/definitions/staff.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_staff.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized - user not authenticated or business_id missing",
                         "schema": {
-                            "$ref": "#/definitions/staff.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_staff.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Staff member not found",
                         "schema": {
-                            "$ref": "#/definitions/staff.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_staff.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/staff.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_staff.ErrorResponse"
                         }
                     }
                 }
@@ -1776,31 +1816,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Staff member deactivated successfully",
                         "schema": {
-                            "$ref": "#/definitions/staff.SuccessResponse"
+                            "$ref": "#/definitions/internal_http_handlers_staff.SuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Validation error or invalid staff ID format",
                         "schema": {
-                            "$ref": "#/definitions/staff.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_staff.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized - user not authenticated or business_id missing",
                         "schema": {
-                            "$ref": "#/definitions/staff.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_staff.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Staff member not found",
                         "schema": {
-                            "$ref": "#/definitions/staff.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_staff.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/staff.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_staff.ErrorResponse"
                         }
                     }
                 }
@@ -1837,25 +1877,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Staff services retrieved successfully (array of ServiceHTTPResponse)",
                         "schema": {
-                            "$ref": "#/definitions/service.SuccessResponse"
+                            "$ref": "#/definitions/internal_http_handlers_service.SuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid staff ID format",
                         "schema": {
-                            "$ref": "#/definitions/service.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_service.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized - user not authenticated or business_id missing",
                         "schema": {
-                            "$ref": "#/definitions/service.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_service.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/service.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_service.ErrorResponse"
                         }
                     }
                 }
@@ -1891,7 +1931,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/service.AssignServicesHTTPRequest"
+                            "$ref": "#/definitions/internal_http_handlers_service.AssignServicesHTTPRequest"
                         }
                     }
                 ],
@@ -1899,25 +1939,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Services assigned to staff successfully",
                         "schema": {
-                            "$ref": "#/definitions/service.SuccessResponse"
+                            "$ref": "#/definitions/internal_http_handlers_service.SuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Validation error - invalid staff ID format, invalid service IDs, or staff/service not found",
                         "schema": {
-                            "$ref": "#/definitions/service.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_service.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized - user not authenticated or business_id missing",
                         "schema": {
-                            "$ref": "#/definitions/service.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_service.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/service.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_service.ErrorResponse"
                         }
                     }
                 }
@@ -1961,25 +2001,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Service removed from staff successfully",
                         "schema": {
-                            "$ref": "#/definitions/service.SuccessResponse"
+                            "$ref": "#/definitions/internal_http_handlers_service.SuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Validation error - invalid staff/service ID format or service not assigned to staff",
                         "schema": {
-                            "$ref": "#/definitions/service.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_service.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized - user not authenticated or business_id missing",
                         "schema": {
-                            "$ref": "#/definitions/service.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_service.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/service.ErrorResponse"
+                            "$ref": "#/definitions/internal_http_handlers_service.ErrorResponse"
                         }
                     }
                 }
@@ -1987,7 +2027,22 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "auth.AuthResponseDTO": {
+        "github_com_OrkhanNajaf1i_booking-service_internal_domain_auth.UserRole": {
+            "type": "string",
+            "enum": [
+                "customer",
+                "provider_owner",
+                "staff",
+                "solo_practitioner"
+            ],
+            "x-enum-varnames": [
+                "UserTypeCustomer",
+                "UserTypeOwner",
+                "UserTypeStaff",
+                "UserTypeSoloPractitioner"
+            ]
+        },
+        "internal_http_handlers_auth.AuthResponseDTO": {
             "type": "object",
             "properties": {
                 "access_token": {
@@ -2007,11 +2062,11 @@ const docTemplate = `{
                     "example": "Bearer"
                 },
                 "user": {
-                    "$ref": "#/definitions/auth.UserResponseDTO"
+                    "$ref": "#/definitions/internal_http_handlers_auth.UserResponseDTO"
                 }
             }
         },
-        "auth.ErrorResponseDTO": {
+        "internal_http_handlers_auth.ErrorResponseDTO": {
             "type": "object",
             "properties": {
                 "code": {
@@ -2025,7 +2080,7 @@ const docTemplate = `{
                 }
             }
         },
-        "auth.ForgotPasswordHTTPRequest": {
+        "internal_http_handlers_auth.ForgotPasswordHTTPRequest": {
             "type": "object",
             "properties": {
                 "email": {
@@ -2033,7 +2088,7 @@ const docTemplate = `{
                 }
             }
         },
-        "auth.LoginHTTPRequest": {
+        "internal_http_handlers_auth.LoginHTTPRequest": {
             "type": "object",
             "properties": {
                 "email": {
@@ -2044,7 +2099,7 @@ const docTemplate = `{
                 }
             }
         },
-        "auth.RefreshTokenHTTPRequest": {
+        "internal_http_handlers_auth.RefreshTokenHTTPRequest": {
             "type": "object",
             "properties": {
                 "refresh_token": {
@@ -2052,7 +2107,7 @@ const docTemplate = `{
                 }
             }
         },
-        "auth.RegisterHTTPRequest": {
+        "internal_http_handlers_auth.RegisterHTTPRequest": {
             "type": "object",
             "properties": {
                 "email": {
@@ -2073,7 +2128,7 @@ const docTemplate = `{
                 }
             }
         },
-        "auth.ResetPasswordHTTPRequest": {
+        "internal_http_handlers_auth.ResetPasswordHTTPRequest": {
             "type": "object",
             "properties": {
                 "password": {
@@ -2084,7 +2139,7 @@ const docTemplate = `{
                 }
             }
         },
-        "auth.SuccessResponseDTO": {
+        "internal_http_handlers_auth.SuccessResponseDTO": {
             "type": "object",
             "properties": {
                 "data": {},
@@ -2096,7 +2151,7 @@ const docTemplate = `{
                 }
             }
         },
-        "auth.UserResponseDTO": {
+        "internal_http_handlers_auth.UserResponseDTO": {
             "type": "object",
             "properties": {
                 "avatar": {
@@ -2130,26 +2185,11 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "role": {
-                    "$ref": "#/definitions/auth.UserRole"
+                    "$ref": "#/definitions/github_com_OrkhanNajaf1i_booking-service_internal_domain_auth.UserRole"
                 }
             }
         },
-        "auth.UserRole": {
-            "type": "string",
-            "enum": [
-                "customer",
-                "provider_owner",
-                "staff",
-                "solo_practitioner"
-            ],
-            "x-enum-varnames": [
-                "UserTypeCustomer",
-                "UserTypeOwner",
-                "UserTypeStaff",
-                "UserTypeSoloPractitioner"
-            ]
-        },
-        "business.BusinessHTTPResponse": {
+        "internal_http_handlers_business.BusinessHTTPResponse": {
             "type": "object",
             "properties": {
                 "business_type": {
@@ -2184,7 +2224,7 @@ const docTemplate = `{
                 }
             }
         },
-        "business.CreateMultiBusinessHTTPRequest": {
+        "internal_http_handlers_business.CreateMultiBusinessHTTPRequest": {
             "type": "object",
             "properties": {
                 "industry": {
@@ -2198,7 +2238,7 @@ const docTemplate = `{
                 }
             }
         },
-        "business.CreateSoloBusinessHTTPRequest": {
+        "internal_http_handlers_business.CreateSoloBusinessHTTPRequest": {
             "type": "object",
             "properties": {
                 "name": {
@@ -2212,7 +2252,7 @@ const docTemplate = `{
                 }
             }
         },
-        "business.ErrorHTTPResponse": {
+        "internal_http_handlers_business.ErrorHTTPResponse": {
             "type": "object",
             "properties": {
                 "code": {
@@ -2226,7 +2266,7 @@ const docTemplate = `{
                 }
             }
         },
-        "business.SuccessHTTPResponse": {
+        "internal_http_handlers_business.SuccessHTTPResponse": {
             "type": "object",
             "properties": {
                 "data": {},
@@ -2238,7 +2278,7 @@ const docTemplate = `{
                 }
             }
         },
-        "business.UpdateBusinessHTTPRequest": {
+        "internal_http_handlers_business.UpdateBusinessHTTPRequest": {
             "type": "object",
             "properties": {
                 "industry": {
@@ -2249,43 +2289,6 @@ const docTemplate = `{
                 },
                 "phone": {
                     "type": "string"
-                }
-            }
-        },
-        "customer.ErrorResponseDTO": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "integer"
-                }
-            }
-        },
-        "customer.ListCustomersResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/internal_http_handlers_customer.CustomerResponse"
-                    }
-                },
-                "page": {
-                    "type": "integer"
-                },
-                "page_size": {
-                    "type": "integer"
-                },
-                "total": {
-                    "type": "integer"
-                },
-                "total_pages": {
-                    "type": "integer"
                 }
             }
         },
@@ -2346,6 +2349,43 @@ const docTemplate = `{
                 }
             }
         },
+        "internal_http_handlers_customer.ErrorResponseDTO": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_http_handlers_customer.ListCustomersResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_http_handlers_customer.CustomerResponse"
+                    }
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "total_pages": {
+                    "type": "integer"
+                }
+            }
+        },
         "internal_http_handlers_customer.UpdateCustomerRequest": {
             "type": "object",
             "properties": {
@@ -2366,7 +2406,7 @@ const docTemplate = `{
                 }
             }
         },
-        "location.CreateLocationHTTPRequest": {
+        "internal_http_handlers_location.CreateLocationHTTPRequest": {
             "type": "object",
             "required": [
                 "name"
@@ -2386,7 +2426,7 @@ const docTemplate = `{
                 }
             }
         },
-        "location.ErrorResponse": {
+        "internal_http_handlers_location.ErrorResponse": {
             "type": "object",
             "properties": {
                 "details": {},
@@ -2398,7 +2438,7 @@ const docTemplate = `{
                 }
             }
         },
-        "location.SuccessResponse": {
+        "internal_http_handlers_location.SuccessResponse": {
             "type": "object",
             "properties": {
                 "data": {},
@@ -2410,7 +2450,7 @@ const docTemplate = `{
                 }
             }
         },
-        "location.UpdateLocationHTTPRequest": {
+        "internal_http_handlers_location.UpdateLocationHTTPRequest": {
             "type": "object",
             "required": [
                 "name"
@@ -2430,7 +2470,7 @@ const docTemplate = `{
                 }
             }
         },
-        "service.AssignServicesHTTPRequest": {
+        "internal_http_handlers_service.AssignServicesHTTPRequest": {
             "type": "object",
             "properties": {
                 "service_ids": {
@@ -2441,7 +2481,7 @@ const docTemplate = `{
                 }
             }
         },
-        "service.ErrorResponse": {
+        "internal_http_handlers_service.ErrorResponse": {
             "type": "object",
             "properties": {
                 "details": {},
@@ -2453,7 +2493,7 @@ const docTemplate = `{
                 }
             }
         },
-        "service.SuccessResponse": {
+        "internal_http_handlers_service.SuccessResponse": {
             "type": "object",
             "properties": {
                 "data": {},
@@ -2465,7 +2505,7 @@ const docTemplate = `{
                 }
             }
         },
-        "service.UpdateServiceHTTPRequest": {
+        "internal_http_handlers_service.UpdateServiceHTTPRequest": {
             "type": "object",
             "properties": {
                 "description": {
@@ -2482,7 +2522,7 @@ const docTemplate = `{
                 }
             }
         },
-        "staff.AcceptInviteHTTPRequest": {
+        "internal_http_handlers_staff.AcceptInviteHTTPRequest": {
             "type": "object",
             "properties": {
                 "password": {
@@ -2493,7 +2533,7 @@ const docTemplate = `{
                 }
             }
         },
-        "staff.CreateStaffHTTPRequest": {
+        "internal_http_handlers_staff.CreateStaffHTTPRequest": {
             "type": "object",
             "properties": {
                 "location_id": {
@@ -2510,7 +2550,7 @@ const docTemplate = `{
                 }
             }
         },
-        "staff.ErrorResponse": {
+        "internal_http_handlers_staff.ErrorResponse": {
             "type": "object",
             "properties": {
                 "details": {},
@@ -2522,7 +2562,7 @@ const docTemplate = `{
                 }
             }
         },
-        "staff.InviteStaffHTTPRequest": {
+        "internal_http_handlers_staff.InviteStaffHTTPRequest": {
             "type": "object",
             "properties": {
                 "email": {
@@ -2539,7 +2579,7 @@ const docTemplate = `{
                 }
             }
         },
-        "staff.SuccessResponse": {
+        "internal_http_handlers_staff.SuccessResponse": {
             "type": "object",
             "properties": {
                 "data": {},
@@ -2551,7 +2591,7 @@ const docTemplate = `{
                 }
             }
         },
-        "staff.UpdateStaffHTTPRequest": {
+        "internal_http_handlers_staff.UpdateStaffHTTPRequest": {
             "type": "object",
             "properties": {
                 "bio": {
@@ -2574,7 +2614,7 @@ const docTemplate = `{
                 }
             }
         },
-        "staff.ValidateInviteHTTPRequest": {
+        "internal_http_handlers_staff.ValidateInviteHTTPRequest": {
             "type": "object",
             "properties": {
                 "token": {
