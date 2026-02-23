@@ -151,7 +151,7 @@ func (handler *BusinessHandler) GetBusiness(writer http.ResponseWriter, request 
 
 // @Summary      List All Businesses
 // @Description  Retrieves all registered businesses in the system.
-// @Tags         Businesses
+// @Tags         Business
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
