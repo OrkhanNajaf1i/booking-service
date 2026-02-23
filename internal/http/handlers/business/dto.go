@@ -58,6 +58,13 @@ func ToBusinessesHTTPResponse(businesses []*business.Business) []*BusinessHTTPRe
 	}
 	return responses
 }
+
+type ListBusinessesHTTPResponse struct {
+	Success bool                    `json:"success"`
+	Data    []*BusinessHTTPResponse `json:"data"`
+	Message string                  `json:"message,omitempty"`
+}
+
 func ToBusinessHTTPResponse(business *business.Business) *BusinessHTTPResponse {
 	if business == nil {
 		return nil

@@ -160,6 +160,17 @@ definitions:
       message:
         type: string
     type: object
+  internal_http_handlers_business.ListBusinessesHTTPResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/internal_http_handlers_business.BusinessHTTPResponse'
+        type: array
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   internal_http_handlers_business.SuccessHTTPResponse:
     properties:
       data: {}
@@ -693,7 +704,7 @@ paths:
         "200":
           description: Businesses retrieved successfully
           schema:
-            $ref: '#/definitions/internal_http_handlers_business.SuccessHTTPResponse'
+            $ref: '#/definitions/internal_http_handlers_business.ListBusinessesHTTPResponse'
         "401":
           description: Unauthorized - user not authenticated
           schema:
@@ -706,7 +717,7 @@ paths:
       - BearerAuth: []
       summary: List All Businesses
       tags:
-      - Businesses
+      - Business
   /api/v1/businesses/{id}:
     get:
       consumes:
