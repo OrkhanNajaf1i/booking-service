@@ -56,7 +56,7 @@ cd booking-service
 ### run commands
 go run cmd/api/main.go
 go run cmd/worker/main.go
-
+swag init -g cmd/api/main.go -o docs --parseInternal --parseDependency
 
 
 <!--
