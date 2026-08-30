@@ -94,3 +94,24 @@ func ParseServiceIDs(ids []string) ([]uuid.UUID, error) {
 	}
 	return result, nil
 }
+
+// CreateServiceHTTPRequest – yeni xidmet yaratmaq ucun.
+//
+// Xidmet randevunun mueddetini ve gelirini teyin edir: duration_minutes
+// availability muherrikine, price ise dashboard hesabatina gedir.
+type CreateServiceHTTPRequest struct {
+	Name            string  `json:"name" example:"Sac kesimi"`
+	Description     string  `json:"description" example:"Kisi sac kesimi"`
+	DurationMinutes int     `json:"duration_minutes" example:"30"`
+	Price           float64 `json:"price" example:"20"`
+}
+
+// ToDomain – HTTP DTO -> domain request.
+func (r *CreateServiceHTTPRequest) ToDomain() *domain.CreateServiceRequest {
+	return &domain.CreateServiceRequest{
+		Name:            strings.TrimSpace(r.Name),
+		Description:     strings.TrimSpace(r.Description),
+		DurationMinutes: r.DurationMinutes,
+		Price:           r.Price,
+	}
+}
