@@ -43,3 +43,6 @@ Thumbs.db
 logs/
 *.log
 tmp/
+
+# Lokal test konfiqurasiyasi (Docker test bazasi)
+.env.local

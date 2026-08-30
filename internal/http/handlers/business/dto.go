@@ -21,9 +21,11 @@ type CreateMultiBusinessHTTPRequest struct {
 }
 
 type UpdateBusinessHTTPRequest struct {
-	Name     string `json:"name"`
-	Industry string `json:"industry"`
-	Phone    string `json:"phone"`
+	BusinessID uuid.UUID `json:"business_id"`
+	Name       string    `json:"name"`
+	Industry   string    `json:"industry"`
+	Phone      string    `json:"phone"`
+	// OwnerID  uuid.UUID `json:"owner_id"`
 }
 
 type BusinessHTTPResponse struct {
@@ -109,5 +111,6 @@ func (request *UpdateBusinessHTTPRequest) ToUpdateBusinessRequest() *business.Up
 		Name:     request.Name,
 		Industry: request.Industry,
 		Phone:    request.Phone,
+		// OwnerID:  request.OwnerID,
 	}
 }

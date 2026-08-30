@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/OrkhanNajaf1i/booking-service/internal/config"
 	"github.com/OrkhanNajaf1i/booking-service/internal/logger"
@@ -74,9 +75,25 @@ func RunMigrations(cfg config.AppConfig, appLogger logger.Logger) error {
 	dsn := buildMigrationDSN(cfg)
 	appLogger.Info("Migration DSN", logger.Field{Key: "dsn", Value: dsn})
 
-	m, err := migrate.New(migrationsPath, dsn)
+	var m *migrate.Migrate
+	var err error
+	const maxAttempts = 5
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		m, err = migrate.New(migrationsPath, dsn)
+		if err == nil {
+			break
+		}
+		appLogger.Warn("Migration connection failed, retrying...",
+			logger.Field{Key: "attempt", Value: attempt},
+			logger.Field{Key: "max", Value: maxAttempts},
+			logger.Field{Key: "error", Value: err.Error()},
+		)
+		if attempt < maxAttempts {
+			time.Sleep(time.Duration(attempt) * 5 * time.Second)
+		}
+	}
 	if err != nil {
-		return fmt.Errorf("failed to create migrate instance: %w", err)
+		return fmt.Errorf("failed to create migrate instance after %d attempts: %w", maxAttempts, err)
 	}
 	defer m.Close()
 

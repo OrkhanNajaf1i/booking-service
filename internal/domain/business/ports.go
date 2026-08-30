@@ -21,5 +21,5 @@ type Service interface {
 	GetBusinessByID(ctx context.Context, id uuid.UUID) (*Business, error)
 	GetBusinessByOwner(ctx context.Context, ownerID uuid.UUID) (*Business, error)
 	ListBusinesses(ctx context.Context) ([]*Business, error)
-	UpdateBusiness(ctx context.Context, businessID uuid.UUID, request *UpdateBusinessRequest) error
+	UpdateBusiness(ctx context.Context, businessID uuid.UUID, ownerID uuid.UUID, request *UpdateBusinessRequest) error
 }
