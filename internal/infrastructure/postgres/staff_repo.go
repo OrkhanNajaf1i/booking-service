@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/OrkhanNajaf1i/booking-service/internal/domain/staff"
 	"github.com/google/uuid"
@@ -237,4 +238,43 @@ func (r *StaffRepository) ListInvitesByBusiness(ctx context.Context, businessID 
 	}
 
 	return invites, nil
+}
+
+// EnsureOwnerProfile – biznes sahibi ucun staff profili yaradir.
+//
+// business.StaffProvisioner realizasiyasidir. Idempotentdir: profil
+// artiq varsa yeni setir yaratmir, cunki onboarding tekrarlana biler.
+func (r *StaffRepository) EnsureOwnerProfile(
+	ctx context.Context,
+	businessID, userID uuid.UUID,
+	title string,
+) error {
+	const existsQuery = `
+		SELECT EXISTS (
+			SELECT 1 FROM staff_profiles
+			WHERE business_id = $1 AND user_id = $2
+		)`
+
+	var exists bool
+	if err := r.db.GetContext(ctx, &exists, existsQuery, businessID, userID); err != nil {
+		return fmt.Errorf("postgres: owner staff profile check failed: %w", err)
+	}
+	if exists {
+		return nil
+	}
+
+	if strings.TrimSpace(title) == "" {
+		title = "Mutexessis"
+	}
+
+	const insertQuery = `
+		INSERT INTO staff_profiles (
+			id, user_id, business_id, role, title, department, bio, status,
+			joined_at, created_at, updated_at
+		) VALUES ($1, $2, $3, 'admin', $4, '', '', 'active', NOW(), NOW(), NOW())`
+
+	if _, err := r.db.ExecContext(ctx, insertQuery, uuid.New(), userID, businessID, title); err != nil {
+		return fmt.Errorf("postgres: create owner staff profile failed: %w", err)
+	}
+	return nil
 }
