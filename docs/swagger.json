@@ -2898,6 +2898,45 @@
                 }
             }
         },
+        "/dashboard/stats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Bu gunun bronlari, cavab gozleyenler, cari ayin geliri ve musteri sayi.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Dashboard gostericileri",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "IANA timezone (default Asia/Baku)",
+                        "name": "tz",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_dashboard.SuccessResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_dashboard.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/notifications": {
             "get": {
                 "security": [
@@ -3155,6 +3194,20 @@
                     "Public"
                 ],
                 "summary": "Aktiv bizneslerin siyahisi",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Sahe uzre filtr (mes. Berber)",
+                        "name": "category",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Ad / sahe uzre axtaris",
+                        "name": "q",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -3246,6 +3299,26 @@
                         "required": true
                     }
                 ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_public.SuccessResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/public/categories": {
+            "get": {
+                "description": "Her kateqoriyada nece aktiv biznes oldugunu da qaytarir.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Public"
+                ],
+                "summary": "Xidmet kateqoriyalari",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -3915,6 +3988,32 @@
                 },
                 "status": {
                     "type": "string"
+                }
+            }
+        },
+        "internal_http_handlers_dashboard.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "internal_http_handlers_dashboard.SuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
                 }
             }
         },

@@ -129,6 +129,15 @@ func (service *BusinessService) ListBusinesses(ctx context.Context) ([]*Business
 
 	return businesses, nil
 }
+
+// ListBookableBusinesses – musteri kesfi ucun; yalniz iscisi olan bizneslər.
+func (service *BusinessService) ListBookableBusinesses(ctx context.Context) ([]*Business, error) {
+	businesses, err := service.repository.ListBookable(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list bookable businesses: %w", err)
+	}
+	return businesses, nil
+}
 func (service *BusinessService) UpdateBusiness(
 	ctx context.Context,
 	businessID uuid.UUID,
