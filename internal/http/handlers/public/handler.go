@@ -14,6 +14,8 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"sort"
+	"strings"
 	"time"
 
 	availabilityDomain "github.com/OrkhanNajaf1i/booking-service/internal/domain/availability"
@@ -68,14 +70,19 @@ type BusinessCard struct {
 // @Description  Musteri xestexana / klinika / berberxana secmek ucun. Auth telem olunmur.
 // @Tags         Public
 // @Produce      json
+// @Param        category query string false "Sahe uzre filtr (mes. Berber)"
+// @Param        q        query string false "Ad / sahe uzre axtaris"
 // @Success      200 {object} SuccessResponse
 // @Router       /public/businesses [get]
 func (h *Handler) ListBusinesses(w http.ResponseWriter, r *http.Request) {
-	all, err := h.businesses.ListBusinesses(r.Context())
+	all, err := h.businesses.ListBookableBusinesses(r.Context())
 	if err != nil {
 		h.writeInternal(w, err)
 		return
 	}
+
+	category := strings.TrimSpace(r.URL.Query().Get("category"))
+	search := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("q")))
 
 	cards := make([]BusinessCard, 0, len(all))
 	for _, item := range all {
@@ -83,6 +90,13 @@ func (h *Handler) ListBusinesses(w http.ResponseWriter, r *http.Request) {
 		if !item.IsActive {
 			continue
 		}
+		if category != "" && !strings.EqualFold(categoryOf(item.ServiceCategory, item.Industry), category) {
+			continue
+		}
+		if search != "" && !matchesSearch(item.Name, item.ServiceCategory, item.Industry, search) {
+			continue
+		}
+
 		cards = append(cards, BusinessCard{
 			ID:              item.ID,
 			Name:            item.Name,
@@ -94,6 +108,79 @@ func (h *Handler) ListBusinesses(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeSuccess(w, http.StatusOK, "", cards)
+}
+
+// CategoryCard – kesf ekraninda gosterilen kateqoriya.
+type CategoryCard struct {
+	Name  string `json:"name"`
+	Count int    `json:"count"`
+}
+
+// ListCategories – GET /api/v1/public/categories
+//
+// Musteri once sahe secir ("Berber", "Dis Hekimi"), sonra hemin
+// sahedeki biznesler siyahilanir. Kateqoriya ayrica cedvel deyil —
+// bizneslerin service_category (yoxdursa industry) sahesinden yigilir.
+//
+// @Summary      Xidmet kateqoriyalari
+// @Description  Her kateqoriyada nece aktiv biznes oldugunu da qaytarir.
+// @Tags         Public
+// @Produce      json
+// @Success      200 {object} SuccessResponse
+// @Router       /public/categories [get]
+func (h *Handler) ListCategories(w http.ResponseWriter, r *http.Request) {
+	all, err := h.businesses.ListBookableBusinesses(r.Context())
+	if err != nil {
+		h.writeInternal(w, err)
+		return
+	}
+
+	counts := make(map[string]int)
+	for _, item := range all {
+		if !item.IsActive {
+			continue
+		}
+		name := categoryOf(item.ServiceCategory, item.Industry)
+		if name == "" {
+			continue
+		}
+		counts[name]++
+	}
+
+	cards := make([]CategoryCard, 0, len(counts))
+	for name, count := range counts {
+		cards = append(cards, CategoryCard{Name: name, Count: count})
+	}
+
+	// Coxlu biznesi olan sahe once gorunsun; beraberlikde elifba sirasi.
+	sort.Slice(cards, func(i, j int) bool {
+		if cards[i].Count != cards[j].Count {
+			return cards[i].Count > cards[j].Count
+		}
+		return cards[i].Name < cards[j].Name
+	})
+
+	writeSuccess(w, http.StatusOK, "", cards)
+}
+
+// categoryOf – biznesin aid oldugu sahe.
+// service_category daha deqiqdir ("Dis Hekimi"), industry daha genisdir
+// ("healthcare"); ona gore birincisine ustunluk verilir.
+func categoryOf(serviceCategory, industry string) string {
+	if trimmed := strings.TrimSpace(serviceCategory); trimmed != "" {
+		return trimmed
+	}
+	return strings.TrimSpace(industry)
+}
+
+// matchesSearch – ad, sahe ve ya industry uzre sade axtaris.
+func matchesSearch(name, serviceCategory, industry, needle string) bool {
+	for _, field := range []string{name, serviceCategory, industry} {
+		if strings.Contains(strings.ToLower(field), needle) {
+			return true
+		}
+	}
+	return false
 }
 
 // GetBusiness – GET /api/v1/public/businesses/{id}

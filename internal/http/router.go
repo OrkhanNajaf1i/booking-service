@@ -9,6 +9,7 @@ import (
 	bookingHandler "github.com/OrkhanNajaf1i/booking-service/internal/http/handlers/booking"
 	businessHandler "github.com/OrkhanNajaf1i/booking-service/internal/http/handlers/business"
 	customerHandler "github.com/OrkhanNajaf1i/booking-service/internal/http/handlers/customer"
+	dashboardHandler "github.com/OrkhanNajaf1i/booking-service/internal/http/handlers/dashboard"
 	locationHandler "github.com/OrkhanNajaf1i/booking-service/internal/http/handlers/location"
 	notificationHandler "github.com/OrkhanNajaf1i/booking-service/internal/http/handlers/notification"
 	publicHandler "github.com/OrkhanNajaf1i/booking-service/internal/http/handlers/public"
@@ -35,6 +36,7 @@ type Handlers struct {
 	Availability *availabilityHandler.Handler
 	Booking      *bookingHandler.Handler
 	Notification *notificationHandler.Handler
+	Dashboard    *dashboardHandler.Handler
 	Public       *publicHandler.Handler
 	Realtime     *realtime.Handler
 }
@@ -52,6 +54,9 @@ func NewRouter(h Handlers, tokenManager authDomain.TokenManager) *http.ServeMux 
 	routes.RegisterAvailabilityRoutes(mux, h.Availability, authMiddleware)
 	routes.RegisterBookingRoutes(mux, h.Booking, authMiddleware)
 	routes.RegisterNotificationRoutes(mux, h.Notification, authMiddleware)
+	if h.Dashboard != nil {
+		routes.RegisterDashboardRoutes(mux, h.Dashboard, authMiddleware)
+	}
 
 	// Musterinin login olmadan gore bilecekleri.
 	if h.Public != nil {

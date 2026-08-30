@@ -27,6 +27,7 @@ import (
 	bookingHandler "github.com/OrkhanNajaf1i/booking-service/internal/http/handlers/booking"
 	businessHandler "github.com/OrkhanNajaf1i/booking-service/internal/http/handlers/business"
 	customerHandler "github.com/OrkhanNajaf1i/booking-service/internal/http/handlers/customer"
+	dashboardHandler "github.com/OrkhanNajaf1i/booking-service/internal/http/handlers/dashboard"
 	locationHandler "github.com/OrkhanNajaf1i/booking-service/internal/http/handlers/location"
 	notificationHandler "github.com/OrkhanNajaf1i/booking-service/internal/http/handlers/notification"
 	publicHandler "github.com/OrkhanNajaf1i/booking-service/internal/http/handlers/public"
@@ -78,6 +79,7 @@ func New(cfg *config.AppConfig, appLogger logger.Logger) (*App, error) {
 	bookingRepo := postgres.NewBookingRepository(db)
 	notificationRepo := postgres.NewNotificationRepository(db)
 	participantsRepo := postgres.NewParticipantsRepository(db)
+	dashboardRepo := postgres.NewDashboardRepository(db)
 
 	// ---------- KRIPTO / EMAIL ----------
 	passwordHasher := crypto.NewBcryptPasswordHasher()
@@ -135,6 +137,7 @@ func New(cfg *config.AppConfig, appLogger logger.Logger) (*App, error) {
 		Availability: availabilityHandler.NewHandler(availabilitySvc, appLogger),
 		Booking:      bookingHandler.NewHandler(bookingSvc, staffRepo, appLogger),
 		Notification: notificationHandler.NewHandler(notificationSvc, appLogger),
+		Dashboard:    dashboardHandler.NewHandler(dashboardRepo, appLogger, cfg.DefaultTimezone),
 		Public: publicHandler.NewHandler(
 			businessSvc, staffSvc, serviceSvc, availabilitySvc, appLogger,
 		),

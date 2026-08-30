@@ -440,6 +440,23 @@ definitions:
       status:
         type: string
     type: object
+  internal_http_handlers_dashboard.ErrorResponse:
+    properties:
+      code:
+        type: string
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  internal_http_handlers_dashboard.SuccessResponse:
+    properties:
+      data: {}
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   internal_http_handlers_location.CreateLocationHTTPRequest:
     properties:
       address:
@@ -2540,6 +2557,31 @@ paths:
       summary: Oz musteri kartini tap/yarat
       tags:
       - Customer
+  /dashboard/stats:
+    get:
+      description: Bu gunun bronlari, cavab gozleyenler, cari ayin geliri ve musteri
+        sayi.
+      parameters:
+      - description: IANA timezone (default Asia/Baku)
+        in: query
+        name: tz
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_http_handlers_dashboard.SuccessResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_http_handlers_dashboard.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Dashboard gostericileri
+      tags:
+      - Dashboard
   /notifications:
     get:
       parameters:
@@ -2696,6 +2738,15 @@ paths:
     get:
       description: Musteri xestexana / klinika / berberxana secmek ucun. Auth telem
         olunmur.
+      parameters:
+      - description: Sahe uzre filtr (mes. Berber)
+        in: query
+        name: category
+        type: string
+      - description: Ad / sahe uzre axtaris
+        in: query
+        name: q
+        type: string
       produces:
       - application/json
       responses:
@@ -2763,6 +2814,19 @@ paths:
           schema:
             $ref: '#/definitions/internal_http_handlers_public.SuccessResponse'
       summary: Biznesin isciləri
+      tags:
+      - Public
+  /public/categories:
+    get:
+      description: Her kateqoriyada nece aktiv biznes oldugunu da qaytarir.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_http_handlers_public.SuccessResponse'
+      summary: Xidmet kateqoriyalari
       tags:
       - Public
 schemes:
