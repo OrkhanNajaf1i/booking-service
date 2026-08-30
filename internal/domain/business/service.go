@@ -11,11 +11,19 @@ import (
 
 type BusinessService struct {
 	repository Repository
+	owners     OwnerLinker
+	staff      StaffProvisioner
 }
 
-func NewService(repository Repository) *BusinessService {
+func NewService(
+	repository Repository,
+	owners OwnerLinker,
+	staff StaffProvisioner,
+) *BusinessService {
 	return &BusinessService{
 		repository: repository,
+		owners:     owners,
+		staff:      staff,
 	}
 }
 
@@ -50,6 +58,27 @@ func (service *BusinessService) CreateBusiness(
 
 	if err := service.repository.Create(ctx, business); err != nil {
 		return nil, fmt.Errorf("failed to create business: %w", err)
+	}
+
+	// Istifadecini biznese baglayiriq. Bu olmasa JWT-ye business_id
+	// dusmur ve butun biznes-kontekstli endpoint-ler 400 qaytarir.
+	if service.owners != nil {
+		if err := service.owners.UpdateUserBusinessID(ctx, ownerID, business.ID, true); err != nil {
+			return nil, fmt.Errorf("failed to link owner to business: %w", err)
+		}
+	}
+
+	// Sahib ozu de xidmet gosteren sexsdir: randevu staff_id-ye baglanir,
+	// ona gore profili derhal yaradilir. Eks halda "evvelce isci elave
+	// edin" ekranindan kenara cixmaq mumkun olmur.
+	if service.staff != nil {
+		title := request.ServiceCategory
+		if title == "" {
+			title = request.Industry
+		}
+		if err := service.staff.EnsureOwnerProfile(ctx, business.ID, ownerID, title); err != nil {
+			return nil, fmt.Errorf("failed to create owner staff profile: %w", err)
+		}
 	}
 
 	return business, nil
