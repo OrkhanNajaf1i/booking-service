@@ -10,16 +10,19 @@ import (
 
 	"github.com/OrkhanNajaf1i/booking-service/internal/domain/business"
 	"github.com/OrkhanNajaf1i/booking-service/internal/http/middleware"
+	"github.com/OrkhanNajaf1i/booking-service/internal/logger"
 	"github.com/google/uuid"
 )
 
 type BusinessHandler struct {
 	businessService business.Service
+	logger          logger.Logger
 }
 
-func NewBusinessHandler(businessService business.Service) *BusinessHandler {
+func NewBusinessHandler(businessService business.Service, log logger.Logger) *BusinessHandler {
 	return &BusinessHandler{
 		businessService: businessService,
+		logger:          log,
 	}
 }
 
@@ -235,14 +238,20 @@ func (handler *BusinessHandler) GetBusinessByID(writer http.ResponseWriter, requ
 // @Failure      500  {object}  ErrorHTTPResponse "Internal server error"
 // @Router       /api/v1/business [put]
 func (handler *BusinessHandler) UpdateBusiness(writer http.ResponseWriter, request *http.Request) {
+
 	if request.Method != http.MethodPut {
 		handler.respondWithError(writer, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "Method not allowed")
 		return
 	}
 
 	ctx := request.Context()
+	// businessID, err := handler.extractBusinessIDFromContext(ctx)
 
-	businessID, err := handler.extractBusinessIDFromContext(ctx)
+	// if err != nil {
+	// 	handler.respondWithError(writer, http.StatusUnauthorized, "UNAUTHORIZED", err.Error())
+	// 	return
+	// }
+	ownerID, err := handler.extractUserIDFromContext(ctx)
 	if err != nil {
 		handler.respondWithError(writer, http.StatusUnauthorized, "UNAUTHORIZED", err.Error())
 		return
@@ -257,7 +266,7 @@ func (handler *BusinessHandler) UpdateBusiness(writer http.ResponseWriter, reque
 
 	domainRequest := httpRequest.ToUpdateBusinessRequest()
 
-	if err := handler.businessService.UpdateBusiness(ctx, businessID, domainRequest); err != nil {
+	if err := handler.businessService.UpdateBusiness(ctx, httpRequest.BusinessID, ownerID, domainRequest); err != nil {
 		handler.handleDomainError(writer, err)
 		return
 	}
@@ -277,46 +286,18 @@ func (handler *BusinessHandler) extractIDFromPath(path, prefix string) string {
 	return id
 }
 
+// extractUserIDFromContext – JWT-den gelen user_id.
+//
+// Deyer middleware terefinden uuid.UUID kimi yazilir. Evvel burada
+// string gozlenilirdi ve butun /business sorgulari 401 verirdi;
+// indi ortaq helper istifade olunur ki, tip bir yerde teyin olunsun.
 func (handler *BusinessHandler) extractUserIDFromContext(ctx context.Context) (uuid.UUID, error) {
-	userIDValue := ctx.Value(middleware.UserIDKey)
-	if userIDValue == nil {
-		return uuid.Nil, fmt.Errorf("user ID not found in context")
-	}
-
-	userIDString, ok := userIDValue.(string)
-	if !ok || userIDString == "" {
-		return uuid.Nil, fmt.Errorf("user ID has invalid type")
-	}
-
-	userID, err := uuid.Parse(userIDString)
-	if err != nil {
-		return uuid.Nil, fmt.Errorf("invalid user ID format: %w", err)
-	}
-
-	return userID, nil
+	return middleware.UserIDFromContext(ctx)
 }
 
+// extractBusinessIDFromContext – JWT-den gelen business_id.
 func (handler *BusinessHandler) extractBusinessIDFromContext(ctx context.Context) (uuid.UUID, error) {
-	businessIDValue := ctx.Value(middleware.BusinessKey)
-	if businessIDValue == nil {
-		return uuid.Nil, fmt.Errorf("business ID not found in context")
-	}
-
-	businessIDString, ok := businessIDValue.(string)
-	if !ok {
-		return uuid.Nil, fmt.Errorf("business ID has invalid type")
-	}
-
-	if businessIDString == "" {
-		return uuid.Nil, fmt.Errorf("business ID is empty")
-	}
-
-	businessID, err := uuid.Parse(businessIDString)
-	if err != nil {
-		return uuid.Nil, fmt.Errorf("invalid business ID format: %w", err)
-	}
-
-	return businessID, nil
+	return middleware.BusinessIDFromContext(ctx)
 }
 
 func (handler *BusinessHandler) handleDomainError(writer http.ResponseWriter, err error) {
@@ -348,6 +329,7 @@ func (handler *BusinessHandler) mapErrorCodeToHTTPStatus(errorCode string) int {
 		"INDUSTRY_TOO_LONG":          http.StatusBadRequest,
 		"INVALID_BUSINESS_TYPE":      http.StatusBadRequest,
 		"BUSINESS_NOT_FOUND":         http.StatusNotFound,
+		"UNAUTHORIZED":               http.StatusUnauthorized,
 	}
 
 	if status, exists := errorStatusMap[errorCode]; exists {

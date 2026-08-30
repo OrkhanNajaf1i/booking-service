@@ -24,11 +24,30 @@ type Repository interface {
 	UpdateLastBookingTime(ctx context.Context, customerID uuid.UUID, timestamp time.Time) error
 }
 
+// UserProfile - ResolveSelf ucun lazim olan istifadeci melumati.
+type UserProfile struct {
+	ID       uuid.UUID
+	FullName string
+	Email    string
+	Phone    string
+}
+
+// UserProfileProvider - istifadeci profilini oxuyan port.
+// Auth repository bu imzani odeyir.
+type UserProfileProvider interface {
+	GetUserProfile(ctx context.Context, userID uuid.UUID) (*UserProfile, error)
+}
+
 // Service - Business Logic (Domain Service)
 type Service interface {
 	CreateCustomer(ctx context.Context, businessID uuid.UUID, req *CreateCustomerRequest) (*Customer, error)
 	GetCustomer(ctx context.Context, businessID, id uuid.UUID) (*Customer, error)
 	GetCustomerByUserID(ctx context.Context, businessID, userID uuid.UUID) (*Customer, error)
+
+	// ResolveSelf - musteri tetbiqi ucun: login olmus istifadecinin hemin
+	// biznesdeki musteri kartini tapir, yoxdursa yaradir.
+	// Bron yaratmaq ucun customer_id teleb olundugundan bu addim vacibdir.
+	ResolveSelf(ctx context.Context, businessID, userID uuid.UUID) (*Customer, error)
 	ListCustomers(ctx context.Context, businessID uuid.UUID, page, pageSize int) (*CustomersListResponse, error)
 	UpdateCustomer(ctx context.Context, businessID, id uuid.UUID, req *UpdateCustomerRequest) (*Customer, error)
 	DeleteCustomer(ctx context.Context, businessID, id uuid.UUID) error

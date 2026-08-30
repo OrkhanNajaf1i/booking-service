@@ -1,12 +1,13 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
+	"github.com/OrkhanNajaf1i/booking-service/internal/app/worker"
 	"github.com/OrkhanNajaf1i/booking-service/internal/config"
 	"github.com/OrkhanNajaf1i/booking-service/internal/infrastructure/postgres"
 	"github.com/OrkhanNajaf1i/booking-service/internal/logger"
@@ -17,30 +18,34 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Println("WORKER: .env file not found, using system envs")
 	}
+
 	cfg, err := config.Load()
 	if err != nil {
-		log.Fatal("Failed to load config: %v", err)
+		log.Fatalf("Failed to load config: %v", err)
 	}
 
 	appLogger, err := logger.New(cfg)
 	if err != nil {
-		log.Fatal("Failed to initialize logger: %v", err)
+		log.Fatalf("Failed to initialize logger: %v", err)
 	}
+
 	if err := postgres.RunMigrations(*cfg, appLogger); err != nil {
 		log.Fatalf("migrations failed: %v", err)
 	}
-	appLogger.Info("Worker starting")
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
-	ticker := time.NewTicker(time.Second * 30)
-	defer ticker.Stop()
 
-	for {
-		select {
-		case <-ticker.C:
-			appLogger.Info("Processing reminders...")
-		case <-stop:
-			appLogger.Info("Worker shutting down gracefully")
-		}
+	app, err := worker.New(cfg, appLogger)
+	if err != nil {
+		log.Fatalf("failed to init worker: %v", err)
 	}
+	defer app.Close()
+
+	// SIGINT/SIGTERM gelende ctx legv olunur ve Run() temiz cixir.
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	if err := app.Run(ctx); err != nil && err != context.Canceled {
+		log.Fatalf("worker error: %v", err)
+	}
+
+	appLogger.Info("Worker dayandi")
 }

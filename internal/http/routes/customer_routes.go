@@ -16,6 +16,10 @@ func RegisterCustomerRoutes(
 		return authMiddleware(http.HandlerFunc(handlerFunc))
 	}
 	mux.Handle("POST /api/v1/customers", protected(h.CreateCustomer))
+
+	// Musteri tetbiqi: oz musteri kartini tap/yarat.
+	// "/customers" ile qarismasin deye ayrica seqmentdir.
+	mux.Handle("POST /api/v1/customers/self", protected(h.ResolveSelf))
 	mux.Handle("GET /api/v1/customers", protected(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Query().Get("id") != "" {
 			h.GetCustomer(w, r)

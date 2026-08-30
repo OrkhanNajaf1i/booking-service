@@ -10,14 +10,67 @@ import (
 )
 
 type service struct {
-	repo Repository
+	repo     Repository
+	profiles UserProfileProvider
 }
 
-// NewService - Service instance-ı yaratır
-func NewService(repo Repository) Service {
+// NewService - Service instance-ı yaratır.
+// profiles nil ola bilər; bu halda ResolveSelf istifadə oluna bilməz.
+func NewService(repo Repository, profiles UserProfileProvider) Service {
 	return &service{
-		repo: repo,
+		repo:     repo,
+		profiles: profiles,
 	}
+}
+
+// ResolveSelf - login olmuş istifadəçinin həmin biznesdəki müştəri kartı.
+//
+// Müştəri tətbiqindən bron edərkən lazımdır: JWT-də yalnız user_id var,
+// booking isə customer_id tələb edir. Kart yoxdursa istifadəçinin öz
+// profil məlumatı ilə yaradılır.
+func (s *service) ResolveSelf(ctx context.Context, businessID, userID uuid.UUID) (*Customer, error) {
+	if businessID == uuid.Nil || userID == uuid.Nil {
+		return nil, ErrInvalidCustomerData
+	}
+
+	existing, err := s.repo.GetByUserID(ctx, businessID, userID)
+	if err == nil && existing != nil {
+		return existing, nil
+	}
+
+	if s.profiles == nil {
+		return nil, ErrCustomerNotFound
+	}
+
+	profile, err := s.profiles.GetUserProfile(ctx, userID)
+	if err != nil || profile == nil {
+		return nil, ErrCustomerNotFound
+	}
+
+	// Bu biznesdə eyni e-poçtla kart varsa (admin əvvəlcədən əlavə edib),
+	// yenisini yaratmaq əvəzinə onu istifadəçiyə bağlayırıq.
+	if profile.Email != "" {
+		byEmail, err := s.repo.GetByEmail(ctx, businessID, profile.Email)
+		if err == nil && byEmail != nil {
+			if byEmail.UserID == nil {
+				byEmail.UserID = &userID
+				byEmail.UpdatedAt = time.Now()
+				if err := s.repo.Update(ctx, byEmail); err != nil {
+					return nil, fmt.Errorf("failed to link customer to user: %w", err)
+				}
+			}
+			return byEmail, nil
+		}
+	}
+
+	created := NewCustomer(businessID, profile.FullName, profile.Email, profile.Phone)
+	created.UserID = &userID
+
+	if err := s.repo.Create(ctx, created); err != nil {
+		return nil, fmt.Errorf("failed to create customer: %w", err)
+	}
+
+	return created, nil
 }
 
 // CreateCustomer - Biznes tərəfindən müştəri yaratmaq

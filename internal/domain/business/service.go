@@ -103,6 +103,7 @@ func (service *BusinessService) ListBusinesses(ctx context.Context) ([]*Business
 func (service *BusinessService) UpdateBusiness(
 	ctx context.Context,
 	businessID uuid.UUID,
+	ownerID uuid.UUID,
 	request *UpdateBusinessRequest,
 ) error {
 	if businessID == uuid.Nil {
@@ -113,6 +114,18 @@ func (service *BusinessService) UpdateBusiness(
 		return NewBusinessError("INVALID_REQUEST", "Request cannot be nil")
 	}
 
+	existing, err := service.repository.GetByOwnerID(ctx, ownerID)
+	if err != nil {
+		return fmt.Errorf("failed to get business: %w", err)
+	}
+	if existing == nil {
+		return NewBusinessError("BUSINESS_NOT_FOUND", "Business not found")
+	}
+
+	// Frontdan gələn ID uyğundurmu?
+	if existing.ID != businessID {
+		return NewBusinessError("UNAUTHORIZED", "Business ID does not match")
+	}
 	business, err := service.repository.GetByID(ctx, businessID)
 	if err != nil {
 		return fmt.Errorf("failed to get business: %w", err)
@@ -125,6 +138,7 @@ func (service *BusinessService) UpdateBusiness(
 	business.Name = request.Name
 	business.Industry = request.Industry
 	business.Phone = request.Phone
+	// business.OwnerID = request.OwnerID
 	business.UpdatedAt = time.Now()
 
 	if err := service.validateBusiness(business); err != nil {
