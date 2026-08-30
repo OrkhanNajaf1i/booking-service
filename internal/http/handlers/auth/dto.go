@@ -14,6 +14,11 @@ type RegisterHTTPRequest struct {
 	Password string `json:"password" example:"StrongPass123!"`
 	FullName string `json:"full_name" example:"Orkhan Najafli"`
 	Phone    string `json:"phone" example:"+994501234567"`
+
+	// AccountType – "customer" (musteri tetbiqi) ve ya "provider"
+	// (admin paneli: hekim, xestexana, berber, usta).
+	// Gonderilmese "customer" qebul edilir.
+	AccountType string `json:"account_type" example:"customer" enums:"customer,provider"`
 }
 
 type LoginHTTPRequest struct {
@@ -70,10 +75,11 @@ type ErrorResponseDTO struct {
 
 func ToDomainRegister(httpReq *RegisterHTTPRequest) *auth.RegisterRequest {
 	return &auth.RegisterRequest{
-		Email:    strings.TrimSpace(httpReq.Email),
-		Password: httpReq.Password,
-		FullName: strings.TrimSpace(httpReq.FullName),
-		Phone:    strings.TrimSpace(httpReq.Phone),
+		Email:       strings.TrimSpace(httpReq.Email),
+		Password:    httpReq.Password,
+		FullName:    strings.TrimSpace(httpReq.FullName),
+		Phone:       strings.TrimSpace(httpReq.Phone),
+		AccountType: auth.AccountType(strings.TrimSpace(httpReq.AccountType)),
 	}
 }
 

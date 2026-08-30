@@ -64,10 +64,6 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 	}
 	domainReq := ToDomainRegister(&httpReq)
 	authResp, err := h.authService.Register(ctx, domainReq)
-	var bid string = "null"
-	if authResp.User.BusinessID != nil {
-		bid = authResp.User.BusinessID.String()
-	}
 	if err != nil {
 		h.logger.Error("Register: Service error",
 			logger.Field{Key: "error", Value: err.Error()},
@@ -88,6 +84,13 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 		h.sendError(w, http.StatusInternalServerError, "INTERNAL_ERROR")
 		return
 	}
+	// BusinessID yalniz ugurlu registrasiyadan sonra oxunur: xeta halinda
+	// authResp nil olur ve buradaki muraciet panic verirdi.
+	bid := "null"
+	if authResp.User.BusinessID != nil {
+		bid = authResp.User.BusinessID.String()
+	}
+
 	h.logger.Info("Register: user created successfully",
 		logger.Field{Key: "user_id", Value: authResp.User.ID.String()},
 		logger.Field{Key: "email", Value: authResp.User.Email},
