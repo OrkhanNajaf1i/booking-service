@@ -12,6 +12,124 @@ definitions:
     - UserTypeOwner
     - UserTypeStaff
     - UserTypeSoloPractitioner
+  github_com_OrkhanNajaf1i_booking-service_internal_domain_availability.BulkWorkingHoursRequest:
+    properties:
+      days:
+        items:
+          $ref: '#/definitions/github_com_OrkhanNajaf1i_booking-service_internal_domain_availability.SetWorkingHoursRequest'
+        type: array
+      staff_id:
+        type: string
+    type: object
+  github_com_OrkhanNajaf1i_booking-service_internal_domain_availability.CreateTimeOffRequest:
+    properties:
+      end_at:
+        type: string
+      reason:
+        type: string
+      staff_id:
+        type: string
+      start_at:
+        type: string
+    type: object
+  github_com_OrkhanNajaf1i_booking-service_internal_domain_availability.SetWorkingHoursRequest:
+    properties:
+      break_enabled:
+        type: boolean
+      break_end:
+        type: string
+      break_start:
+        type: string
+      day_of_week:
+        type: integer
+      end_time:
+        type: string
+      is_active:
+        type: boolean
+      staff_id:
+        type: string
+      start_time:
+        type: string
+    type: object
+  github_com_OrkhanNajaf1i_booking-service_internal_domain_availability.UpdateScheduleSettingsRequest:
+    properties:
+      allow_reschedule_proposal:
+        type: boolean
+      auto_confirm:
+        type: boolean
+      buffer_after_mins:
+        type: integer
+      buffer_before_mins:
+        type: integer
+      default_duration_mins:
+        type: integer
+      max_advance_days:
+        type: integer
+      min_notice_mins:
+        type: integer
+      slot_step_mins:
+        type: integer
+      staff_id:
+        type: string
+      timezone:
+        type: string
+    type: object
+  github_com_OrkhanNajaf1i_booking-service_internal_domain_booking.CancelBookingRequest:
+    properties:
+      reason:
+        type: string
+    type: object
+  github_com_OrkhanNajaf1i_booking-service_internal_domain_booking.CreateBookingRequest:
+    properties:
+      customer_id:
+        type: string
+      location_id:
+        type: string
+      notes:
+        type: string
+      service_id:
+        type: string
+      staff_id:
+        type: string
+      start_time:
+        type: string
+    type: object
+  github_com_OrkhanNajaf1i_booking-service_internal_domain_booking.ProposeRescheduleRequest:
+    properties:
+      new_start_time:
+        type: string
+      note:
+        type: string
+    type: object
+  github_com_OrkhanNajaf1i_booking-service_internal_domain_booking.RespondToProposalRequest:
+    properties:
+      accept:
+        type: boolean
+      note:
+        type: string
+    type: object
+  github_com_OrkhanNajaf1i_booking-service_internal_domain_booking.UpdateBookingRequest:
+    properties:
+      notes:
+        type: string
+    type: object
+  github_com_OrkhanNajaf1i_booking-service_internal_domain_notification.Platform:
+    enum:
+    - ios
+    - android
+    - web
+    type: string
+    x-enum-varnames:
+    - PlatformIOS
+    - PlatformAndroid
+    - PlatformWeb
+  github_com_OrkhanNajaf1i_booking-service_internal_domain_notification.RegisterDeviceRequest:
+    properties:
+      platform:
+        $ref: '#/definitions/github_com_OrkhanNajaf1i_booking-service_internal_domain_notification.Platform'
+      token:
+        type: string
+    type: object
   internal_http_handlers_auth.AuthResponseDTO:
     properties:
       access_token:
@@ -110,6 +228,40 @@ definitions:
       role:
         $ref: '#/definitions/github_com_OrkhanNajaf1i_booking-service_internal_domain_auth.UserRole'
     type: object
+  internal_http_handlers_availability.ErrorResponse:
+    properties:
+      code:
+        type: string
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  internal_http_handlers_availability.SuccessResponse:
+    properties:
+      data: {}
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  internal_http_handlers_booking.ErrorResponse:
+    properties:
+      code:
+        type: string
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  internal_http_handlers_booking.SuccessResponse:
+    properties:
+      data: {}
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   internal_http_handlers_business.BusinessHTTPResponse:
     properties:
       business_type:
@@ -181,6 +333,8 @@ definitions:
     type: object
   internal_http_handlers_business.UpdateBusinessHTTPRequest:
     properties:
+      business_id:
+        type: string
       industry:
         type: string
       name:
@@ -250,6 +404,19 @@ definitions:
       total_pages:
         type: integer
     type: object
+  internal_http_handlers_customer.ResolveSelfRequest:
+    properties:
+      business_id:
+        type: string
+    type: object
+  internal_http_handlers_customer.SuccessResponseDTO:
+    properties:
+      data: {}
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   internal_http_handlers_customer.UpdateCustomerRequest:
     properties:
       email:
@@ -304,6 +471,22 @@ definitions:
         type: string
     required:
     - name
+    type: object
+  internal_http_handlers_notification.SuccessResponse:
+    properties:
+      data: {}
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  internal_http_handlers_public.SuccessResponse:
+    properties:
+      data: {}
+      message:
+        type: string
+      success:
+        type: boolean
     type: object
   internal_http_handlers_service.AssignServicesHTTPRequest:
     properties:
@@ -407,9 +590,11 @@ definitions:
 host: booking-service-sld9.onrender.com
 info:
   contact: {}
-  description: Booking Platforması üçün Backend API sənədləri.
+  description: Booking Platformasi ucun Backend API. Randevu vaxtlari is qrafiki,
+    nahar fasilesi ve slot addimi esasinda runtime-da hesablanir; bildirisler WebSocket
+    ve FCM ile realtime catdirilir.
   title: Booking Service API
-  version: "1.0"
+  version: "2.0"
 paths:
   /api/v1/auth/forgot-password:
     post:
@@ -1795,6 +1980,781 @@ paths:
       summary: Validate Invitation Token
       tags:
       - Staff
+  /availability:
+    get:
+      description: Isci qrafiki, nahar fasilesi, slot addimi ve movcud bronlar esasinda
+        hesablanmis bos vaxtlar.
+      parameters:
+      - description: Isci ID
+        in: query
+        name: staff_id
+        required: true
+        type: string
+      - description: Xidmet ID (mueddet bundan goturulur)
+        in: query
+        name: service_id
+        type: string
+      - description: Baslangic tarixi YYYY-MM-DD
+        in: query
+        name: from
+        type: string
+      - description: Bitis tarixi YYYY-MM-DD
+        in: query
+        name: to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_http_handlers_availability.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_http_handlers_availability.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Bos vaxtlari getir
+      tags:
+      - Availability
+  /availability/settings:
+    get:
+      parameters:
+      - description: Isci ID (bos olsa biznes default-u)
+        in: query
+        name: staff_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_http_handlers_availability.SuccessResponse'
+      security:
+      - BearerAuth: []
+      summary: Qrafik ayarlarini getir
+      tags:
+      - Availability
+    put:
+      consumes:
+      - application/json
+      description: slot_step_mins secim addimini teyin edir (mes. 16 deqiqe). auto_confirm
+        true olsa bron tesdiq gozlemeden confirmed olur.
+      parameters:
+      - description: Ayarlar
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_OrkhanNajaf1i_booking-service_internal_domain_availability.UpdateScheduleSettingsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_http_handlers_availability.SuccessResponse'
+      security:
+      - BearerAuth: []
+      summary: Qrafik ayarlarini yenile
+      tags:
+      - Availability
+  /availability/time-off:
+    get:
+      parameters:
+      - description: Isci ID
+        in: query
+        name: staff_id
+        required: true
+        type: string
+      - description: YYYY-MM-DD
+        in: query
+        name: from
+        type: string
+      - description: YYYY-MM-DD
+        in: query
+        name: to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_http_handlers_availability.SuccessResponse'
+      security:
+      - BearerAuth: []
+      summary: Bloklanmis intervallar
+      tags:
+      - Availability
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Interval
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_OrkhanNajaf1i_booking-service_internal_domain_availability.CreateTimeOffRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_http_handlers_availability.SuccessResponse'
+      security:
+      - BearerAuth: []
+      summary: Bloklanmis interval elave et
+      tags:
+      - Availability
+  /availability/time-off/{id}:
+    delete:
+      parameters:
+      - description: Time off ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_http_handlers_availability.SuccessResponse'
+      security:
+      - BearerAuth: []
+      summary: Bloklanmis intervali sil
+      tags:
+      - Availability
+  /availability/working-hours:
+    delete:
+      parameters:
+      - description: Isci ID
+        in: query
+        name: staff_id
+        required: true
+        type: string
+      - description: 0=Bazar ... 6=Senbe
+        in: query
+        name: day_of_week
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_http_handlers_availability.SuccessResponse'
+      security:
+      - BearerAuth: []
+      summary: Bir gunun qrafikini sil
+      tags:
+      - Availability
+    get:
+      parameters:
+      - description: Isci ID
+        in: query
+        name: staff_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_http_handlers_availability.SuccessResponse'
+      security:
+      - BearerAuth: []
+      summary: Iscinin heftelik qrafiki
+      tags:
+      - Availability
+    post:
+      consumes:
+      - application/json
+      description: Baslangic/bitis saati ve (istese) nahar fasilesi. break_enabled=false
+        olsa fasile tetbiq edilmir.
+      parameters:
+      - description: Is saatlari
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_OrkhanNajaf1i_booking-service_internal_domain_availability.SetWorkingHoursRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_http_handlers_availability.SuccessResponse'
+      security:
+      - BearerAuth: []
+      summary: Bir gunun is saatlarini teyin et
+      tags:
+      - Availability
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Heftelik qrafik
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_OrkhanNajaf1i_booking-service_internal_domain_availability.BulkWorkingHoursRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_http_handlers_availability.SuccessResponse'
+      security:
+      - BearerAuth: []
+      summary: Heftelik qrafiki yaz
+      tags:
+      - Availability
+  /bookings:
+    get:
+      parameters:
+      - description: Isci ID
+        in: query
+        name: staff_id
+        type: string
+      - description: Musteri ID
+        in: query
+        name: customer_id
+        type: string
+      - description: pending|confirmed|reschedule_proposed|cancelled|completed|no_show
+        in: query
+        name: status
+        type: string
+      - description: RFC3339 ve ya YYYY-MM-DD
+        in: query
+        name: from
+        type: string
+      - description: RFC3339 ve ya YYYY-MM-DD
+        in: query
+        name: to
+        type: string
+      - description: Default 50
+        in: query
+        name: limit
+        type: integer
+      - description: Default 0
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_http_handlers_booking.SuccessResponse'
+      security:
+      - BearerAuth: []
+      summary: Biznesin bronlari
+      tags:
+      - Booking
+    post:
+      consumes:
+      - application/json
+      description: Secilen vaxt availability muherrikinden kecirilir. Bos deyilse
+        SLOT_TAKEN qaytarilir. auto_confirm sondurulubse bron pending yaranir ve isciye
+        aninda bildiris gedir.
+      parameters:
+      - description: Bron
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_OrkhanNajaf1i_booking-service_internal_domain_booking.CreateBookingRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_http_handlers_booking.SuccessResponse'
+        "409":
+          description: Vaxt artiq tutulub
+          schema:
+            $ref: '#/definitions/internal_http_handlers_booking.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Bron yarat
+      tags:
+      - Booking
+  /bookings/{id}:
+    get:
+      parameters:
+      - description: Booking ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_http_handlers_booking.SuccessResponse'
+      security:
+      - BearerAuth: []
+      summary: Bron detallari
+      tags:
+      - Booking
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Booking ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Qeydler
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_OrkhanNajaf1i_booking-service_internal_domain_booking.UpdateBookingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_http_handlers_booking.SuccessResponse'
+      security:
+      - BearerAuth: []
+      summary: Bron qeydlerini yenile
+      tags:
+      - Booking
+  /bookings/{id}/cancel:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Booking ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Sebeb
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/github_com_OrkhanNajaf1i_booking-service_internal_domain_booking.CancelBookingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_http_handlers_booking.SuccessResponse'
+      security:
+      - BearerAuth: []
+      summary: Bronu legv et
+      tags:
+      - Booking
+  /bookings/{id}/complete:
+    post:
+      parameters:
+      - description: Booking ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_http_handlers_booking.SuccessResponse'
+      security:
+      - BearerAuth: []
+      summary: Randevunu tamamlanmis isarele
+      tags:
+      - Booking
+  /bookings/{id}/confirm:
+    post:
+      parameters:
+      - description: Booking ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_http_handlers_booking.SuccessResponse'
+      security:
+      - BearerAuth: []
+      summary: Bronu tesdiqle
+      tags:
+      - Booking
+  /bookings/{id}/no-show:
+    post:
+      parameters:
+      - description: Booking ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_http_handlers_booking.SuccessResponse'
+      security:
+      - BearerAuth: []
+      summary: Musteri gelmedi
+      tags:
+      - Booking
+  /bookings/{id}/propose:
+    post:
+      consumes:
+      - application/json
+      description: Provider musteriye basqa vaxt teklif edir. Teklif olunan vaxt da
+        qrafik uzre yoxlanilir. Musteri qebul edene qeder ilkin vaxt saxlanilir.
+      parameters:
+      - description: Booking ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Yeni vaxt
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_OrkhanNajaf1i_booking-service_internal_domain_booking.ProposeRescheduleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_http_handlers_booking.SuccessResponse'
+      security:
+      - BearerAuth: []
+      summary: Alternativ vaxt teklif et
+      tags:
+      - Booking
+  /bookings/{id}/respond:
+    post:
+      consumes:
+      - application/json
+      description: accept=true olsa bron teklif olunan vaxta kecir ve tesdiqlenir;
+        false olsa ilkin vaxta qayidir.
+      parameters:
+      - description: Booking ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Cavab
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_OrkhanNajaf1i_booking-service_internal_domain_booking.RespondToProposalRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_http_handlers_booking.SuccessResponse'
+      security:
+      - BearerAuth: []
+      summary: Teklife cavab ver
+      tags:
+      - Booking
+  /bookings/my:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_http_handlers_booking.SuccessResponse'
+      security:
+      - BearerAuth: []
+      summary: Menim bronlarim
+      tags:
+      - Booking
+  /customers/self:
+    post:
+      consumes:
+      - application/json
+      description: Login olmus istifadecinin verilmis biznesdeki musteri kartini qaytarir.
+        Kart yoxdursa yaradilir.
+      parameters:
+      - description: Biznes ID
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_http_handlers_customer.ResolveSelfRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_http_handlers_customer.SuccessResponseDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_http_handlers_customer.ErrorResponseDTO'
+      security:
+      - BearerAuth: []
+      summary: Oz musteri kartini tap/yarat
+      tags:
+      - Customer
+  /notifications:
+    get:
+      parameters:
+      - description: Yalniz oxunmamislar
+        in: query
+        name: unread
+        type: boolean
+      - description: Default 20
+        in: query
+        name: limit
+        type: integer
+      - description: Default 0
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_http_handlers_notification.SuccessResponse'
+      security:
+      - BearerAuth: []
+      summary: Bildirisler
+      tags:
+      - Notification
+  /notifications/{id}/read:
+    post:
+      parameters:
+      - description: Notification ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_http_handlers_notification.SuccessResponse'
+      security:
+      - BearerAuth: []
+      summary: Bildirisi oxunmus isarele
+      tags:
+      - Notification
+  /notifications/devices:
+    delete:
+      parameters:
+      - description: FCM token
+        in: query
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_http_handlers_notification.SuccessResponse'
+      security:
+      - BearerAuth: []
+      summary: Cihaz token-ini sil
+      tags:
+      - Notification
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: FCM token
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_OrkhanNajaf1i_booking-service_internal_domain_notification.RegisterDeviceRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_http_handlers_notification.SuccessResponse'
+      security:
+      - BearerAuth: []
+      summary: Push ucun cihaz token-i qeyd et
+      tags:
+      - Notification
+  /notifications/read-all:
+    post:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_http_handlers_notification.SuccessResponse'
+      security:
+      - BearerAuth: []
+      summary: Hamisini oxunmus isarele
+      tags:
+      - Notification
+  /notifications/unread-count:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_http_handlers_notification.SuccessResponse'
+      security:
+      - BearerAuth: []
+      summary: Oxunmamis bildiris sayi
+      tags:
+      - Notification
+  /public/availability:
+    get:
+      parameters:
+      - description: Biznes ID
+        in: query
+        name: business_id
+        required: true
+        type: string
+      - description: Isci ID
+        in: query
+        name: staff_id
+        required: true
+        type: string
+      - description: Xidmet ID
+        in: query
+        name: service_id
+        type: string
+      - description: YYYY-MM-DD
+        in: query
+        name: from
+        type: string
+      - description: YYYY-MM-DD
+        in: query
+        name: to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_http_handlers_public.SuccessResponse'
+      summary: Bos vaxtlar (auth telem olunmur)
+      tags:
+      - Public
+  /public/businesses:
+    get:
+      description: Musteri xestexana / klinika / berberxana secmek ucun. Auth telem
+        olunmur.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_http_handlers_public.SuccessResponse'
+      summary: Aktiv bizneslerin siyahisi
+      tags:
+      - Public
+  /public/businesses/{id}:
+    get:
+      parameters:
+      - description: Biznes ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_http_handlers_public.SuccessResponse'
+      summary: Biznes detallari
+      tags:
+      - Public
+  /public/businesses/{id}/services:
+    get:
+      parameters:
+      - description: Biznes ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Yalniz bu iscinin xidmetleri
+        in: query
+        name: staff_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_http_handlers_public.SuccessResponse'
+      summary: Biznesin xidmetleri
+      tags:
+      - Public
+  /public/businesses/{id}/staff:
+    get:
+      description: Musteri hansi hekim/berber ile bron edeceyini secir.
+      parameters:
+      - description: Biznes ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_http_handlers_public.SuccessResponse'
+      summary: Biznesin isciləri
+      tags:
+      - Public
 schemes:
 - https
 securityDefinitions:

@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type AppConfig struct {
@@ -35,6 +36,23 @@ type AppConfig struct {
 	BrevoAPIKey      string
 	BrevoSenderEmail string
 	BaseURL          string
+
+	// ---------- REALTIME / PUSH ----------
+
+	// WSAllowedOrigins – verguelle ayrilmis origin siyahisi.
+	// Bos olarsa butun origin-lere icaze verilir (dev rejimi).
+	WSAllowedOrigins string
+
+	// FCM service account JSON-u: ya fayl yolu, ya da birbasa deyeri.
+	// Ikisi de bos olarsa push sondurulur, qalan her sey isleyir.
+	FCMCredentialsFile string
+	FCMCredentialsJSON string
+
+	// DefaultTimezone – bildiris metnlerindeki saatlarin gosterildiyi zona.
+	DefaultTimezone string
+
+	// WorkerPollInterval – worker-in outbox-i yoxlama tezliyi.
+	WorkerPollInterval time.Duration
 }
 
 func Load() (*AppConfig, error) {
@@ -53,6 +71,7 @@ func Load() (*AppConfig, error) {
 	if err = LoadEmailConfig(cfg); err != nil {
 		return nil, fmt.Errorf("email config error: %w", err)
 	}
+	LoadRealtimeConfig(cfg)
 	return cfg, nil
 }
 
@@ -205,3 +224,25 @@ func LoadEmailConfig(cfg *AppConfig) error {
 
 // 	return nil
 // }
+
+// LoadRealtimeConfig – realtime, push ve worker ayarlari.
+// Hec biri mecburi deyil: yoxdursa sistem sadece hemin funksiyani
+// sondurur, isini dayandirmir.
+func LoadRealtimeConfig(cfg *AppConfig) {
+	cfg.WSAllowedOrigins = strings.TrimSpace(os.Getenv("APP_WS_ALLOWED_ORIGINS"))
+
+	cfg.FCMCredentialsFile = strings.TrimSpace(os.Getenv("APP_FCM_CREDENTIALS_FILE"))
+	cfg.FCMCredentialsJSON = strings.TrimSpace(os.Getenv("APP_FCM_CREDENTIALS_JSON"))
+
+	cfg.DefaultTimezone = strings.TrimSpace(os.Getenv("APP_DEFAULT_TIMEZONE"))
+	if cfg.DefaultTimezone == "" {
+		cfg.DefaultTimezone = "Asia/Baku"
+	}
+
+	cfg.WorkerPollInterval = 15 * time.Second
+	if raw := strings.TrimSpace(os.Getenv("APP_WORKER_POLL_SECONDS")); raw != "" {
+		if seconds, err := strconv.Atoi(raw); err == nil && seconds > 0 {
+			cfg.WorkerPollInterval = time.Duration(seconds) * time.Second
+		}
+	}
+}

@@ -3,7 +3,6 @@ package location
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	domain "github.com/OrkhanNajaf1i/booking-service/internal/domain/location"
@@ -35,20 +34,8 @@ func writeJSONError(w http.ResponseWriter, status int, message string, details i
 }
 
 func getBusinessIDFromContext(r *http.Request) (uuid.UUID, error) {
-	v := r.Context().Value(middleware.BusinessKey)
-	if v == nil {
-		return uuid.Nil, fmt.Errorf("business id missing in context")
-	}
-
-	businessID, ok := v.(uuid.UUID)
-	if !ok {
-		return uuid.Nil, fmt.Errorf("invalid business id in context")
-	}
-	if businessID == uuid.Nil {
-		return uuid.Nil, fmt.Errorf("business id is empty")
-	}
-
-	return businessID, nil
+	// Tip yalniz middleware paketinde teyin olunur.
+	return middleware.BusinessIDFromContext(r.Context())
 }
 
 // @Summary      Create Location

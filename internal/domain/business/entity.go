@@ -59,6 +59,7 @@ type UpdateBusinessRequest struct {
 	Name     string `json:"name"`
 	Industry string `json:"industry"`
 	Phone    string `json:"phone"`
+	// OwnerID  uuid.UUID `json:"owner_id"`
 }
 
 type BusinessError struct {

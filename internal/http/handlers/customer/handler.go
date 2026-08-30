@@ -4,7 +4,6 @@ package customer
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -12,6 +11,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/OrkhanNajaf1i/booking-service/internal/domain/customer"
+	"github.com/OrkhanNajaf1i/booking-service/internal/http/middleware"
 	"github.com/OrkhanNajaf1i/booking-service/internal/logger"
 )
 
@@ -53,17 +53,9 @@ func (h *Handler) sendSuccess(w http.ResponseWriter, status int, message string,
 
 // GetBusinessIDFromContext - Middleware-dən business_id əldə et (auth-dən kimi)
 func GetBusinessIDFromContext(r *http.Request) (uuid.UUID, error) {
-	val := r.Context().Value("business_id")
-	if val == nil {
-		return uuid.Nil, errors.New("unauthorized - business_id not found in context")
-	}
-
-	businessID, ok := val.(uuid.UUID)
-	if !ok {
-		return uuid.Nil, errors.New("unauthorized - business_id type assertion failed")
-	}
-
-	return businessID, nil
+	// Acar middleware.BusinessKey-dir (oz tipi ile) ve deyer uuid.UUID-dir.
+	// Ikisini de middleware paketi teyin edir.
+	return middleware.BusinessIDFromContext(r.Context())
 }
 
 // @Summary      Create Customer

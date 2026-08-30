@@ -89,6 +89,7 @@ import (
 	"strings"
 
 	authDomain "github.com/OrkhanNajaf1i/booking-service/internal/domain/auth"
+	"github.com/google/uuid"
 )
 
 type contextKey string
@@ -120,13 +121,18 @@ func AuthMiddleware(tokenManager authDomain.TokenManager) func(http.Handler) htt
 				return
 			}
 
-			businessIDStr := ""
+			// Handler-ler bu deyerleri uuid.UUID kimi oxuyur; string
+			// saxlansa tip cevrilmesi ugursuz olur ve butun qorunan
+			// endpoint-ler 401/500 verir. Business-i olmayan istifadeci
+			// ucun uuid.Nil qoyulur – handler-ler bunu ozleri yoxlayir.
+			businessID := uuid.Nil
 			if claims.BusinessID != nil {
-				businessIDStr = claims.BusinessID.String()
+				businessID = *claims.BusinessID
 			}
-			ctx := context.WithValue(r.Context(), UserIDKey, claims.UserID.String())
+
+			ctx := context.WithValue(r.Context(), UserIDKey, claims.UserID)
 			ctx = context.WithValue(ctx, RoleKey, string(claims.Role))
-			ctx = context.WithValue(ctx, BusinessKey, businessIDStr)
+			ctx = context.WithValue(ctx, BusinessKey, businessID)
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
