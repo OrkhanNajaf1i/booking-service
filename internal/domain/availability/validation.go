@@ -119,6 +119,20 @@ func ValidateSettings(settings *ScheduleSettings) error {
 	if settings.MaxAdvanceDays < 1 || settings.MaxAdvanceDays > 365 {
 		return NewError("INVALID_MAX_ADVANCE", "max_advance_days 1-365 araliginda olmalidir")
 	}
+	for _, window := range []struct {
+		name  string
+		value int
+	}{
+		{"pending_expires_mins", settings.PendingExpiresMins},
+		{"cancellation_window_mins", settings.CancellationWindowMins},
+		{"reschedule_window_mins", settings.RescheduleWindowMins},
+	} {
+		// 20160 deqiqe = 14 gun. Bundan uzun pencere praktiki deyil.
+		if window.value < 0 || window.value > 20160 {
+			return NewError("INVALID_WINDOW", window.name+" 0-20160 deqiqe araliginda olmalidir")
+		}
+	}
+
 	if strings.TrimSpace(settings.Timezone) != "" {
 		if _, err := time.LoadLocation(settings.Timezone); err != nil {
 			return NewError("INVALID_TIMEZONE", "timezone taninmadi: "+settings.Timezone)

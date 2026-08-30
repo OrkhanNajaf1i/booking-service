@@ -53,6 +53,8 @@ definitions:
     type: object
   github_com_OrkhanNajaf1i_booking-service_internal_domain_availability.UpdateScheduleSettingsRequest:
     properties:
+      allow_customer_reschedule:
+        type: boolean
       allow_reschedule_proposal:
         type: boolean
       auto_confirm:
@@ -61,11 +63,17 @@ definitions:
         type: integer
       buffer_before_mins:
         type: integer
+      cancellation_window_mins:
+        type: integer
       default_duration_mins:
         type: integer
       max_advance_days:
         type: integer
       min_notice_mins:
+        type: integer
+      pending_expires_mins:
+        type: integer
+      reschedule_window_mins:
         type: integer
       slot_step_mins:
         type: integer
@@ -521,6 +529,21 @@ definitions:
         items:
           type: string
         type: array
+    type: object
+  internal_http_handlers_service.CreateServiceHTTPRequest:
+    properties:
+      description:
+        example: Kisi sac kesimi
+        type: string
+      duration_minutes:
+        example: 30
+        type: integer
+      name:
+        example: Sac kesimi
+        type: string
+      price:
+        example: 20
+        type: number
     type: object
   internal_http_handlers_service.ErrorResponse:
     properties:
@@ -1442,6 +1465,42 @@ paths:
       security:
       - BearerAuth: []
       summary: List All Services
+      tags:
+      - Service
+    post:
+      consumes:
+      - application/json
+      description: Yeni xidmet yaradir. Xidmet randevunun mueddetini (duration_minutes)
+        ve gelirini (price) teyin edir.
+      parameters:
+      - description: Xidmet melumatlari
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_http_handlers_service.CreateServiceHTTPRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Xidmet yaradildi
+          schema:
+            $ref: '#/definitions/internal_http_handlers_service.SuccessResponse'
+        "400":
+          description: Validasiya xetasi
+          schema:
+            $ref: '#/definitions/internal_http_handlers_service.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_http_handlers_service.ErrorResponse'
+        "500":
+          description: Daxili xeta
+          schema:
+            $ref: '#/definitions/internal_http_handlers_service.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create Service
       tags:
       - Service
   /api/v1/services/{id}:

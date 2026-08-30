@@ -559,6 +559,18 @@ func (s *availabilityService) UpdateSettings(
 	if req.AllowRescheduleProposal != nil {
 		existing.AllowRescheduleProposal = *req.AllowRescheduleProposal
 	}
+	if req.PendingExpiresMins != nil {
+		existing.PendingExpiresMins = *req.PendingExpiresMins
+	}
+	if req.CancellationWindowMins != nil {
+		existing.CancellationWindowMins = *req.CancellationWindowMins
+	}
+	if req.AllowCustomerReschedule != nil {
+		existing.AllowCustomerReschedule = *req.AllowCustomerReschedule
+	}
+	if req.RescheduleWindowMins != nil {
+		existing.RescheduleWindowMins = *req.RescheduleWindowMins
+	}
 
 	if err := ValidateSettings(existing); err != nil {
 		return nil, err

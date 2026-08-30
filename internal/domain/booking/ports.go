@@ -27,6 +27,24 @@ type Repository interface {
 	// GetByIDForUser – multi-tenant business_id olmadan, istifadecinin
 	// iştirakcisi oldugu bronu tapir (musteri tetbiqi ucun).
 	GetByIDForUser(ctx context.Context, userID, bookingID uuid.UUID) (*Booking, error)
+
+	// FindCustomerOverlap – istifadecinin verilmis araliqla kesisen
+	// aktiv bronu (butun bizneslerde). Yoxdursa (nil, nil).
+	//
+	// customer_id biznes uzre unikaldir, ona gore eyni sexsin ferqli
+	// bizneslerdeki kartlari ayri-ayri sayilir — bu sorgu users
+	// seviyyesinde birlesdirir.
+	FindCustomerOverlap(
+		ctx context.Context,
+		customerUserID uuid.UUID,
+		start, end time.Time,
+		excludeBookingID uuid.UUID,
+	) (*Booking, error)
+
+	// ExpireStalePending – cavabsiz qalmis pending bronlari legv edir.
+	// Worker terefinden cagirilir; legv edilenlerin siyahisini qaytarir
+	// ki, terefler xeberdar edilsin.
+	ExpireStalePending(ctx context.Context, limit int) ([]*Booking, error)
 }
 
 // AvailabilityChecker – availability.Service-in booking-e lazim olan hissesi.

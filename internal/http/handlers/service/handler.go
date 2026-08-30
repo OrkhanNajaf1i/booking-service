@@ -367,3 +367,45 @@ func (h Handler) RemoveServiceFromStaff(w http.ResponseWriter, r *http.Request) 
 	}
 	writeJSON(w, http.StatusOK, resp)
 }
+
+// @Summary      Create Service
+// @Description  Yeni xidmet yaradir. Xidmet randevunun mueddetini (duration_minutes) ve gelirini (price) teyin edir.
+// @Tags         Service
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request body CreateServiceHTTPRequest true "Xidmet melumatlari"
+// @Success      201  {object}  SuccessResponse "Xidmet yaradildi"
+// @Failure      400  {object}  ErrorResponse "Validasiya xetasi"
+// @Failure      401  {object}  ErrorResponse "Unauthorized"
+// @Failure      500  {object}  ErrorResponse "Daxili xeta"
+// @Router       /api/v1/services [post]
+func (h Handler) CreateService(w http.ResponseWriter, r *http.Request) {
+	businessID, err := getBusinessIDFromContext(r)
+	if err != nil {
+		writeJSONError(w, http.StatusUnauthorized, "Unauthorized", err.Error())
+		return
+	}
+
+	var req CreateServiceHTTPRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeJSONError(w, http.StatusBadRequest, "Invalid request body", err.Error())
+		return
+	}
+
+	created, err := h.service.CreateService(r.Context(), businessID, req.ToDomain())
+	if err != nil {
+		// Domain validasiya xetalari istifadeciye aiddir, 500 deyil.
+		if domainErr, ok := err.(*domain.ServiceError); ok {
+			writeJSONError(w, http.StatusBadRequest, domainErr.Code, domainErr.Message)
+			return
+		}
+		writeJSONError(w, http.StatusInternalServerError, "Failed to create service", err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, SuccessResponse{
+		Success: true,
+		Data:    FromDomainService(created),
+	})
+}

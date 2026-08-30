@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/OrkhanNajaf1i/booking-service/internal/domain/booking"
 	"github.com/google/uuid"
@@ -301,4 +302,84 @@ func prefixColumns(alias, columns string) string {
 		prefixed = append(prefixed, alias+"."+trimmed)
 	}
 	return strings.Join(prefixed, ", ")
+}
+
+// FindCustomerOverlap – istifadecinin verilmis araliqla kesisen aktiv bronu.
+//
+// customers cedvelinde her biznes ucun ayri setir olur, ona gore
+// user_id uzre JOIN edirik: eyni sexsin ferqli bizneslerdeki randevulari
+// da nezere alinir.
+func (r *BookingRepository) FindCustomerOverlap(
+	ctx context.Context,
+	customerUserID uuid.UUID,
+	start, end time.Time,
+	excludeBookingID uuid.UUID,
+) (*booking.Booking, error) {
+	query := `
+		SELECT ` + prefixColumns("b", bookingColumns) + `
+		FROM bookings b
+		JOIN customers c ON c.id = b.customer_id
+		WHERE c.user_id = $1
+		  AND b.status IN ('pending', 'confirmed', 'reschedule_proposed')
+		  AND b.start_time < $3
+		  AND b.end_time   > $2
+		  AND ($4 = '00000000-0000-0000-0000-000000000000'::uuid OR b.id <> $4)
+		LIMIT 1`
+
+	var found booking.Booking
+	err := r.database.GetContext(ctx, &found, query, customerUserID, start, end, excludeBookingID)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("postgres: find customer overlap failed: %w", err)
+	}
+	return &found, nil
+}
+
+// ExpireStalePending – cavabsiz qalmis pending bronlari legv edir.
+//
+// Muddet her biznesin schedule_settings-inden goturulur (staff uzre
+// override varsa o, yoxsa biznes default-u, o da yoxdursa 1440 deqiqe).
+// Randevu vaxti onsuz da kecmisse muddetden asili olmayaraq legv olunur:
+// bele bron slotu bos yere tutur.
+func (r *BookingRepository) ExpireStalePending(
+	ctx context.Context,
+	limit int,
+) ([]*booking.Booking, error) {
+	query := `
+		WITH expired AS (
+			SELECT b.id
+			FROM bookings b
+			LEFT JOIN schedule_settings ss_staff
+			       ON ss_staff.business_id = b.business_id
+			      AND ss_staff.staff_id    = b.staff_id
+			LEFT JOIN schedule_settings ss_biz
+			       ON ss_biz.business_id = b.business_id
+			      AND ss_biz.staff_id IS NULL
+			WHERE b.status = 'pending'
+			  AND COALESCE(ss_staff.pending_expires_mins, ss_biz.pending_expires_mins, 1440) > 0
+			  AND (
+			        b.created_at + make_interval(
+			            mins => COALESCE(ss_staff.pending_expires_mins, ss_biz.pending_expires_mins, 1440)
+			        ) <= NOW()
+			     OR b.start_time <= NOW()
+			  )
+			ORDER BY b.created_at
+			LIMIT $1
+			FOR UPDATE SKIP LOCKED
+		)
+		UPDATE bookings b
+		SET status        = 'cancelled',
+		    cancel_reason = 'Vaxtinda cavablandirilmadi',
+		    updated_at    = NOW()
+		FROM expired
+		WHERE b.id = expired.id
+		RETURNING ` + prefixColumns("b", bookingColumns)
+
+	rows := make([]*booking.Booking, 0, limit)
+	if err := r.database.SelectContext(ctx, &rows, query, limit); err != nil {
+		return nil, fmt.Errorf("postgres: expire stale pending failed: %w", err)
+	}
+	return rows, nil
 }
