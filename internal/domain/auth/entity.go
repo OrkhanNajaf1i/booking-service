@@ -85,11 +85,40 @@ type JWTClaims struct {
 	IsOwner    bool       `db:"is_owner" json:"is_owner"`
 	ExpiresAt  int64      `db:"expires_at" json:"expires_at"`
 }
+
+// AccountType – qeydiyyatin hansi tetbiqden geldiyini bildirir.
+//
+// Musteri tetbiqi ile admin paneli eyni /auth/register endpoint-ini
+// isledir, lakin yaradilan hesablar ferqlidir: musteri bron edir,
+// provider ise biznes qurub randevu qebul edir.
+type AccountType string
+
+const (
+	AccountTypeCustomer AccountType = "customer"
+	AccountTypeProvider AccountType = "provider"
+)
+
+func (a AccountType) IsValid() bool {
+	return a == AccountTypeCustomer || a == AccountTypeProvider
+}
+
+// UserRole – hemin hesab tipinin qarsiligi olan rol.
+func (a AccountType) UserRole() UserRole {
+	if a == AccountTypeProvider {
+		return UserTypeOwner
+	}
+	return UserTypeCustomer
+}
+
 type RegisterRequest struct {
 	Email    string `db:"email" json:"email"`
 	Password string `db:"password" json:"password"`
 	FullName string `db:"full_name" json:"full_name"`
 	Phone    string `db:"phone" json:"phone"`
+
+	// AccountType – bos olarsa "customer" qebul edilir.
+	// Kohne client-ler bu sahani gondermir, ona gore default vacibdir.
+	AccountType AccountType `json:"account_type"`
 }
 
 type LoginRequest struct {

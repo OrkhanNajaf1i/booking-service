@@ -175,6 +175,16 @@ definitions:
     type: object
   internal_http_handlers_auth.RegisterHTTPRequest:
     properties:
+      account_type:
+        description: |-
+          AccountType – "customer" (musteri tetbiqi) ve ya "provider"
+          (admin paneli: hekim, xestexana, berber, usta).
+          Gonderilmese "customer" qebul edilir.
+        enum:
+        - customer
+        - provider
+        example: customer
+        type: string
       email:
         example: orkhan@example.com
         type: string

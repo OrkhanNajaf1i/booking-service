@@ -3524,6 +3524,15 @@ const docTemplate = `{
         "internal_http_handlers_auth.RegisterHTTPRequest": {
             "type": "object",
             "properties": {
+                "account_type": {
+                    "description": "AccountType – \"customer\" (musteri tetbiqi) ve ya \"provider\"\n(admin paneli: hekim, xestexana, berber, usta).\nGonderilmese \"customer\" qebul edilir.",
+                    "type": "string",
+                    "enum": [
+                        "customer",
+                        "provider"
+                    ],
+                    "example": "customer"
+                },
                 "email": {
                     "type": "string",
                     "example": "orkhan@example.com"

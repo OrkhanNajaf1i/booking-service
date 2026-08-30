@@ -57,15 +57,25 @@ func (s *Service) Register(ctx context.Context, req *RegisterRequest) (*AuthResp
 	now := time.Now()
 	userID := uuid.New()
 
+	// Hesab tipi rolu teyin edir. Gonderilmeyibse musteri sayilir –
+	// bu, sahani bilmeyen kohne client-ler ucun tehlukesiz defaultdur.
+	accountType := req.AccountType
+	if !accountType.IsValid() {
+		accountType = AccountTypeCustomer
+	}
+	role := accountType.UserRole()
+
 	user := &User{
-		ID:            userID,
-		Email:         strings.ToLower(strings.TrimSpace(req.Email)), // Email normalize
-		PasswordHash:  hashedPassword,
-		FullName:      strings.TrimSpace(req.FullName),
-		Phone:         strings.TrimSpace(req.Phone),
-		Role:          UserTypeCustomer,
-		BusinessID:    nil,
-		IsActive:      true,
+		ID:           userID,
+		Email:        strings.ToLower(strings.TrimSpace(req.Email)), // Email normalize
+		PasswordHash: hashedPassword,
+		FullName:     strings.TrimSpace(req.FullName),
+		Phone:        strings.TrimSpace(req.Phone),
+		Role:         role,
+		BusinessID:   nil,
+		IsActive:     true,
+		// Provider onboarding-de biznes yaradanda sahib olur;
+		// biznes hele yoxdur, ona gore burada false.
 		IsOwner:       false,
 		EmailVerified: false,
 		Avatar:        nil,

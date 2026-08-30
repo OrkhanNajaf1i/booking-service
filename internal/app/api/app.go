@@ -142,7 +142,12 @@ func New(cfg *config.AppConfig, appLogger logger.Logger) (*App, error) {
 	}
 
 	router := httpapi.NewRouter(handlers, tokenManager)
-	handlerWithCORS := middleware.CORSMiddleware(router)
+
+	// Sira vacibdir: recover en xaricde olmalidir ki, CORS basliqlari
+	// yazildiqdan sonra bas veren panic-i de tuta bilsin.
+	handlerWithCORS := middleware.RecoverMiddleware(appLogger)(
+		middleware.CORSMiddleware(router),
+	)
 
 	addr := fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
 	server := &http.Server{
