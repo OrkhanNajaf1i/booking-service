@@ -182,3 +182,35 @@ func (repository *BusinessRepository) UpdateOwner(ctx context.Context, businessI
 
 	return nil
 }
+
+// ListBookable – musterinin real olaraq bron ede bileceyi bizneslər.
+//
+// Sert: biznes aktivdir VE en azi bir aktiv iscisi var. Isci olmadan
+// randevu yaradila bilmir (booking staff_id-ye baglanir), ona gore bele
+// biznesi musteriye gostermek onu bos ekrana aparir.
+func (repository *BusinessRepository) ListBookable(ctx context.Context) ([]*business.Business, error) {
+	query := `
+		SELECT
+			b.id, b.name, b.owner_id, b.industry, b.service_category,
+			b.phone, b.business_type, b.is_active, b.created_at, b.updated_at
+		FROM businesses b
+		WHERE b.is_active = TRUE
+		  AND EXISTS (
+			  SELECT 1 FROM staff_profiles sp
+			  WHERE sp.business_id = b.id AND sp.status = 'active'
+		  )
+		ORDER BY b.created_at DESC
+	`
+
+	var businesses []*business.Business
+	if err := repository.database.SelectContext(ctx, &businesses, query); err != nil {
+		if err == sql.ErrNoRows {
+			return []*business.Business{}, nil
+		}
+		return nil, fmt.Errorf("postgres: failed to list bookable businesses: %w", err)
+	}
+	if businesses == nil {
+		return []*business.Business{}, nil
+	}
+	return businesses, nil
+}
