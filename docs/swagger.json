@@ -4,10 +4,10 @@
     ],
     "swagger": "2.0",
     "info": {
-        "description": "Booking Platforması üçün Backend API sənədləri.",
+        "description": "Booking Platformasi ucun Backend API. Randevu vaxtlari is qrafiki, nahar fasilesi ve slot addimi esasinda runtime-da hesablanir; bildirisler WebSocket ve FCM ile realtime catdirilir.",
         "title": "Booking Service API",
         "contact": {},
-        "version": "1.0"
+        "version": "2.0"
     },
     "host": "booking-service-sld9.onrender.com",
     "basePath": "/api/v1",
@@ -2021,6 +2021,1240 @@
                     }
                 }
             }
+        },
+        "/availability": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Isci qrafiki, nahar fasilesi, slot addimi ve movcud bronlar esasinda hesablanmis bos vaxtlar.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Availability"
+                ],
+                "summary": "Bos vaxtlari getir",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Isci ID",
+                        "name": "staff_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Xidmet ID (mueddet bundan goturulur)",
+                        "name": "service_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Baslangic tarixi YYYY-MM-DD",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Bitis tarixi YYYY-MM-DD",
+                        "name": "to",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_availability.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_availability.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/availability/settings": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Availability"
+                ],
+                "summary": "Qrafik ayarlarini getir",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Isci ID (bos olsa biznes default-u)",
+                        "name": "staff_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_availability.SuccessResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "slot_step_mins secim addimini teyin edir (mes. 16 deqiqe). auto_confirm true olsa bron tesdiq gozlemeden confirmed olur.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Availability"
+                ],
+                "summary": "Qrafik ayarlarini yenile",
+                "parameters": [
+                    {
+                        "description": "Ayarlar",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_OrkhanNajaf1i_booking-service_internal_domain_availability.UpdateScheduleSettingsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_availability.SuccessResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/availability/time-off": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Availability"
+                ],
+                "summary": "Bloklanmis intervallar",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Isci ID",
+                        "name": "staff_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "YYYY-MM-DD",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "YYYY-MM-DD",
+                        "name": "to",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_availability.SuccessResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Availability"
+                ],
+                "summary": "Bloklanmis interval elave et",
+                "parameters": [
+                    {
+                        "description": "Interval",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_OrkhanNajaf1i_booking-service_internal_domain_availability.CreateTimeOffRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_availability.SuccessResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/availability/time-off/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Availability"
+                ],
+                "summary": "Bloklanmis intervali sil",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Time off ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_availability.SuccessResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/availability/working-hours": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Availability"
+                ],
+                "summary": "Iscinin heftelik qrafiki",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Isci ID",
+                        "name": "staff_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_availability.SuccessResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Availability"
+                ],
+                "summary": "Heftelik qrafiki yaz",
+                "parameters": [
+                    {
+                        "description": "Heftelik qrafik",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_OrkhanNajaf1i_booking-service_internal_domain_availability.BulkWorkingHoursRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_availability.SuccessResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Baslangic/bitis saati ve (istese) nahar fasilesi. break_enabled=false olsa fasile tetbiq edilmir.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Availability"
+                ],
+                "summary": "Bir gunun is saatlarini teyin et",
+                "parameters": [
+                    {
+                        "description": "Is saatlari",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_OrkhanNajaf1i_booking-service_internal_domain_availability.SetWorkingHoursRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_availability.SuccessResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Availability"
+                ],
+                "summary": "Bir gunun qrafikini sil",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Isci ID",
+                        "name": "staff_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "0=Bazar ... 6=Senbe",
+                        "name": "day_of_week",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_availability.SuccessResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/bookings": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Booking"
+                ],
+                "summary": "Biznesin bronlari",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Isci ID",
+                        "name": "staff_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Musteri ID",
+                        "name": "customer_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "pending|confirmed|reschedule_proposed|cancelled|completed|no_show",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "RFC3339 ve ya YYYY-MM-DD",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "RFC3339 ve ya YYYY-MM-DD",
+                        "name": "to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Default 50",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Default 0",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_booking.SuccessResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Secilen vaxt availability muherrikinden kecirilir. Bos deyilse SLOT_TAKEN qaytarilir. auto_confirm sondurulubse bron pending yaranir ve isciye aninda bildiris gedir.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Booking"
+                ],
+                "summary": "Bron yarat",
+                "parameters": [
+                    {
+                        "description": "Bron",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_OrkhanNajaf1i_booking-service_internal_domain_booking.CreateBookingRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_booking.SuccessResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Vaxt artiq tutulub",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_booking.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/bookings/my": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Booking"
+                ],
+                "summary": "Menim bronlarim",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_booking.SuccessResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/bookings/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Booking"
+                ],
+                "summary": "Bron detallari",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Booking ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_booking.SuccessResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Booking"
+                ],
+                "summary": "Bron qeydlerini yenile",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Booking ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Qeydler",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_OrkhanNajaf1i_booking-service_internal_domain_booking.UpdateBookingRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_booking.SuccessResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/bookings/{id}/cancel": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Booking"
+                ],
+                "summary": "Bronu legv et",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Booking ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Sebeb",
+                        "name": "request",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_OrkhanNajaf1i_booking-service_internal_domain_booking.CancelBookingRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_booking.SuccessResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/bookings/{id}/complete": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Booking"
+                ],
+                "summary": "Randevunu tamamlanmis isarele",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Booking ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_booking.SuccessResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/bookings/{id}/confirm": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Booking"
+                ],
+                "summary": "Bronu tesdiqle",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Booking ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_booking.SuccessResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/bookings/{id}/no-show": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Booking"
+                ],
+                "summary": "Musteri gelmedi",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Booking ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_booking.SuccessResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/bookings/{id}/propose": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Provider musteriye basqa vaxt teklif edir. Teklif olunan vaxt da qrafik uzre yoxlanilir. Musteri qebul edene qeder ilkin vaxt saxlanilir.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Booking"
+                ],
+                "summary": "Alternativ vaxt teklif et",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Booking ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Yeni vaxt",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_OrkhanNajaf1i_booking-service_internal_domain_booking.ProposeRescheduleRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_booking.SuccessResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/bookings/{id}/respond": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "accept=true olsa bron teklif olunan vaxta kecir ve tesdiqlenir; false olsa ilkin vaxta qayidir.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Booking"
+                ],
+                "summary": "Teklife cavab ver",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Booking ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Cavab",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_OrkhanNajaf1i_booking-service_internal_domain_booking.RespondToProposalRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_booking.SuccessResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/customers/self": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Login olmus istifadecinin verilmis biznesdeki musteri kartini qaytarir. Kart yoxdursa yaradilir.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Customer"
+                ],
+                "summary": "Oz musteri kartini tap/yarat",
+                "parameters": [
+                    {
+                        "description": "Biznes ID",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_customer.ResolveSelfRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_customer.SuccessResponseDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_customer.ErrorResponseDTO"
+                        }
+                    }
+                }
+            }
+        },
+        "/notifications": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notification"
+                ],
+                "summary": "Bildirisler",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "description": "Yalniz oxunmamislar",
+                        "name": "unread",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Default 20",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Default 0",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_notification.SuccessResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/notifications/devices": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notification"
+                ],
+                "summary": "Push ucun cihaz token-i qeyd et",
+                "parameters": [
+                    {
+                        "description": "FCM token",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_OrkhanNajaf1i_booking-service_internal_domain_notification.RegisterDeviceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_notification.SuccessResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notification"
+                ],
+                "summary": "Cihaz token-ini sil",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "FCM token",
+                        "name": "token",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_notification.SuccessResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/notifications/read-all": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notification"
+                ],
+                "summary": "Hamisini oxunmus isarele",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_notification.SuccessResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/notifications/unread-count": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notification"
+                ],
+                "summary": "Oxunmamis bildiris sayi",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_notification.SuccessResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/notifications/{id}/read": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notification"
+                ],
+                "summary": "Bildirisi oxunmus isarele",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Notification ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_notification.SuccessResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/public/availability": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Public"
+                ],
+                "summary": "Bos vaxtlar (auth telem olunmur)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Biznes ID",
+                        "name": "business_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Isci ID",
+                        "name": "staff_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Xidmet ID",
+                        "name": "service_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "YYYY-MM-DD",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "YYYY-MM-DD",
+                        "name": "to",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_public.SuccessResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/public/businesses": {
+            "get": {
+                "description": "Musteri xestexana / klinika / berberxana secmek ucun. Auth telem olunmur.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Public"
+                ],
+                "summary": "Aktiv bizneslerin siyahisi",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_public.SuccessResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/public/businesses/{id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Public"
+                ],
+                "summary": "Biznes detallari",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Biznes ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_public.SuccessResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/public/businesses/{id}/services": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Public"
+                ],
+                "summary": "Biznesin xidmetleri",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Biznes ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Yalniz bu iscinin xidmetleri",
+                        "name": "staff_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_public.SuccessResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/public/businesses/{id}/staff": {
+            "get": {
+                "description": "Musteri hansi hekim/berber ile bron edeceyini secir.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Public"
+                ],
+                "summary": "Biznesin isciləri",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Biznes ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_public.SuccessResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -2038,6 +3272,186 @@
                 "UserTypeStaff",
                 "UserTypeSoloPractitioner"
             ]
+        },
+        "github_com_OrkhanNajaf1i_booking-service_internal_domain_availability.BulkWorkingHoursRequest": {
+            "type": "object",
+            "properties": {
+                "days": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_OrkhanNajaf1i_booking-service_internal_domain_availability.SetWorkingHoursRequest"
+                    }
+                },
+                "staff_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_OrkhanNajaf1i_booking-service_internal_domain_availability.CreateTimeOffRequest": {
+            "type": "object",
+            "properties": {
+                "end_at": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "staff_id": {
+                    "type": "string"
+                },
+                "start_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_OrkhanNajaf1i_booking-service_internal_domain_availability.SetWorkingHoursRequest": {
+            "type": "object",
+            "properties": {
+                "break_enabled": {
+                    "type": "boolean"
+                },
+                "break_end": {
+                    "type": "string"
+                },
+                "break_start": {
+                    "type": "string"
+                },
+                "day_of_week": {
+                    "type": "integer"
+                },
+                "end_time": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "staff_id": {
+                    "type": "string"
+                },
+                "start_time": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_OrkhanNajaf1i_booking-service_internal_domain_availability.UpdateScheduleSettingsRequest": {
+            "type": "object",
+            "properties": {
+                "allow_reschedule_proposal": {
+                    "type": "boolean"
+                },
+                "auto_confirm": {
+                    "type": "boolean"
+                },
+                "buffer_after_mins": {
+                    "type": "integer"
+                },
+                "buffer_before_mins": {
+                    "type": "integer"
+                },
+                "default_duration_mins": {
+                    "type": "integer"
+                },
+                "max_advance_days": {
+                    "type": "integer"
+                },
+                "min_notice_mins": {
+                    "type": "integer"
+                },
+                "slot_step_mins": {
+                    "type": "integer"
+                },
+                "staff_id": {
+                    "type": "string"
+                },
+                "timezone": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_OrkhanNajaf1i_booking-service_internal_domain_booking.CancelBookingRequest": {
+            "type": "object",
+            "properties": {
+                "reason": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_OrkhanNajaf1i_booking-service_internal_domain_booking.CreateBookingRequest": {
+            "type": "object",
+            "properties": {
+                "customer_id": {
+                    "type": "string"
+                },
+                "location_id": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "service_id": {
+                    "type": "string"
+                },
+                "staff_id": {
+                    "type": "string"
+                },
+                "start_time": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_OrkhanNajaf1i_booking-service_internal_domain_booking.ProposeRescheduleRequest": {
+            "type": "object",
+            "properties": {
+                "new_start_time": {
+                    "type": "string"
+                },
+                "note": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_OrkhanNajaf1i_booking-service_internal_domain_booking.RespondToProposalRequest": {
+            "type": "object",
+            "properties": {
+                "accept": {
+                    "type": "boolean"
+                },
+                "note": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_OrkhanNajaf1i_booking-service_internal_domain_booking.UpdateBookingRequest": {
+            "type": "object",
+            "properties": {
+                "notes": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_OrkhanNajaf1i_booking-service_internal_domain_notification.Platform": {
+            "type": "string",
+            "enum": [
+                "ios",
+                "android",
+                "web"
+            ],
+            "x-enum-varnames": [
+                "PlatformIOS",
+                "PlatformAndroid",
+                "PlatformWeb"
+            ]
+        },
+        "github_com_OrkhanNajaf1i_booking-service_internal_domain_notification.RegisterDeviceRequest": {
+            "type": "object",
+            "properties": {
+                "platform": {
+                    "$ref": "#/definitions/github_com_OrkhanNajaf1i_booking-service_internal_domain_notification.Platform"
+                },
+                "token": {
+                    "type": "string"
+                }
+            }
         },
         "internal_http_handlers_auth.AuthResponseDTO": {
             "type": "object",
@@ -2186,6 +3600,58 @@
                 }
             }
         },
+        "internal_http_handlers_availability.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "internal_http_handlers_availability.SuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "internal_http_handlers_booking.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "internal_http_handlers_booking.SuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "internal_http_handlers_business.BusinessHTTPResponse": {
             "type": "object",
             "properties": {
@@ -2295,6 +3761,9 @@
         "internal_http_handlers_business.UpdateBusinessHTTPRequest": {
             "type": "object",
             "properties": {
+                "business_id": {
+                    "type": "string"
+                },
                 "industry": {
                     "type": "string"
                 },
@@ -2400,6 +3869,26 @@
                 }
             }
         },
+        "internal_http_handlers_customer.ResolveSelfRequest": {
+            "type": "object",
+            "properties": {
+                "business_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_http_handlers_customer.SuccessResponseDTO": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "internal_http_handlers_customer.UpdateCustomerRequest": {
             "type": "object",
             "properties": {
@@ -2481,6 +3970,30 @@
                 },
                 "phone": {
                     "type": "string"
+                }
+            }
+        },
+        "internal_http_handlers_notification.SuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "internal_http_handlers_public.SuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
                 }
             }
         },

@@ -3,7 +3,6 @@ package staff
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -36,27 +35,11 @@ func writeJSONError(w http.ResponseWriter, status int, message string, details i
 }
 
 func getBusinessIDFromContext(r *http.Request) (uuid.UUID, error) {
-	v := r.Context().Value(middleware.BusinessKey)
-	if v == nil {
-		return uuid.Nil, fmt.Errorf("business id missing in context")
-	}
-	businessID, ok := v.(uuid.UUID)
-	if !ok || businessID == uuid.Nil {
-		return uuid.Nil, fmt.Errorf("invalid business id in context")
-	}
-	return businessID, nil
+	return middleware.BusinessIDFromContext(r.Context())
 }
 
 func getUserIDFromContext(r *http.Request) (uuid.UUID, error) {
-	v := r.Context().Value(middleware.UserIDKey)
-	if v == nil {
-		return uuid.Nil, fmt.Errorf("user id missing in context")
-	}
-	userID, ok := v.(uuid.UUID)
-	if !ok || userID == uuid.Nil {
-		return uuid.Nil, fmt.Errorf("invalid user id in context")
-	}
-	return userID, nil
+	return middleware.UserIDFromContext(r.Context())
 }
 
 // @Summary      Create Staff Profile

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/OrkhanNajaf1i/booking-service/internal/domain/auth"
+	"github.com/OrkhanNajaf1i/booking-service/internal/domain/customer"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
@@ -238,4 +239,51 @@ func (r *AuthRepository) UpdateUserStatus(ctx context.Context, userID uuid.UUID,
 		return fmt.Errorf("failed to update status for user %s: %w", userID, err)
 	}
 	return nil
+}
+
+// UpdateUserBusinessID – istifadecini bir biznese baglayir.
+// Staff invite qebul edilende cagirilir: davetle gelen sexs
+// artiq hemin biznesin iscisi olur.
+func (r *AuthRepository) UpdateUserBusinessID(
+	ctx context.Context,
+	userID, businessID uuid.UUID,
+	isOwner bool,
+) error {
+	query := `
+        UPDATE users
+        SET business_id = $1, is_owner = $2, updated_at = $3
+        WHERE id = $4
+    `
+	result, err := r.db.ExecContext(ctx, query, businessID, isOwner, time.Now(), userID)
+	if err != nil {
+		return fmt.Errorf("failed to set business for user %s: %w", userID, err)
+	}
+
+	affected, err := result.RowsAffected()
+	if err == nil && affected == 0 {
+		return fmt.Errorf("user %s not found", userID)
+	}
+	return nil
+}
+
+// GetUserProfile – customer.UserProfileProvider realizasiyasi.
+// Musteri tetbiqi bron edende oz musteri karti bu melumatla yaradilir.
+func (r *AuthRepository) GetUserProfile(
+	ctx context.Context,
+	userID uuid.UUID,
+) (*customer.UserProfile, error) {
+	user, err := r.GetUserByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		return nil, nil
+	}
+
+	return &customer.UserProfile{
+		ID:       user.ID,
+		FullName: user.FullName,
+		Email:    user.Email,
+		Phone:    user.Phone,
+	}, nil
 }
