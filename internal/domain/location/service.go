@@ -37,6 +37,8 @@ func (s *LocationService) CreateLocation(
 	location.Address = req.Address
 	location.City = req.City
 	location.Phone = req.Phone
+	location.Latitude = req.Latitude
+	location.Longitude = req.Longitude
 
 	if err := s.validateLocation(location); err != nil {
 		return nil, err
@@ -122,6 +124,8 @@ func (s *LocationService) UpdateLocation(
 	location.Address = req.Address
 	location.City = req.City
 	location.Phone = req.Phone
+	location.Latitude = req.Latitude
+	location.Longitude = req.Longitude
 	location.UpdatedAt = time.Now()
 
 	if err := s.validateLocation(location); err != nil {
