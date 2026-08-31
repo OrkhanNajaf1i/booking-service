@@ -79,6 +79,11 @@ type BusinessCard struct {
 	City    string `json:"city,omitempty"`
 	Address string `json:"address,omitempty"`
 
+	// Koordinatlar xerite gorunusu ucundur. Filial xeritede
+	// isarelenmeyibse bos qalir — bele biznes yalniz siyahida gorunur.
+	Latitude  *float64 `json:"latitude,omitempty"`
+	Longitude *float64 `json:"longitude,omitempty"`
+
 	// DistanceKm yalniz sorguda lat/lng olanda dolur.
 	DistanceKm *float64 `json:"distance_km,omitempty"`
 }
@@ -242,6 +247,11 @@ func fillLocation(
 
 	card.City = chosen.City
 	card.Address = chosen.Address
+
+	if chosen.HasCoordinates() {
+		card.Latitude = chosen.Latitude
+		card.Longitude = chosen.Longitude
+	}
 }
 
 // CategoryCard – kesf ekraninda gosterilen kateqoriya.

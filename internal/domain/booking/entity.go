@@ -109,6 +109,11 @@ type Booking struct {
 	Status       BookingStatus `db:"status"        json:"status"`
 	Notes        string        `db:"notes"         json:"notes"`
 
+	// Musteri melumati — YALNIZ provayder siyahisinda dolur.
+	// Bazadan JOIN ile gelir, bookings cedvelinde bele sutun yoxdur.
+	CustomerName  string `db:"customer_name"  json:"customer_name,omitempty"`
+	CustomerPhone string `db:"customer_phone" json:"customer_phone,omitempty"`
+
 	// Provider alternativ vaxt teklif edende doldurulur.
 	ProposedStartTime *time.Time `db:"proposed_start_time" json:"proposed_start_time,omitempty"`
 	ProposedEndTime   *time.Time `db:"proposed_end_time"   json:"proposed_end_time,omitempty"`
