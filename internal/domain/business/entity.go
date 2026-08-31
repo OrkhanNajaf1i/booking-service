@@ -59,6 +59,23 @@ type CreateBusinessRequest struct {
 	CategorySlug string       `json:"category_slug"`
 	Phone        string       `json:"phone"`
 	BusinessType BusinessType `json:"business_type"`
+
+	// Location – ilk filial. Mecburidir.
+	Location *LocationDraft `json:"location"`
+}
+
+// LocationDraft – biznesle birlikde yaradilan ilk filial.
+//
+// Biznes yarandigi anda musteri tetbiqinde gorunur. Unvani ve
+// koordinati olmasa kartda gedilecek yer yazilmir, xeritede noqtesi
+// olmur ve "yaxinlikdakilar" filtri onu sessizce atlayir — yeni
+// biznes elan verib ozunu gizletmis olur.
+type LocationDraft struct {
+	Name      string   `json:"name"`
+	Address   string   `json:"address"`
+	City      string   `json:"city"`
+	Latitude  *float64 `json:"latitude"`
+	Longitude *float64 `json:"longitude"`
 }
 
 type UpdateBusinessRequest struct {
@@ -114,3 +131,6 @@ type BookableBusiness struct {
 	Business
 	Locations []LocationSummary `json:"locations"`
 }
+
+// defaultLocationName – sahib filiala ad vermeyibse.
+const defaultLocationName = "Əsas filial"

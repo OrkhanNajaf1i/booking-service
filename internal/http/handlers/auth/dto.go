@@ -126,7 +126,8 @@ var ErrorMessages = map[string]string{
 	"FULLNAME_TOO_SHORT": "Tam ad çox qısadır",
 	"FULLNAME_TOO_LONG":  "Tam ad çox uzundur",
 
-	"PHONE_REQUIRED": "Telefon nömrəsi tələb olunur",
+	"PHONE_REQUIRED":       "Telefon nömrəsi tələb olunur",
+	"INVALID_PHONE_FORMAT": "Mobil nömrə düzgün deyil: +994 50 123 45 67",
 
 	"INVALID_CREDENTIALS": "Email və ya parol yanlışdır",
 	"USER_INACTIVE":       "Akkaunt deaktivdir",

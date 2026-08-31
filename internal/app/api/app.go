@@ -106,9 +106,12 @@ func New(cfg *config.AppConfig, appLogger logger.Logger) (*App, error) {
 
 	// ---------- DOMAIN SERVIS-LERI ----------
 	businessSvc := business.NewService(businessRepo, authRepo, staffRepo).
-		WithSchedules(availabilityRepo)
+		WithSchedules(availabilityRepo).
+		WithLocations(locationRepo).
+		WithStaffCounter(staffRepo)
 	authSvc := auth.NewAuthService(authRepo, passwordHasher, emailService, tokenManager).
-		WithPhoneAccounts(authRepo)
+		WithPhoneAccounts(authRepo).
+		WithPhoneNormalizer(otp.NormalizePhone)
 
 	// Telefonla giris: kanal konfiqurasiyaya gore secilir.
 	//

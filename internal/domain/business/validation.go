@@ -64,6 +64,49 @@ func (service *BusinessService) validateCreateRequest(request *CreateBusinessReq
 	return nil
 }
 
+// Filialsiz biznes yaradilmir.
+//
+// Musteri tetbiqi biznesi yarandigi anda gosterir: unvan ve koordinat
+// olmasa kartda gedilecek yer yazilmir, xeritede noqte cixmir,
+// "yaxinlikdakilar" filtri onu atlayir. Ona gore ilk filial biznesin
+// oz melumati qeder mecburidir.
+func (service *BusinessService) validateLocationDraft(draft *LocationDraft) error {
+	if draft == nil {
+		return NewBusinessError(
+			"LOCATION_REQUIRED",
+			"Filial unvani secilmelidir",
+		)
+	}
+
+	if strings.TrimSpace(draft.Address) == "" {
+		return NewBusinessError(
+			"LOCATION_ADDRESS_REQUIRED",
+			"Filial unvani yazilmalidir",
+		)
+	}
+
+	// Koordinat ya tam verilir, ya hec verilmir — yarimciq deyer
+	// xeritede yanlis noqte gosterer.
+	if draft.Latitude == nil || draft.Longitude == nil {
+		return NewBusinessError(
+			"LOCATION_COORDINATES_REQUIRED",
+			"Xeritede yer secilmelidir",
+		)
+	}
+	if *draft.Latitude < -90 || *draft.Latitude > 90 {
+		return NewBusinessError("LATITUDE_OUT_OF_RANGE", "Enlik -90 ile 90 arasinda olmalidir")
+	}
+	if *draft.Longitude < -180 || *draft.Longitude > 180 {
+		return NewBusinessError("LONGITUDE_OUT_OF_RANGE", "Uzunluq -180 ile 180 arasinda olmalidir")
+	}
+
+	if len(strings.TrimSpace(draft.Name)) > 100 {
+		return NewBusinessError("LOCATION_NAME_TOO_LONG", "Filial adi 100 simvoldan uzun ola bilmez")
+	}
+
+	return nil
+}
+
 func (service *BusinessService) validateBusinessName(name string) error {
 	cleanName := strings.TrimSpace(name)
 

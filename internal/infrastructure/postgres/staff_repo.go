@@ -281,3 +281,18 @@ func (r *StaffRepository) EnsureOwnerProfile(
 
 	return staffID, nil
 }
+
+// CountActiveStaff – biznesdeki aktiv isci sayi (business.StaffCounter).
+func (r *StaffRepository) CountActiveStaff(ctx context.Context, businessID uuid.UUID) (int, error) {
+	const query = `
+		SELECT COUNT(*) FROM staff_profiles
+		WHERE business_id = $1 AND status = 'active'
+	`
+
+	var count int
+	if err := r.db.GetContext(ctx, &count, query, businessID); err != nil {
+		return 0, fmt.Errorf("postgres: failed to count active staff: %w", err)
+	}
+
+	return count, nil
+}

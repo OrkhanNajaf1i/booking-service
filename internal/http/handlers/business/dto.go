@@ -9,21 +9,50 @@ import (
 	"github.com/google/uuid"
 )
 
+// LocationHTTPRequest – biznesle birlikde yaradilan ilk filial.
+type LocationHTTPRequest struct {
+	Name      string   `json:"name"`
+	Address   string   `json:"address"`
+	City      string   `json:"city"`
+	Latitude  *float64 `json:"latitude"`
+	Longitude *float64 `json:"longitude"`
+}
+
+func (request *LocationHTTPRequest) ToDraft() *business.LocationDraft {
+	if request == nil {
+		return nil
+	}
+	return &business.LocationDraft{
+		Name:      request.Name,
+		Address:   request.Address,
+		City:      request.City,
+		Latitude:  request.Latitude,
+		Longitude: request.Longitude,
+	}
+}
+
+// SwitchModeHTTPRequest – tek isci ↔ komanda kecidi.
+type SwitchModeHTTPRequest struct {
+	BusinessType string `json:"business_type"`
+}
+
 type CreateSoloBusinessHTTPRequest struct {
 	Name string `json:"name"`
 	// CategorySlug – kesf ekranindaki sabit kateqoriya (mes. "dentist").
 	CategorySlug string `json:"category_slug"`
 	// ServiceCategory – sahibin oz sozu ("Kardioloq"); kartda alt basliq.
-	ServiceCategory string `json:"service_category"`
-	Phone           string `json:"phone"`
+	ServiceCategory string               `json:"service_category"`
+	Phone           string               `json:"phone"`
+	Location        *LocationHTTPRequest `json:"location"`
 }
 
 type CreateMultiBusinessHTTPRequest struct {
-	Name            string `json:"name"`
-	Industry        string `json:"industry"`
-	CategorySlug    string `json:"category_slug"`
-	ServiceCategory string `json:"service_category"`
-	Phone           string `json:"phone"`
+	Name            string               `json:"name"`
+	Industry        string               `json:"industry"`
+	CategorySlug    string               `json:"category_slug"`
+	ServiceCategory string               `json:"service_category"`
+	Phone           string               `json:"phone"`
+	Location        *LocationHTTPRequest `json:"location"`
 }
 
 type UpdateBusinessHTTPRequest struct {
@@ -110,6 +139,7 @@ func (request *CreateSoloBusinessHTTPRequest) ToCreateBusinessRequest() *busines
 		Phone:           request.Phone,
 		BusinessType:    business.BusinessTypeSolo,
 		Industry:        "",
+		Location:        request.Location.ToDraft(),
 	}
 }
 
@@ -120,6 +150,7 @@ func (request *CreateMultiBusinessHTTPRequest) ToCreateBusinessRequest() *busine
 		ServiceCategory: request.ServiceCategory,
 		CategorySlug:    request.CategorySlug,
 		Phone:           request.Phone,
+		Location:        request.Location.ToDraft(),
 		BusinessType:    business.BusinessTypeMulti,
 	}
 }
