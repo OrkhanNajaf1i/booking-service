@@ -5,26 +5,34 @@ import (
 	"time"
 
 	"github.com/OrkhanNajaf1i/booking-service/internal/domain/business"
+	"github.com/OrkhanNajaf1i/booking-service/internal/domain/catalog"
 	"github.com/google/uuid"
 )
 
 type CreateSoloBusinessHTTPRequest struct {
-	Name            string `json:"name"`
+	Name string `json:"name"`
+	// CategorySlug – kesf ekranindaki sabit kateqoriya (mes. "dentist").
+	CategorySlug string `json:"category_slug"`
+	// ServiceCategory – sahibin oz sozu ("Kardioloq"); kartda alt basliq.
 	ServiceCategory string `json:"service_category"`
 	Phone           string `json:"phone"`
 }
 
 type CreateMultiBusinessHTTPRequest struct {
-	Name     string `json:"name"`
-	Industry string `json:"industry"`
-	Phone    string `json:"phone"`
+	Name            string `json:"name"`
+	Industry        string `json:"industry"`
+	CategorySlug    string `json:"category_slug"`
+	ServiceCategory string `json:"service_category"`
+	Phone           string `json:"phone"`
 }
 
 type UpdateBusinessHTTPRequest struct {
-	BusinessID uuid.UUID `json:"business_id"`
-	Name       string    `json:"name"`
-	Industry   string    `json:"industry"`
-	Phone      string    `json:"phone"`
+	BusinessID      uuid.UUID `json:"business_id"`
+	Name            string    `json:"name"`
+	Industry        string    `json:"industry"`
+	CategorySlug    string    `json:"category_slug"`
+	ServiceCategory string    `json:"service_category"`
+	Phone           string    `json:"phone"`
 	// OwnerID  uuid.UUID `json:"owner_id"`
 }
 
@@ -33,6 +41,8 @@ type BusinessHTTPResponse struct {
 	Name            string    `json:"name"`
 	OwnerID         uuid.UUID `json:"owner_id"`
 	Industry        string    `json:"industry"`
+	CategorySlug    string    `json:"category_slug"`
+	CategoryName    string    `json:"category_name"`
 	ServiceCategory string    `json:"service_category"`
 	Phone           string    `json:"phone"`
 	BusinessType    string    `json:"business_type"`
@@ -72,11 +82,17 @@ func ToBusinessHTTPResponse(business *business.Business) *BusinessHTTPResponse {
 		return nil
 	}
 
+	resolved := catalog.ResolveWith(
+		business.CategorySlug, business.ServiceCategory, business.Industry,
+	)
+
 	return &BusinessHTTPResponse{
 		ID:              business.ID,
 		Name:            business.Name,
 		OwnerID:         business.OwnerID,
 		Industry:        business.Industry,
+		CategorySlug:    resolved.Slug,
+		CategoryName:    resolved.Name,
 		ServiceCategory: business.ServiceCategory,
 		Phone:           business.Phone,
 		BusinessType:    string(business.BusinessType),
@@ -90,6 +106,7 @@ func (request *CreateSoloBusinessHTTPRequest) ToCreateBusinessRequest() *busines
 	return &business.CreateBusinessRequest{
 		Name:            request.Name,
 		ServiceCategory: request.ServiceCategory,
+		CategorySlug:    request.CategorySlug,
 		Phone:           request.Phone,
 		BusinessType:    business.BusinessTypeSolo,
 		Industry:        "",
@@ -100,17 +117,20 @@ func (request *CreateMultiBusinessHTTPRequest) ToCreateBusinessRequest() *busine
 	return &business.CreateBusinessRequest{
 		Name:            request.Name,
 		Industry:        request.Industry,
+		ServiceCategory: request.ServiceCategory,
+		CategorySlug:    request.CategorySlug,
 		Phone:           request.Phone,
 		BusinessType:    business.BusinessTypeMulti,
-		ServiceCategory: "",
 	}
 }
 
 func (request *UpdateBusinessHTTPRequest) ToUpdateBusinessRequest() *business.UpdateBusinessRequest {
 	return &business.UpdateBusinessRequest{
-		Name:     request.Name,
-		Industry: request.Industry,
-		Phone:    request.Phone,
+		Name:            request.Name,
+		Industry:        request.Industry,
+		ServiceCategory: request.ServiceCategory,
+		CategorySlug:    request.CategorySlug,
+		Phone:           request.Phone,
 		// OwnerID:  request.OwnerID,
 	}
 }

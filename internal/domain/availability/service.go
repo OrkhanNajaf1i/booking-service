@@ -35,9 +35,9 @@ func NewService(repo Repository, durations ServiceDurationProvider, log logger.L
 
 // ResolveSettings – uc pilleli zencir:
 //
-//	1) hemin isciye mexsus override
-//	2) biznesin default ayari
-//	3) sistem default-u
+//  1. hemin isciye mexsus override
+//  2. biznesin default ayari
+//  3. sistem default-u
 func (s *availabilityService) ResolveSettings(
 	ctx context.Context,
 	businessID uuid.UUID,
@@ -558,6 +558,18 @@ func (s *availabilityService) UpdateSettings(
 	}
 	if req.AllowRescheduleProposal != nil {
 		existing.AllowRescheduleProposal = *req.AllowRescheduleProposal
+	}
+	if req.PendingExpiresMins != nil {
+		existing.PendingExpiresMins = *req.PendingExpiresMins
+	}
+	if req.CancellationWindowMins != nil {
+		existing.CancellationWindowMins = *req.CancellationWindowMins
+	}
+	if req.AllowCustomerReschedule != nil {
+		existing.AllowCustomerReschedule = *req.AllowCustomerReschedule
+	}
+	if req.RescheduleWindowMins != nil {
+		existing.RescheduleWindowMins = *req.RescheduleWindowMins
 	}
 
 	if err := ValidateSettings(existing); err != nil {

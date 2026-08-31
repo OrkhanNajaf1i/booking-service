@@ -14,12 +14,18 @@ import (
 type StaffService struct {
 	repo        Repository
 	userService UserService
+	owners      BusinessOwnerLookup
 }
 
-func NewService(repo Repository, userService UserService) *StaffService {
+func NewService(
+	repo Repository,
+	userService UserService,
+	owners BusinessOwnerLookup,
+) *StaffService {
 	return &StaffService{
 		repo:        repo,
 		userService: userService,
+		owners:      owners,
 	}
 }
 
@@ -89,6 +95,18 @@ func (s *StaffService) ListStaff(
 		return nil, fmt.Errorf("failed to list staff: %w", err)
 	}
 
+	// Sahib bir defe tapilir, her setir ucun ayrica sorgu getmir.
+	// Axtaris alinmasa siyahi yene qaytarilir — is_owner sadece false
+	// qalir ve server terefindeki qadaga onsuz da yerindedir.
+	if s.owners != nil {
+		if ownerID, ownerErr := s.owners.OwnerUserID(ctx, businessID); ownerErr == nil &&
+			ownerID != uuid.Nil {
+			for _, member := range staff {
+				member.IsOwner = member.UserID == ownerID
+			}
+		}
+	}
+
 	return staff, nil
 }
 
@@ -139,11 +157,70 @@ func (s *StaffService) DeactivateStaff(
 		return &StaffError{Code: "INVALID_ID", Message: "Staff ID and Business ID are required"}
 	}
 
+	// Sahib ozunu silmemelidir.
+	//
+	// Tek isleyen hekim/berber ucun bu, yegane iscini silmek demekdir:
+	// biznes kesf ekranindan itir, movcud randevular sahibsiz qalir.
+	// Komandali biznesde de sahib eyni zamanda adminlerdir — o gedende
+	// biznesi idare edecek adam qalmir. Isci cixarmaq lazimdirsa
+	// DIGER iscilər silinir.
+	owner, err := s.isOwner(ctx, staffID, businessID)
+	if err != nil {
+		return err
+	}
+	if owner {
+		return &StaffError{
+			Code:    "OWNER_CANNOT_BE_REMOVED",
+			Message: "Biznes sahibi işçi siyahısından silinə bilməz",
+		}
+	}
+
 	if err := s.repo.DeactivateStaff(ctx, staffID, businessID); err != nil {
 		return fmt.Errorf("failed to deactivate staff: %w", err)
 	}
 
 	return nil
+}
+
+// IsOwner – hemin isci biznesin sahibidirmi. Panel duymeni bunun uzre
+// gizledir; qerar yene serverde verilir.
+func (s *StaffService) IsOwner(
+	ctx context.Context,
+	staffID, businessID uuid.UUID,
+) (bool, error) {
+	if staffID == uuid.Nil || businessID == uuid.Nil {
+		return false, &StaffError{Code: "INVALID_ID", Message: "Staff ID and Business ID are required"}
+	}
+	return s.isOwner(ctx, staffID, businessID)
+}
+
+func (s *StaffService) isOwner(
+	ctx context.Context,
+	staffID, businessID uuid.UUID,
+) (bool, error) {
+	// Sahib axtarisi qurulmayibsa qadaga tetbiq edile bilmez.
+	// Sessizce kecmek daha pisdir — sahib silinerdi.
+	if s.owners == nil {
+		return false, &StaffError{
+			Code:    "OWNER_LOOKUP_UNAVAILABLE",
+			Message: "Sahib yoxlanışı mümkün olmadı",
+		}
+	}
+
+	profile, err := s.repo.GetStaffByID(ctx, staffID, businessID)
+	if err != nil {
+		return false, fmt.Errorf("failed to get staff: %w", err)
+	}
+	if profile == nil {
+		return false, &StaffError{Code: "NOT_FOUND", Message: "İşçi tapılmadı"}
+	}
+
+	ownerID, err := s.owners.OwnerUserID(ctx, businessID)
+	if err != nil {
+		return false, fmt.Errorf("failed to get business owner: %w", err)
+	}
+
+	return ownerID != uuid.Nil && ownerID == profile.UserID, nil
 }
 
 // InviteStaff - Yeni işçi dəvət etmək

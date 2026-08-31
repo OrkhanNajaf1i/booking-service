@@ -19,7 +19,7 @@ type Repository interface {
 	// aktiv olmaqla yanasi en azi bir aktiv iscisi olmalidir.
 	// Isci olmayan biznes musteriye gosterilse, o, secim edib bos
 	// ekranla qarsilasir.
-	ListBookable(ctx context.Context) ([]*Business, error)
+	ListBookable(ctx context.Context) ([]*BookableBusiness, error)
 }
 
 // OwnerLinker – istifadecini yaradilan biznese baglayir.
@@ -44,6 +44,6 @@ type Service interface {
 	GetBusinessByID(ctx context.Context, id uuid.UUID) (*Business, error)
 	GetBusinessByOwner(ctx context.Context, ownerID uuid.UUID) (*Business, error)
 	ListBusinesses(ctx context.Context) ([]*Business, error)
-	ListBookableBusinesses(ctx context.Context) ([]*Business, error)
+	ListBookableBusinesses(ctx context.Context) ([]*BookableBusiness, error)
 	UpdateBusiness(ctx context.Context, businessID uuid.UUID, ownerID uuid.UUID, request *UpdateBusinessRequest) error
 }

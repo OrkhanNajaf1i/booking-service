@@ -12,11 +12,11 @@ import (
 )
 
 type notificationService struct {
-	repo      Repository
-	realtime  RealtimePublisher
-	push      PushSender
-	log       logger.Logger
-	now       func() time.Time
+	repo     Repository
+	realtime RealtimePublisher
+	push     PushSender
+	log      logger.Logger
+	now      func() time.Time
 }
 
 // NewService – bildiris servisi. realtime ve push nil ola biler;

@@ -19,17 +19,16 @@ func (service *BusinessService) validateBusiness(business *Business) error {
 		return err
 	}
 
-	switch business.BusinessType {
-	case BusinessTypeSolo:
+	if !business.BusinessType.IsValid() {
+		return NewBusinessError("INVALID_BUSINESS_TYPE", "Invalid business type")
+	}
+
+	// Sahe metni isteye baglidir — qruplasdirmani category_slug teyin
+	// edir. Verilibse uzunluguna baxilir.
+	if strings.TrimSpace(business.ServiceCategory) != "" {
 		if err := service.validateServiceCategory(business.ServiceCategory); err != nil {
 			return err
 		}
-	case BusinessTypeMulti:
-		if err := service.validateIndustry(business.Industry); err != nil {
-			return err
-		}
-	default:
-		return NewBusinessError("INVALID_BUSINESS_TYPE", "Invalid business type")
 	}
 
 	return nil
@@ -52,13 +51,12 @@ func (service *BusinessService) validateCreateRequest(request *CreateBusinessReq
 		return NewBusinessError("INVALID_BUSINESS_TYPE", "Invalid business type")
 	}
 
-	switch request.BusinessType {
-	case BusinessTypeSolo:
+	// Sahe metni artiq isteye baglidir: qruplasdirmani sabit kateqoriya
+	// secimi teyin edir (bax: CreateBusiness). Metn yalniz kartda alt
+	// basliq kimi gorunur, ona gore verilibse uzunluguna baxilir,
+	// verilmeyibse buraxilir.
+	if strings.TrimSpace(request.ServiceCategory) != "" {
 		if err := service.validateServiceCategory(request.ServiceCategory); err != nil {
-			return err
-		}
-	case BusinessTypeMulti:
-		if err := service.validateIndustry(request.Industry); err != nil {
 			return err
 		}
 	}
@@ -99,12 +97,9 @@ func (service *BusinessService) validatePhone(phone string) error {
 	return nil
 }
 
+// validateServiceCategory – yalniz metn verilibse cagirilir.
 func (service *BusinessService) validateServiceCategory(category string) error {
 	cleanCategory := strings.TrimSpace(category)
-
-	if cleanCategory == "" {
-		return NewBusinessError("SERVICE_CATEGORY_REQUIRED", "Service category is required for solo business")
-	}
 
 	if len(cleanCategory) < 3 {
 		return NewBusinessError("SERVICE_CATEGORY_TOO_SHORT", "Service category must be at least 3 characters")

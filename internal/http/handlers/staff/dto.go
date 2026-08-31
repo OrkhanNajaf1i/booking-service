@@ -71,6 +71,8 @@ type StaffWithUserResponse struct {
 	LocationID *uuid.UUID         `json:"location_id,omitempty"`
 	Status     domain.StaffStatus `json:"status"`
 	JoinedAt   time.Time          `json:"joined_at"`
+	// IsOwner – biznes sahibidir; isci siyahisindan silinmir.
+	IsOwner bool `json:"is_owner"`
 }
 
 type InviteResponse struct {
@@ -94,7 +96,11 @@ type SuccessResponse struct {
 }
 
 type ErrorResponse struct {
-	Success bool        `json:"success"`
+	Success bool `json:"success"`
+	// Code ve Message klientin oxudugu sahelerdir.
+	Code    string `json:"code,omitempty"`
+	Message string `json:"message"`
+	// Error/Details kohne forma ile uyumluluq ucun qalir.
 	Error   string      `json:"error"`
 	Details interface{} `json:"details,omitempty"`
 }
@@ -197,6 +203,7 @@ func FromDomainStaffWithUser(list []*domain.StaffWithUser) []StaffWithUserRespon
 			LocationID: s.LocationID,
 			Status:     s.Status,
 			JoinedAt:   s.JoinedAt,
+			IsOwner:    s.IsOwner,
 		})
 	}
 	return res

@@ -13,13 +13,17 @@ package public
 import (
 	"encoding/json"
 	"errors"
+	"math"
 	"net/http"
+	"net/url"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
 	availabilityDomain "github.com/OrkhanNajaf1i/booking-service/internal/domain/availability"
 	businessDomain "github.com/OrkhanNajaf1i/booking-service/internal/domain/business"
+	"github.com/OrkhanNajaf1i/booking-service/internal/domain/catalog"
 	serviceDomain "github.com/OrkhanNajaf1i/booking-service/internal/domain/service"
 	staffDomain "github.com/OrkhanNajaf1i/booking-service/internal/domain/staff"
 	"github.com/OrkhanNajaf1i/booking-service/internal/logger"
@@ -56,12 +60,27 @@ func NewHandler(
 
 // BusinessCard – siyahida gosterilen minimal melumat.
 type BusinessCard struct {
-	ID              uuid.UUID `json:"id"`
-	Name            string    `json:"name"`
-	Industry        string    `json:"industry"`
-	ServiceCategory string    `json:"service_category"`
-	Phone           string    `json:"phone"`
-	BusinessType    string    `json:"business_type"`
+	ID   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
+
+	// Category sabit kateqoriya slug-idir; qruplasdirma bunun uzre gedir.
+	Category     string `json:"category"`
+	CategoryName string `json:"category_name"`
+	CategoryIcon string `json:"category_icon"`
+
+	// ServiceCategory sahibin ozunun yazdigi metndir — kartda alt basliq
+	// kimi gorunur, cunki "Kardioloq" "Hekim"-den daha melumatlidir.
+	ServiceCategory string `json:"service_category"`
+	Industry        string `json:"industry"`
+	Phone           string `json:"phone"`
+	BusinessType    string `json:"business_type"`
+
+	// Yer melumati — en yaxin (koordinat verilmeyibse birinci) filialdan.
+	City    string `json:"city,omitempty"`
+	Address string `json:"address,omitempty"`
+
+	// DistanceKm yalniz sorguda lat/lng olanda dolur.
+	DistanceKm *float64 `json:"distance_km,omitempty"`
 }
 
 // ListBusinesses – GET /api/v1/public/businesses
@@ -70,8 +89,11 @@ type BusinessCard struct {
 // @Description  Musteri xestexana / klinika / berberxana secmek ucun. Auth telem olunmur.
 // @Tags         Public
 // @Produce      json
-// @Param        category query string false "Sahe uzre filtr (mes. Berber)"
-// @Param        q        query string false "Ad / sahe uzre axtaris"
+// @Param        category  query string false "Kateqoriya slug-i (mes. dentist)"
+// @Param        q         query string false "Ad / sahe uzre axtaris"
+// @Param        lat       query number false "Musterinin en dairesi — yaxinliq siralamasi ucun"
+// @Param        lng       query number false "Musterinin uzunluq dairesi"
+// @Param        radius_km query number false "lat/lng verilibse: bu mesafeden uzaqlari kesir"
 // @Success      200 {object} SuccessResponse
 // @Router       /public/businesses [get]
 func (h *Handler) ListBusinesses(w http.ResponseWriter, r *http.Request) {
@@ -81,8 +103,12 @@ func (h *Handler) ListBusinesses(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	category := strings.TrimSpace(r.URL.Query().Get("category"))
-	search := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("q")))
+	query := r.URL.Query()
+	category := strings.TrimSpace(query.Get("category"))
+	search := normalizeSearch(query.Get("q"))
+
+	from, hasOrigin := parseOrigin(query)
+	radiusKm, hasRadius := parseFloat(query.Get("radius_km"))
 
 	cards := make([]BusinessCard, 0, len(all))
 	for _, item := range all {
@@ -90,42 +116,157 @@ func (h *Handler) ListBusinesses(w http.ResponseWriter, r *http.Request) {
 		if !item.IsActive {
 			continue
 		}
-		if category != "" && !strings.EqualFold(categoryOf(item.ServiceCategory, item.Industry), category) {
-			continue
-		}
-		if search != "" && !matchesSearch(item.Name, item.ServiceCategory, item.Industry, search) {
+
+		resolved := catalog.ResolveWith(item.CategorySlug, item.ServiceCategory, item.Industry)
+
+		// Kateqoriya slug uzre suzulur; kohne muraciet uyumlulugu ucun
+		// gorunen ad da qebul edilir.
+		if category != "" &&
+			!strings.EqualFold(resolved.Slug, category) &&
+			!strings.EqualFold(resolved.Name, category) {
 			continue
 		}
 
-		cards = append(cards, BusinessCard{
+		if search != "" && !matchesSearch(item, resolved, search) {
+			continue
+		}
+
+		card := BusinessCard{
 			ID:              item.ID,
 			Name:            item.Name,
-			Industry:        item.Industry,
+			Category:        resolved.Slug,
+			CategoryName:    resolved.Name,
+			CategoryIcon:    resolved.Icon,
 			ServiceCategory: item.ServiceCategory,
+			Industry:        item.Industry,
 			Phone:           item.Phone,
 			BusinessType:    string(item.BusinessType),
+		}
+
+		if hasOrigin {
+			distance, ok := item.NearestDistanceKm(from.lat, from.lng)
+			switch {
+			case ok:
+				if hasRadius && distance > radiusKm {
+					continue
+				}
+				rounded := math.Round(distance*10) / 10
+				card.DistanceKm = &rounded
+			case hasRadius:
+				// Harada oldugu bilinmeyen biznes mesafe suzgecinden
+				// kecmemelidir — istifadeci "yaxinliqdakilar" isteyib.
+				continue
+			}
+		}
+
+		fillLocation(&card, item, from, hasOrigin)
+		cards = append(cards, card)
+	}
+
+	// Yaxinliq isteyibse en yaxin evvel; mesafesiz olanlar sona.
+	if hasOrigin {
+		sort.SliceStable(cards, func(i, j int) bool {
+			left, right := cards[i].DistanceKm, cards[j].DistanceKm
+			switch {
+			case left == nil:
+				return false
+			case right == nil:
+				return true
+			default:
+				return *left < *right
+			}
 		})
 	}
 
 	writeSuccess(w, http.StatusOK, "", cards)
 }
 
+// originPoint – musterinin noqtesi.
+type originPoint struct{ lat, lng float64 }
+
+// parseOrigin – lat ve lng birlikde ve etibarli olmalidir. Yarimciq
+// deyer sessizce goz ardi edilir: siyahi yene qaytarilir, sadece
+// mesafesiz. Kesf ekrani koordinat olmadan da islemelidir.
+func parseOrigin(query url.Values) (originPoint, bool) {
+	lat, okLat := parseFloat(query.Get("lat"))
+	lng, okLng := parseFloat(query.Get("lng"))
+	if !okLat || !okLng {
+		return originPoint{}, false
+	}
+	if lat < -90 || lat > 90 || lng < -180 || lng > 180 {
+		return originPoint{}, false
+	}
+	return originPoint{lat: lat, lng: lng}, true
+}
+
+func parseFloat(raw string) (float64, bool) {
+	trimmed := strings.TrimSpace(raw)
+	if trimmed == "" {
+		return 0, false
+	}
+	value, err := strconv.ParseFloat(trimmed, 64)
+	if err != nil {
+		return 0, false
+	}
+	return value, true
+}
+
+// fillLocation – kartda gosterilecek filial. Musterinin noqtesi
+// bellidirse en yaxin filial, deyilse birinci filial goturulur.
+func fillLocation(
+	card *BusinessCard,
+	item *businessDomain.BookableBusiness,
+	from originPoint,
+	hasOrigin bool,
+) {
+	if len(item.Locations) == 0 {
+		return
+	}
+
+	chosen := item.Locations[0]
+	if hasOrigin {
+		best := -1.0
+		for _, location := range item.Locations {
+			if !location.HasCoordinates() {
+				continue
+			}
+			distance := businessDomain.HaversineKm(
+				from.lat, from.lng, *location.Latitude, *location.Longitude,
+			)
+			if best < 0 || distance < best {
+				best = distance
+				chosen = location
+			}
+		}
+	}
+
+	card.City = chosen.City
+	card.Address = chosen.Address
+}
+
 // CategoryCard – kesf ekraninda gosterilen kateqoriya.
 type CategoryCard struct {
+	Slug  string `json:"slug"`
 	Name  string `json:"name"`
+	Icon  string `json:"icon"`
 	Count int    `json:"count"`
 }
 
 // ListCategories – GET /api/v1/public/categories
 //
-// Musteri once sahe secir ("Berber", "Dis Hekimi"), sonra hemin
+// Musteri once sahe secir ("Berber", "Dis hekimi"), sonra hemin
 // sahedeki biznesler siyahilanir. Kateqoriya ayrica cedvel deyil —
-// bizneslerin service_category (yoxdursa industry) sahesinden yigilir.
+// bizneslerin serbest metni sabit taksonomiyaya baglanir (bax:
+// domain/catalog). Belelikle "Dis Hekimi" ve "Stomatoloq" bir yerde
+// gorunur, siyahi biznes sayi artdiqca parcalanmir.
 //
 // @Summary      Xidmet kateqoriyalari
 // @Description  Her kateqoriyada nece aktiv biznes oldugunu da qaytarir.
 // @Tags         Public
 // @Produce      json
+// @Param        lat       query number false "Verilibse yalniz radius daxilindekiler sayilir"
+// @Param        lng       query number false "Musterinin uzunluq dairesi"
+// @Param        radius_km query number false "Yaxinliq radiusu"
 // @Success      200 {object} SuccessResponse
 // @Router       /public/categories [get]
 func (h *Handler) ListCategories(w http.ResponseWriter, r *http.Request) {
@@ -135,52 +276,125 @@ func (h *Handler) ListCategories(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	query := r.URL.Query()
+	from, hasOrigin := parseOrigin(query)
+	radiusKm, hasRadius := parseFloat(query.Get("radius_km"))
+
 	counts := make(map[string]int)
 	for _, item := range all {
 		if !item.IsActive {
 			continue
 		}
-		name := categoryOf(item.ServiceCategory, item.Industry)
-		if name == "" {
+
+		// Yaxinliq secilibse sayac da hemin radiusu gostermelidir —
+		// eks halda "3 hekim" yazir, acanda bos cixir.
+		if hasOrigin && hasRadius {
+			distance, ok := item.NearestDistanceKm(from.lat, from.lng)
+			if !ok || distance > radiusKm {
+				continue
+			}
+		}
+
+		counts[catalog.ResolveWith(item.CategorySlug, item.ServiceCategory, item.Industry).Slug]++
+	}
+
+	// Bos kateqoriya musteriye gosterilmir: acanda bos ekran cixarir.
+	// all=true ise sahibin secim siyahisi ucundur — orada butun
+	// kateqoriyalar lazimdir, sayindan asili olmayaraq. Orada "Diger"
+	// de yoxdur: o, pese deyil.
+	includeEmpty := query.Get("all") == "true"
+
+	source := catalog.All()
+	if includeEmpty {
+		source = catalog.Selectable()
+	}
+
+	cards := make([]CategoryCard, 0, len(source))
+	for _, category := range source {
+		count := counts[category.Slug]
+		if count == 0 && !includeEmpty {
 			continue
 		}
-		counts[name]++
+		cards = append(cards, CategoryCard{
+			Slug:  category.Slug,
+			Name:  category.Name,
+			Icon:  category.Icon,
+			Count: count,
+		})
 	}
 
-	cards := make([]CategoryCard, 0, len(counts))
-	for name, count := range counts {
-		cards = append(cards, CategoryCard{Name: name, Count: count})
+	// Kesf ekraninda coxlu biznesi olan sahe once gorunsun; secim
+	// siyahisinda ise taksonomiyanin oz sirasi saxlanilir ki, sahib
+	// her defe eyni yerde tapsin.
+	//
+	// "Diger" isteniilen halda EN SONDA qalir: o, pese deyil, sadece
+	// kateqoriyasi secilmemis kohne setirlerin yeridir — sayi cox olsa
+	// da siyahinin basina cixmamalidir.
+	if !includeEmpty {
+		sort.Slice(cards, func(i, j int) bool {
+			leftOther := cards[i].Slug == catalog.SlugOther
+			rightOther := cards[j].Slug == catalog.SlugOther
+			if leftOther != rightOther {
+				return rightOther
+			}
+			if cards[i].Count != cards[j].Count {
+				return cards[i].Count > cards[j].Count
+			}
+			return cards[i].Name < cards[j].Name
+		})
 	}
-
-	// Coxlu biznesi olan sahe once gorunsun; beraberlikde elifba sirasi.
-	sort.Slice(cards, func(i, j int) bool {
-		if cards[i].Count != cards[j].Count {
-			return cards[i].Count > cards[j].Count
-		}
-		return cards[i].Name < cards[j].Name
-	})
 
 	writeSuccess(w, http.StatusOK, "", cards)
 }
 
-// categoryOf – biznesin aid oldugu sahe.
-// service_category daha deqiqdir ("Dis Hekimi"), industry daha genisdir
-// ("healthcare"); ona gore birincisine ustunluk verilir.
-func categoryOf(serviceCategory, industry string) string {
-	if trimmed := strings.TrimSpace(serviceCategory); trimmed != "" {
-		return trimmed
+// matchesSearch – ad, sahibin yazdigi sahe, industry, kateqoriya adi ve
+// filial unvani uzre axtaris. Azerbaycan herfleri ASCII-ye endirilir ki,
+// "dis" yazan adam "Diş Həkimi"ni tapsin.
+func matchesSearch(
+	item *businessDomain.BookableBusiness,
+	resolved catalog.Category,
+	needle string,
+) bool {
+	fields := []string{item.Name, item.ServiceCategory, item.Industry, resolved.Name}
+	for _, location := range item.Locations {
+		fields = append(fields, location.City, location.Address, location.Name)
 	}
-	return strings.TrimSpace(industry)
-}
 
-// matchesSearch – ad, sahe ve ya industry uzre sade axtaris.
-func matchesSearch(name, serviceCategory, industry, needle string) bool {
-	for _, field := range []string{name, serviceCategory, industry} {
-		if strings.Contains(strings.ToLower(field), needle) {
+	for _, field := range fields {
+		if strings.Contains(normalizeSearch(field), needle) {
 			return true
 		}
 	}
 	return false
+}
+
+// normalizeSearch – axtaris ucun kicik herf + Azerbaycan herflerinin
+// ASCII qarsiligi.
+func normalizeSearch(text string) string {
+	var builder strings.Builder
+	builder.Grow(len(text))
+
+	for _, symbol := range strings.ToLower(strings.TrimSpace(text)) {
+		switch symbol {
+		case 'ə':
+			builder.WriteByte('e')
+		case 'ı':
+			builder.WriteByte('i')
+		case 'ş':
+			builder.WriteByte('s')
+		case 'ç':
+			builder.WriteByte('c')
+		case 'ğ':
+			builder.WriteByte('g')
+		case 'ö':
+			builder.WriteByte('o')
+		case 'ü':
+			builder.WriteByte('u')
+		default:
+			builder.WriteRune(symbol)
+		}
+	}
+	return builder.String()
 }
 
 // GetBusiness – GET /api/v1/public/businesses/{id}
@@ -203,9 +417,14 @@ func (h *Handler) GetBusiness(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	resolved := catalog.ResolveWith(found.CategorySlug, found.ServiceCategory, found.Industry)
+
 	writeSuccess(w, http.StatusOK, "", BusinessCard{
 		ID:              found.ID,
 		Name:            found.Name,
+		Category:        resolved.Slug,
+		CategoryName:    resolved.Name,
+		CategoryIcon:    resolved.Icon,
 		Industry:        found.Industry,
 		ServiceCategory: found.ServiceCategory,
 		Phone:           found.Phone,

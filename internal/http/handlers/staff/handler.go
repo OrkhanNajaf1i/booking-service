@@ -26,8 +26,14 @@ func writeJSON(w http.ResponseWriter, status int, data interface{}) {
 }
 
 func writeJSONError(w http.ResponseWriter, status int, message string, details interface{}) {
+	// Domain xetalarinda `details` xeta kodudur; parse xetalarinda
+	// texniki metndir. Yalniz metn olanda `code`-a yazilir.
+	code, _ := details.(string)
+
 	resp := ErrorResponse{
 		Success: false,
+		Code:    code,
+		Message: message,
 		Error:   message,
 		Details: details,
 	}

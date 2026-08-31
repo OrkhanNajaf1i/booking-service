@@ -129,6 +129,8 @@ const scheduleSettingsColumns = `
 	buffer_before_mins, buffer_after_mins,
 	min_notice_mins, max_advance_days,
 	auto_confirm, allow_reschedule_proposal,
+	pending_expires_mins, cancellation_window_mins,
+	allow_customer_reschedule, reschedule_window_mins,
 	created_at, updated_at`
 
 // GetSettings – staffID nil olanda biznesin default setiri qaytarilir.
@@ -182,6 +184,10 @@ func (r *AvailabilityRepository) UpsertSettings(
 			max_advance_days          = EXCLUDED.max_advance_days,
 			auto_confirm              = EXCLUDED.auto_confirm,
 			allow_reschedule_proposal = EXCLUDED.allow_reschedule_proposal,
+			pending_expires_mins      = EXCLUDED.pending_expires_mins,
+			cancellation_window_mins  = EXCLUDED.cancellation_window_mins,
+			allow_customer_reschedule = EXCLUDED.allow_customer_reschedule,
+			reschedule_window_mins    = EXCLUDED.reschedule_window_mins,
 			updated_at                = EXCLUDED.updated_at
 		RETURNING id`
 
@@ -197,8 +203,10 @@ func (r *AvailabilityRepository) UpsertSettings(
 			buffer_before_mins, buffer_after_mins,
 			min_notice_mins, max_advance_days,
 			auto_confirm, allow_reschedule_proposal,
+			pending_expires_mins, cancellation_window_mins,
+			allow_customer_reschedule, reschedule_window_mins,
 			created_at, updated_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
 		ON CONFLICT ` + conflictTarget + ` ` + updateClause
 
 	var id uuid.UUID
@@ -209,6 +217,8 @@ func (r *AvailabilityRepository) UpsertSettings(
 		settings.BufferBeforeMins, settings.BufferAfterMins,
 		settings.MinNoticeMins, settings.MaxAdvanceDays,
 		settings.AutoConfirm, settings.AllowRescheduleProposal,
+		settings.PendingExpiresMins, settings.CancellationWindowMins,
+		settings.AllowCustomerReschedule, settings.RescheduleWindowMins,
 		settings.CreatedAt, settings.UpdatedAt,
 	).Scan(&id)
 	if err != nil {

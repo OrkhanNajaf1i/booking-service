@@ -103,6 +103,15 @@ func (s *bookingService) CreateBooking(
 		status = BookingStatusConfirmed
 	}
 
+	// Musterinin eyni anda basqa randevusu olmamalidir.
+	if parties != nil {
+		if err := s.checkCustomerOverlap(
+			ctx, parties.CustomerUserID, slot.Start, slot.End, uuid.Nil,
+		); err != nil {
+			return nil, err
+		}
+	}
+
 	newBooking := NewBooking(
 		businessID,
 		req.CustomerID,
@@ -193,7 +202,8 @@ func (s *bookingService) ProposeReschedule(
 		return nil, NewBookingError("START_REQUIRED", "new_start_time teleb olunur")
 	}
 
-	existing, err := s.loadForProvider(ctx, actor, bookingID)
+	// Hem provider, hem musteri vaxt deyise biler — qaydalar ferqlidir.
+	existing, err := s.loadForParticipant(ctx, actor, bookingID)
 	if err != nil {
 		return nil, err
 	}
@@ -202,8 +212,22 @@ func (s *bookingService) ProposeReschedule(
 	if err != nil {
 		return nil, err
 	}
-	if !settings.AllowRescheduleProposal {
-		return nil, ErrProposalDisabled
+
+	isProvider := actor.IsProvider() && actor.BusinessID == existing.BusinessID
+
+	if isProvider {
+		if !settings.AllowRescheduleProposal {
+			return nil, ErrProposalDisabled
+		}
+	} else {
+		// Musteri terefi: biznes icaze vermelidir ve pencere kecmemelidir.
+		if !settings.AllowCustomerReschedule {
+			return nil, NewBookingError("RESCHEDULE_DISABLED",
+				"Bu biznesde vaxti ozunuz deyise bilmirsiniz. Zehmet olmasa elaqe saxlayin.")
+		}
+		if err := s.checkRescheduleWindow(existing, settings.RescheduleWindowMins); err != nil {
+			return nil, err
+		}
 	}
 
 	if !existing.Status.CanTransitionTo(BookingStatusRescheduleProposed) {
@@ -215,6 +239,18 @@ func (s *bookingService) ProposeReschedule(
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	// Musteri oz teklifini verse de, hemin anda basqa randevusu olmamalidir.
+	if !isProvider {
+		parties, resolveErr := s.resolveParties(ctx, existing)
+		if resolveErr == nil && parties != nil {
+			if err := s.checkCustomerOverlap(
+				ctx, parties.CustomerUserID, slot.Start, slot.End, existing.ID,
+			); err != nil {
+				return nil, err
+			}
+		}
 	}
 
 	now := s.now()
@@ -330,6 +366,14 @@ func (s *bookingService) Cancel(
 
 	if !existing.Status.CanTransitionTo(BookingStatusCancelled) {
 		return nil, ErrInvalidTransition
+	}
+
+	// Legv penceresi yalniz musteriye aiddir: provider oz qrafikinin
+	// sahibidir ve tecili hallarda hemise legv ede bilmelidir.
+	if !actor.IsProvider() {
+		if err := s.checkCancellationWindow(ctx, existing); err != nil {
+			return nil, err
+		}
 	}
 
 	now := s.now()
@@ -462,6 +506,95 @@ func (s *bookingService) CountByStatus(
 // ============================================================
 // HELPERS
 // ============================================================
+
+// checkRescheduleWindow – randevuya cox az qalibsa musteri vaxti deyise bilmez.
+func (s *bookingService) checkRescheduleWindow(existing *Booking, windowMins int) error {
+	if windowMins <= 0 {
+		return nil
+	}
+
+	deadline := existing.StartTime.Add(-time.Duration(windowMins) * time.Minute)
+	if s.now().Before(deadline) {
+		return nil
+	}
+
+	return NewBookingError("RESCHEDULE_TOO_LATE", fmt.Sprintf(
+		"Vaxt deyisikliyi randevudan en azi %d deqiqe evvel edilmelidir.", windowMins))
+}
+
+// resolveParties – terefleri tapir; xeta halinda nil qaytarir.
+func (s *bookingService) resolveParties(ctx context.Context, existing *Booking) (*Participants, error) {
+	if s.participants == nil {
+		return nil, nil
+	}
+	return s.participants.Resolve(
+		ctx, existing.BusinessID, existing.StaffID, existing.CustomerID, existing.ServiceID,
+	)
+}
+
+// checkCancellationWindow – randevuya cox az qalibsa musteri legv ede bilmez.
+//
+// Son anda legv edilen randevu bosluqda qalir: bu vaxti basqa musteriye
+// vermek artiq mumkun olmur. Sahe standarti 24 saatdir; her biznes oz
+// deyerini teyin edir, 0 ise mehdudiyyeti sondurur.
+func (s *bookingService) checkCancellationWindow(ctx context.Context, existing *Booking) error {
+	settings, err := s.availability.ResolveSettings(ctx, existing.BusinessID, existing.StaffID)
+	if err != nil {
+		// Ayar oxunmasa legv etmeye mane olmuruq – musterini kilidlemek
+		// texniki xetadan daha pis neticedir.
+		s.log.Warn("Legv penceresi yoxlanilmadi",
+			logger.Field{Key: "booking_id", Value: existing.ID.String()},
+			logger.Field{Key: "error", Value: err.Error()},
+		)
+		return nil
+	}
+
+	if settings.CancellationWindowMins <= 0 {
+		return nil
+	}
+
+	deadline := existing.StartTime.Add(-time.Duration(settings.CancellationWindowMins) * time.Minute)
+	if s.now().Before(deadline) {
+		return nil
+	}
+
+	return NewBookingError("CANCELLATION_TOO_LATE", fmt.Sprintf(
+		"Legv randevudan en azi %d deqiqe evvel edilmelidir. Zehmet olmasa birbasa elaqe saxlayin.",
+		settings.CancellationWindowMins,
+	))
+}
+
+// checkCustomerOverlap – musterinin eyni anda basqa aktiv randevusu varmi?
+//
+// Bos yere gedilen randevu hem biznesi, hem novbede duran diger
+// musterileri zerere salir; bu, no-show-un esas sebeblerindendir.
+// DB-de customer_id uzre exclusion constraint var, lakin o yalniz eyni
+// biznes daxilindeki karti tutur — burada istifadeci uzre butun
+// bizneslerde yoxlayiriq.
+func (s *bookingService) checkCustomerOverlap(
+	ctx context.Context,
+	customerUserID uuid.UUID,
+	start, end time.Time,
+	excludeBookingID uuid.UUID,
+) error {
+	if customerUserID == uuid.Nil {
+		return nil
+	}
+
+	overlapping, err := s.repo.FindCustomerOverlap(ctx, customerUserID, start, end, excludeBookingID)
+	if err != nil {
+		s.log.Warn("Musteri ust-uste dusme yoxlamasi ugursuz",
+			logger.Field{Key: "error", Value: err.Error()},
+		)
+		return nil
+	}
+	if overlapping == nil {
+		return nil
+	}
+
+	return NewBookingError("CUSTOMER_DOUBLE_BOOKING",
+		"Hemin saatda artiq basqa randevunuz var. Evvelce onu legv edin ve ya basqa vaxt secin.")
+}
 
 // loadForProvider – yalniz biznes terefinin ede bileceyi emeliyyatlar ucun.
 func (s *bookingService) loadForProvider(

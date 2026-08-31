@@ -24,8 +24,19 @@ type UserService interface {
 	UpdateUserBusinessID(ctx context.Context, userID, businessID uuid.UUID, isOwner bool) error
 }
 
+// BusinessOwnerLookup – biznesin sahibini tapir.
+//
+// Sahib isci siyahisindan silinmemelidir; bunu yoxlamaq ucun staff
+// domeninin biznesin sahibini bilmesi lazimdir. Butun business
+// domenini asili etmemek ucun yalniz bu kicik port goturulur.
+type BusinessOwnerLookup interface {
+	OwnerUserID(ctx context.Context, businessID uuid.UUID) (uuid.UUID, error)
+}
+
 type Service interface {
 	CreateStaffProfile(ctx context.Context, businessID uuid.UUID, req *CreateStaffRequest) (*StaffProfile, error)
+	// IsOwner – hemin isci biznesin sahibidirmi.
+	IsOwner(ctx context.Context, staffID, businessID uuid.UUID) (bool, error)
 	GetStaff(ctx context.Context, staffID, businessID uuid.UUID) (*StaffProfile, error)
 	ListStaff(ctx context.Context, businessID uuid.UUID) ([]*StaffWithUser, error)
 	UpdateStaff(ctx context.Context, staffID, businessID uuid.UUID, req *UpdateStaffRequest) error
