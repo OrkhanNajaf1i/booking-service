@@ -138,14 +138,26 @@ func (r *BookingRepository) List(
 	businessID uuid.UUID,
 	filter *booking.ListFilter,
 ) ([]*booking.Booking, error) {
-	conditions := []string{"business_id = $1"}
+	conditions := []string{"b.business_id = $1"}
 	args := []interface{}{businessID}
 
-	conditions, args = applyBookingFilter(conditions, args, filter, "")
+	conditions, args = applyBookingFilter(conditions, args, filter, "b.")
 
+	// Musterinin adi ve nomresi JOIN ile gelir ki, provayder siyahidan
+	// birbasa zeng ede bilsin.
+	//
+	// LEFT JOIN-dir: musteri setri silinsə de bron siyahidan
+	// dusmemelidir. Ad musteri qeydinde bos ola bilir — o zaman
+	// istifadecinin oz adi goturulur.
 	query := fmt.Sprintf(
-		`SELECT %s FROM bookings WHERE %s ORDER BY start_time DESC LIMIT $%d OFFSET $%d`,
-		bookingColumns,
+		`SELECT %s,
+		        COALESCE(NULLIF(c.full_name, ''), u.full_name, '') AS customer_name,
+		        COALESCE(NULLIF(c.phone, ''), u.phone, '')         AS customer_phone
+		 FROM bookings b
+		 LEFT JOIN customers c ON c.id = b.customer_id
+		 LEFT JOIN users u     ON u.id = c.user_id
+		 WHERE %s ORDER BY b.start_time DESC LIMIT $%d OFFSET $%d`,
+		prefixColumns("b", bookingColumns),
 		strings.Join(conditions, " AND "),
 		len(args)+1, len(args)+2,
 	)
