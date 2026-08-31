@@ -2,8 +2,8 @@
 //
 // Worker iki isi gorur:
 //
-//	1) notification_outbox – novbedeki push bildirislerini gonderir
-//	2) reminder          – yaxinlasan randevular ucun xatirlatma yaradir
+//  1. notification_outbox – novbedeki push bildirislerini gonderir
+//  2. reminder          – yaxinlasan randevular ucun xatirlatma yaradir
 //
 // Her ikisi de eyni poll dovresinde islenir. Worker olmasa da sistem
 // isleyir: in-app bildiris ve WebSocket API prosesinde gonderilir,

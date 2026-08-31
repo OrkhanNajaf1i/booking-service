@@ -35,9 +35,9 @@ func NewService(repo Repository, durations ServiceDurationProvider, log logger.L
 
 // ResolveSettings – uc pilleli zencir:
 //
-//	1) hemin isciye mexsus override
-//	2) biznesin default ayari
-//	3) sistem default-u
+//  1. hemin isciye mexsus override
+//  2. biznesin default ayari
+//  3. sistem default-u
 func (s *availabilityService) ResolveSettings(
 	ctx context.Context,
 	businessID uuid.UUID,

@@ -21,9 +21,9 @@ type Type string
 const (
 	TypeBookingCreated            Type = "booking.created"             // musteri bron etdi -> provider-e
 	TypeBookingConfirmed          Type = "booking.confirmed"           // provider tesdiqledi -> musteriye
-	TypeBookingRescheduleProposed Type = "booking.reschedule_proposed"  // provider basqa vaxt teklif etdi -> musteriye
-	TypeBookingRescheduleAccepted Type = "booking.reschedule_accepted"  // musteri teklifi qebul etdi -> provider-e
-	TypeBookingRescheduleDeclined Type = "booking.reschedule_declined"  // musteri teklifi redd etdi -> provider-e
+	TypeBookingRescheduleProposed Type = "booking.reschedule_proposed" // provider basqa vaxt teklif etdi -> musteriye
+	TypeBookingRescheduleAccepted Type = "booking.reschedule_accepted" // musteri teklifi qebul etdi -> provider-e
+	TypeBookingRescheduleDeclined Type = "booking.reschedule_declined" // musteri teklifi redd etdi -> provider-e
 	TypeBookingCancelled          Type = "booking.cancelled"           // her iki terefden ola biler
 	TypeBookingCompleted          Type = "booking.completed"           // xidmet bitdi
 	TypeBookingNoShow             Type = "booking.no_show"             // musteri gelmedi

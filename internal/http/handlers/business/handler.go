@@ -321,6 +321,7 @@ func (handler *BusinessHandler) mapErrorCodeToHTTPStatus(errorCode string) int {
 		"BUSINESS_NAME_TOO_LONG":     http.StatusBadRequest,
 		"PHONE_REQUIRED":             http.StatusBadRequest,
 		"PHONE_INVALID":              http.StatusBadRequest,
+		"CATEGORY_REQUIRED":          http.StatusBadRequest,
 		"SERVICE_CATEGORY_REQUIRED":  http.StatusBadRequest,
 		"SERVICE_CATEGORY_TOO_SHORT": http.StatusBadRequest,
 		"SERVICE_CATEGORY_TOO_LONG":  http.StatusBadRequest,

@@ -13,6 +13,11 @@ type Repository interface {
 	ListByBusiness(ctx context.Context, businessID uuid.UUID) ([]*Location, error)
 	Update(ctx context.Context, location *Location) error
 	Deactivate(ctx context.Context, id, businessID uuid.UUID) error
+	Activate(ctx context.Context, id, businessID uuid.UUID) error
+	// CountReferences – filiala baglanmis randevu/isci/devet sayi.
+	// Sifir deyilse filial tam silinmemelidir.
+	CountReferences(ctx context.Context, id uuid.UUID) (int, error)
+	Delete(ctx context.Context, id, businessID uuid.UUID) error
 }
 
 type Service interface {
@@ -22,4 +27,6 @@ type Service interface {
 	ListLocations(ctx context.Context, businessID uuid.UUID) ([]*Location, error)
 	UpdateLocation(ctx context.Context, id, businessID uuid.UUID, req *UpdateLocationRequest) error
 	DeactivateLocation(ctx context.Context, id, businessID uuid.UUID) error
+	ActivateLocation(ctx context.Context, id, businessID uuid.UUID) error
+	DeleteLocation(ctx context.Context, id, businessID uuid.UUID) error
 }

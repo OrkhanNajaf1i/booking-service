@@ -25,8 +25,14 @@ func writeJSON(w http.ResponseWriter, status int, data interface{}) {
 }
 
 func writeJSONError(w http.ResponseWriter, status int, message string, details interface{}) {
+	// Domain xetalarinda `details` xeta kodudur; parse xetalarinda
+	// texniki metndir. Yalniz metn olanda `code`-a yazilir.
+	code, _ := details.(string)
+
 	resp := ErrorResponse{
 		Success: false,
+		Code:    code,
+		Message: message,
 		Error:   message,
 		Details: details,
 	}
@@ -256,4 +262,93 @@ func (h Handler) DeactivateLocation(w http.ResponseWriter, r *http.Request) {
 		Message: "Location deactivated successfully",
 	}
 	writeJSON(w, http.StatusOK, resp)
+}
+
+// ActivateLocation – POST /api/v1/locations/{id}/activate
+//
+// @Summary      Filiali yeniden aktivlesdirir
+// @Tags         Locations
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path string true "Location ID"
+// @Success      200 {object} SuccessResponse
+// @Router       /api/v1/locations/{id}/activate [post]
+func (h Handler) ActivateLocation(w http.ResponseWriter, r *http.Request) {
+	businessID, err := getBusinessIDFromContext(r)
+	if err != nil {
+		writeJSONError(w, http.StatusUnauthorized, "Unauthorized", err.Error())
+		return
+	}
+
+	locID, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		writeJSONError(w, http.StatusBadRequest, "Invalid location ID", err.Error())
+		return
+	}
+
+	if err := h.service.ActivateLocation(r.Context(), locID, businessID); err != nil {
+		if locErr, ok := err.(*domain.LocationError); ok {
+			status := http.StatusBadRequest
+			if locErr.Code == "NOT_FOUND" {
+				status = http.StatusNotFound
+			}
+			writeJSONError(w, status, locErr.Message, locErr.Code)
+			return
+		}
+		writeJSONError(w, http.StatusInternalServerError, "Failed to activate location", err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusOK, SuccessResponse{
+		Success: true,
+		Message: "Location activated successfully",
+	})
+}
+
+// DeleteLocation – DELETE /api/v1/locations/{id}/permanent
+//
+// Tam silme. Filiala baglanmis randevu/isci varsa 409 qayidir:
+// tarixce qirilmamalidir, bele filial yalniz deaktiv edilir.
+//
+// @Summary      Filiali hemiselik silir
+// @Tags         Locations
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id path string true "Location ID"
+// @Success      200 {object} SuccessResponse
+// @Failure      409 {object} ErrorResponse "Filiala baglanmis melumat var"
+// @Router       /api/v1/locations/{id}/permanent [delete]
+func (h Handler) DeleteLocation(w http.ResponseWriter, r *http.Request) {
+	businessID, err := getBusinessIDFromContext(r)
+	if err != nil {
+		writeJSONError(w, http.StatusUnauthorized, "Unauthorized", err.Error())
+		return
+	}
+
+	locID, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		writeJSONError(w, http.StatusBadRequest, "Invalid location ID", err.Error())
+		return
+	}
+
+	if err := h.service.DeleteLocation(r.Context(), locID, businessID); err != nil {
+		if locErr, ok := err.(*domain.LocationError); ok {
+			status := http.StatusBadRequest
+			switch locErr.Code {
+			case "NOT_FOUND":
+				status = http.StatusNotFound
+			case "LOCATION_IN_USE":
+				status = http.StatusConflict
+			}
+			writeJSONError(w, status, locErr.Message, locErr.Code)
+			return
+		}
+		writeJSONError(w, http.StatusInternalServerError, "Failed to delete location", err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusOK, SuccessResponse{
+		Success: true,
+		Message: "Location deleted successfully",
+	})
 }

@@ -153,3 +153,59 @@ func (s *LocationService) DeactivateLocation(
 
 	return nil
 }
+
+// ActivateLocation – deaktiv edilmis filiali geri qaytarir.
+func (s *LocationService) ActivateLocation(
+	ctx context.Context,
+	id, businessID uuid.UUID,
+) error {
+	if id == uuid.Nil || businessID == uuid.Nil {
+		return &LocationError{Code: "INVALID_ID", Message: "Location ID and Business ID are required"}
+	}
+
+	if err := s.repo.Activate(ctx, id, businessID); err != nil {
+		return fmt.Errorf("failed to activate location: %w", err)
+	}
+
+	return nil
+}
+
+// DeleteLocation – filiali hemiselik silir.
+//
+// Yalniz hec bir randevu/isci/devet ona baxmirsa mumkundur. Eks halda
+// silmek kecmis randevunun "harada olub" melumatini itirer — bele
+// filial deaktiv edilir, silinmir.
+func (s *LocationService) DeleteLocation(
+	ctx context.Context,
+	id, businessID uuid.UUID,
+) error {
+	if id == uuid.Nil || businessID == uuid.Nil {
+		return &LocationError{Code: "INVALID_ID", Message: "Location ID and Business ID are required"}
+	}
+
+	existing, err := s.repo.GetByID(ctx, id, businessID)
+	if err != nil {
+		return fmt.Errorf("failed to get location: %w", err)
+	}
+	if existing == nil {
+		return &LocationError{Code: "NOT_FOUND", Message: "Filial tapılmadı"}
+	}
+
+	references, err := s.repo.CountReferences(ctx, id)
+	if err != nil {
+		return fmt.Errorf("failed to count references: %w", err)
+	}
+	if references > 0 {
+		return &LocationError{
+			Code: "LOCATION_IN_USE",
+			Message: "Bu filiala bağlı randevu və ya işçi var, silinə bilməz. " +
+				"Onu deaktiv edə bilərsiniz.",
+		}
+	}
+
+	if err := s.repo.Delete(ctx, id, businessID); err != nil {
+		return fmt.Errorf("failed to delete location: %w", err)
+	}
+
+	return nil
+}
