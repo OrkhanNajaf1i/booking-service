@@ -9,6 +9,7 @@ import (
 
 	"github.com/OrkhanNajaf1i/booking-service/internal/domain/auth"
 	"github.com/OrkhanNajaf1i/booking-service/internal/domain/customer"
+	"github.com/OrkhanNajaf1i/booking-service/internal/domain/otp"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
@@ -26,17 +27,25 @@ func NewAuthRepository(db *sqlx.DB) *AuthRepository {
 func (r *AuthRepository) CreateUser(ctx context.Context, user *auth.User) error {
 	query := `
         INSERT INTO users (
-            id, email, full_name, phone, password_hash, 
-            role, business_id, avatar, is_active, is_owner, 
+            id, email, full_name, phone, phone_e164, password_hash,
+            role, business_id, avatar, is_active, is_owner,
             email_verified, created_at, updated_at
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
     `
+
+	// Nomre taninmasa NULL yazilir: yarimciq deyer axtarisi yaniltardi.
+	// Taninmayan forma yalniz `phone` sutununda qalir.
+	var phoneE164 any
+	if normalized, err := otp.NormalizePhone(user.Phone); err == nil {
+		phoneE164 = normalized
+	}
 	_, err := r.db.ExecContext(ctx, query,
 		user.ID,
 		user.Email,
 		user.FullName,
 		user.Phone,
+		phoneE164,
 		user.PasswordHash,
 		user.Role,
 		user.BusinessID,
