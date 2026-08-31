@@ -17,6 +17,9 @@ type Service struct {
 	passwordHasher PasswordHasher
 	emailService   EmailService
 	tokenManager   TokenManager
+	// phoneAccounts telefonla giris ucundur; qurulmayibsa hemin
+	// axin islemir, qalan giris yollari toxunulmaz qalir.
+	phoneAccounts PhoneAccountFinder
 }
 
 func NewAuthService(
@@ -31,6 +34,12 @@ func NewAuthService(
 		emailService:   email,
 		tokenManager:   token,
 	}
+}
+
+// WithPhoneAccounts – telefonla girisi aktivlesdirir.
+func (s *Service) WithPhoneAccounts(finder PhoneAccountFinder) *Service {
+	s.phoneAccounts = finder
+	return s
 }
 
 func (s *Service) Register(ctx context.Context, req *RegisterRequest) (*AuthResponse, error) {

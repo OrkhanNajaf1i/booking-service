@@ -16,6 +16,7 @@ import (
 	"github.com/OrkhanNajaf1i/booking-service/internal/domain/customer"
 	"github.com/OrkhanNajaf1i/booking-service/internal/domain/location"
 	"github.com/OrkhanNajaf1i/booking-service/internal/domain/notification"
+	"github.com/OrkhanNajaf1i/booking-service/internal/domain/otp"
 	serviceDomain "github.com/OrkhanNajaf1i/booking-service/internal/domain/service"
 	"github.com/OrkhanNajaf1i/booking-service/internal/domain/staff"
 
@@ -38,6 +39,7 @@ import (
 	"github.com/OrkhanNajaf1i/booking-service/internal/infrastructure/crypto"
 	"github.com/OrkhanNajaf1i/booking-service/internal/infrastructure/email"
 	"github.com/OrkhanNajaf1i/booking-service/internal/infrastructure/notify"
+	"github.com/OrkhanNajaf1i/booking-service/internal/infrastructure/otpsend"
 	"github.com/OrkhanNajaf1i/booking-service/internal/infrastructure/postgres"
 	"github.com/OrkhanNajaf1i/booking-service/internal/infrastructure/push"
 	"github.com/OrkhanNajaf1i/booking-service/internal/infrastructure/realtime"
@@ -104,7 +106,21 @@ func New(cfg *config.AppConfig, appLogger logger.Logger) (*App, error) {
 
 	// ---------- DOMAIN SERVIS-LERI ----------
 	businessSvc := business.NewService(businessRepo, authRepo, staffRepo)
-	authSvc := auth.NewAuthService(authRepo, passwordHasher, emailService, tokenManager)
+	authSvc := auth.NewAuthService(authRepo, passwordHasher, emailService, tokenManager).
+		WithPhoneAccounts(authRepo)
+
+	// Telefonla giris: kanal konfiqurasiyaya gore secilir.
+	//
+	// Acarlar yoxdursa jurnal kanali qalir — inkisafda butun axini
+	// pulsuz yoxlamaq olur, kod jurnala (ve cavaba) dusur.
+	otpSender := selectOTPSender(cfg, appLogger)
+	otpSvc := otp.NewService(
+		postgres.NewOTPRepository(db),
+		otpSender,
+		otp.DefaultPolicy(),
+	)
+	appLogger.Info("Telefonla giris kanali",
+		logger.Field{Key: "channel", Value: string(otpSender.Channel())})
 	locationSvc := location.NewService(locationRepo)
 	staffSvc := staff.NewService(staffRepo, authRepo, businessRepo)
 	serviceSvc := serviceDomain.NewServiceUseCase(serviceRepo)
@@ -130,6 +146,7 @@ func New(cfg *config.AppConfig, appLogger logger.Logger) (*App, error) {
 	handlers := httpapi.Handlers{
 		Business:     businessHandler.NewBusinessHandler(businessSvc, appLogger),
 		Auth:         authHandler.NewAuthHandler(authSvc, appLogger),
+		PhoneAuth:    authHandler.NewPhoneAuthHandler(otpSvc, authSvc),
 		Location:     locationHandler.NewHandler(locationSvc),
 		Staff:        staffHandler.NewHandler(staffSvc),
 		Service:      serviceHandler.NewHandler(serviceSvc),
@@ -202,4 +219,32 @@ func splitOrigins(raw string) []string {
 		}
 	}
 	return origins
+}
+
+// selectOTPSender – konfiqurasiyaya gore kod kanalini secir.
+//
+// Sira: WhatsApp → SMS → jurnal. Acarlar tam deyilse asagi pillə
+// goturulur; xidmet hər halda qalxir, sadece kod jurnala dusur.
+func selectOTPSender(cfg *config.AppConfig, log logger.Logger) otp.CodeSender {
+	whatsapp := otpsend.WhatsAppConfig{
+		PhoneNumberID: cfg.WhatsAppPhoneNumberID,
+		AccessToken:   cfg.WhatsAppAccessToken,
+		TemplateName:  cfg.WhatsAppTemplateName,
+		LanguageCode:  cfg.WhatsAppLanguageCode,
+	}
+	if whatsapp.IsComplete() {
+		return otpsend.NewWhatsAppSender(whatsapp, log)
+	}
+
+	sms := otpsend.SMSConfig{
+		Endpoint:        cfg.SMSEndpoint,
+		AuthHeader:      cfg.SMSAuthHeader,
+		BodyTemplate:    cfg.SMSBodyTemplate,
+		MessageTemplate: cfg.SMSMessageTemplate,
+	}
+	if sms.IsComplete() {
+		return otpsend.NewSMSSender(sms, log)
+	}
+
+	return otpsend.NewLogSender(log)
 }
