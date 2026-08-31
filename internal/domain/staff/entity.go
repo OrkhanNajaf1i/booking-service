@@ -71,6 +71,10 @@ type StaffWithUser struct {
 	LocationID *uuid.UUID  `db:"location_id" json:"location_id,omitempty"`
 	Status     StaffStatus `db:"status" json:"status"`
 	JoinedAt   time.Time   `db:"joined_at" json:"joined_at"`
+
+	// IsOwner – biznesin sahibi. Bazadan gelmir, siyahi yigilanda
+	// hesablanir. Sahib silinmir, ona gore panel duymeni gizledir.
+	IsOwner bool `db:"-" json:"is_owner"`
 }
 
 type BusinessInvite struct {

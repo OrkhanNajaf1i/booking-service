@@ -40,7 +40,11 @@ type SuccessResponse struct {
 }
 
 type ErrorResponse struct {
-	Success bool        `json:"success"`
+	Success bool `json:"success"`
+	// Code ve Message klientin oxudugu sahelerdir.
+	Code    string `json:"code,omitempty"`
+	Message string `json:"message"`
+	// Error/Details kohne forma ile uyumluluq ucun qalir.
 	Error   string      `json:"error"`
 	Details interface{} `json:"details,omitempty"`
 }

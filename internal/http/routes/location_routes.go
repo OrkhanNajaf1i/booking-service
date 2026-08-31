@@ -20,4 +20,8 @@ func RegisterLocationRoutes(
 	mux.Handle("GET /api/v1/locations/{id}", protected(handler.GetLocation))
 	mux.Handle("PUT /api/v1/locations/{id}", protected(handler.UpdateLocation))
 	mux.Handle("DELETE /api/v1/locations/{id}", protected(handler.DeactivateLocation))
+	mux.Handle("POST /api/v1/locations/{id}/activate", protected(handler.ActivateLocation))
+	// Tam silme ayri yoldadir: DELETE /locations/{id} yumsaq silmedir
+	// (deaktiv), bu ise setri hemiselik goturur.
+	mux.Handle("DELETE /api/v1/locations/{id}/permanent", protected(handler.DeleteLocation))
 }

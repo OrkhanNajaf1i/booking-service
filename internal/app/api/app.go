@@ -106,7 +106,7 @@ func New(cfg *config.AppConfig, appLogger logger.Logger) (*App, error) {
 	businessSvc := business.NewService(businessRepo, authRepo, staffRepo)
 	authSvc := auth.NewAuthService(authRepo, passwordHasher, emailService, tokenManager)
 	locationSvc := location.NewService(locationRepo)
-	staffSvc := staff.NewService(staffRepo, authRepo)
+	staffSvc := staff.NewService(staffRepo, authRepo, businessRepo)
 	serviceSvc := serviceDomain.NewServiceUseCase(serviceRepo)
 	customerSvc := customer.NewService(customerRepo, authRepo)
 

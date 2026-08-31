@@ -61,9 +61,9 @@ var allowedTransitions = map[BookingStatus][]BookingStatus{
 		BookingStatusCancelled,
 	},
 	BookingStatusRescheduleProposed: {
-		BookingStatusConfirmed,           // musteri teklifi qebul etdi
-		BookingStatusRescheduleProposed,  // provider yeniden teklif etdi
-		BookingStatusPending,             // musteri redd etdi, ilkin vaxta qayitdi
+		BookingStatusConfirmed,          // musteri teklifi qebul etdi
+		BookingStatusRescheduleProposed, // provider yeniden teklif etdi
+		BookingStatusPending,            // musteri redd etdi, ilkin vaxta qayitdi
 		BookingStatusCancelled,
 	},
 	BookingStatusConfirmed: {

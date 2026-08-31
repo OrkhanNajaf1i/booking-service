@@ -47,7 +47,7 @@ func (r *StaffRepository) CreateStaffProfile(ctx context.Context, profile *staff
 func (r *StaffRepository) GetStaffByID(ctx context.Context, id, businessID uuid.UUID) (*staff.StaffProfile, error) {
 	query := `
 		SELECT id, user_id, business_id, location_id, role, title, 
-			   department, bio, hourly_rate, status, joined_at, 
+			   department, bio, COALESCE(hourly_rate, 0) AS hourly_rate, status, joined_at, 
 			   created_at, updated_at
 		FROM staff_profiles
 		WHERE id = $1 AND business_id = $2 AND status != 'inactive'
@@ -69,7 +69,7 @@ func (r *StaffRepository) GetStaffByID(ctx context.Context, id, businessID uuid.
 func (r *StaffRepository) GetStaffByUserID(ctx context.Context, userID, businessID uuid.UUID) (*staff.StaffProfile, error) {
 	query := `
 		SELECT id, user_id, business_id, location_id, role, title, 
-			   department, bio, hourly_rate, status, joined_at, 
+			   department, bio, COALESCE(hourly_rate, 0) AS hourly_rate, status, joined_at, 
 			   created_at, updated_at
 		FROM staff_profiles
 		WHERE user_id = $1 AND business_id = $2 AND status != 'inactive'
