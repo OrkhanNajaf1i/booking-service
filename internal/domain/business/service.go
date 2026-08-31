@@ -16,6 +16,9 @@ type BusinessService struct {
 	repository Repository
 	owners     OwnerLinker
 	staff      StaffProvisioner
+	// schedules qurulmayibsa biznes yene yaranir, sadece baslangic
+	// qrafiki olmur — sahib onu ozu qurmalidir.
+	schedules ScheduleProvisioner
 }
 
 func NewService(
@@ -28,6 +31,12 @@ func NewService(
 		owners:     owners,
 		staff:      staff,
 	}
+}
+
+// WithSchedules – yeni biznese baslangic qrafiki qurulmasini aktivlesdirir.
+func (service *BusinessService) WithSchedules(schedules ScheduleProvisioner) *BusinessService {
+	service.schedules = schedules
+	return service
 }
 
 func (service *BusinessService) CreateBusiness(
@@ -92,8 +101,20 @@ func (service *BusinessService) CreateBusiness(
 		if title == "" {
 			title = request.Industry
 		}
-		if err := service.staff.EnsureOwnerProfile(ctx, business.ID, ownerID, title); err != nil {
+		staffID, err := service.staff.EnsureOwnerProfile(ctx, business.ID, ownerID, title)
+		if err != nil {
 			return nil, fmt.Errorf("failed to create owner staff profile: %w", err)
+		}
+
+		// Baslangic qrafiki: Bazar ertesi–Cume 09:00–18:00.
+		//
+		// Qrafiksiz biznes musteri terefinde bos gorunur. Bron onsuz da
+		// TESDIQ teleb edir, ona gore defaultun bir qeder yanlis olmasi
+		// duzeldile bilen seydir; qrafiksiz elan ise oluler.
+		if service.schedules != nil {
+			if err := service.schedules.EnsureDefaultSchedule(ctx, business.ID, staffID); err != nil {
+				return nil, fmt.Errorf("failed to create default schedule: %w", err)
+			}
 		}
 	}
 

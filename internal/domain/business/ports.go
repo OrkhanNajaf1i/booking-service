@@ -36,7 +36,18 @@ type OwnerLinker interface {
 // baglanir, ona gore sahibin profili olmasa ne qrafik teyin edile bilir,
 // ne de bron qebul olunur.
 type StaffProvisioner interface {
-	EnsureOwnerProfile(ctx context.Context, businessID, userID uuid.UUID, title string) error
+	// Yaradilan (ve ya movcud) profilin ID-sini qaytarir: qrafik
+	// hemin isciye baglanir.
+	EnsureOwnerProfile(ctx context.Context, businessID, userID uuid.UUID, title string) (uuid.UUID, error)
+}
+
+// ScheduleProvisioner – yeni isciye baslangic is qrafiki qurur.
+//
+// Bos vaxtlar sorgu aninda qrafikden hesablanir. Qrafik olmasa musteri
+// HER gun ucun "is gunu deyil" gorur, sahib ise neyin catmadigini
+// bilmir — yeni biznes sinmis kimi gorunur.
+type ScheduleProvisioner interface {
+	EnsureDefaultSchedule(ctx context.Context, businessID, staffID uuid.UUID) error
 }
 
 type Service interface {

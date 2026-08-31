@@ -326,3 +326,51 @@ func (r *AvailabilityRepository) ListBookedIntervals(
 
 	return intervals, nil
 }
+
+// EnsureDefaultSchedule – yeni isciye baslangic is qrafiki qurur.
+//
+// business.ScheduleProvisioner realizasiyasidir. Idempotentdir: qrafik
+// artiq varsa toxunulmur, cunki onboarding tekrarlana biler ve sahibin
+// oz qurdugu saatlar ustunden yazilmamalidir.
+//
+// Default: Bazar ertesi–Cume 09:00–18:00, nahar 13:00–14:00. Hefte sonu
+// setri de yaranir, amma sondurulmus — sahib qrafik ekraninda yeddi gunu
+// de gorup istediyini acmalidir.
+func (r *AvailabilityRepository) EnsureDefaultSchedule(
+	ctx context.Context,
+	businessID, staffID uuid.UUID,
+) error {
+	const hoursQuery = `
+		INSERT INTO working_hours (
+			business_id, staff_id, day_of_week,
+			start_time, end_time,
+			break_enabled, break_start, break_end,
+			is_active
+		)
+		SELECT $1, $2, d.day_of_week,
+		       '09:00', '18:00',
+		       TRUE, '13:00', '14:00',
+		       d.day_of_week BETWEEN 1 AND 5
+		FROM generate_series(0, 6) AS d(day_of_week)
+		WHERE NOT EXISTS (
+			SELECT 1 FROM working_hours w WHERE w.staff_id = $2
+		)`
+
+	if _, err := r.database.ExecContext(ctx, hoursQuery, businessID, staffID); err != nil {
+		return fmt.Errorf("postgres: create default working hours failed: %w", err)
+	}
+
+	// Ayarlar cedvelinin butun sutunlari default dasiyir.
+	const settingsQuery = `
+		INSERT INTO schedule_settings (business_id, staff_id)
+		SELECT $1, $2
+		WHERE NOT EXISTS (
+			SELECT 1 FROM schedule_settings s WHERE s.staff_id = $2
+		)`
+
+	if _, err := r.database.ExecContext(ctx, settingsQuery, businessID, staffID); err != nil {
+		return fmt.Errorf("postgres: create default schedule settings failed: %w", err)
+	}
+
+	return nil
+}

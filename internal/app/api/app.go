@@ -105,7 +105,8 @@ func New(cfg *config.AppConfig, appLogger logger.Logger) (*App, error) {
 	bookingPublisher := notify.NewBookingPublisher(notificationSvc, appLogger, cfg.DefaultTimezone)
 
 	// ---------- DOMAIN SERVIS-LERI ----------
-	businessSvc := business.NewService(businessRepo, authRepo, staffRepo)
+	businessSvc := business.NewService(businessRepo, authRepo, staffRepo).
+		WithSchedules(availabilityRepo)
 	authSvc := auth.NewAuthService(authRepo, passwordHasher, emailService, tokenManager).
 		WithPhoneAccounts(authRepo)
 
