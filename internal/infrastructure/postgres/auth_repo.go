@@ -287,3 +287,54 @@ func (r *AuthRepository) GetUserProfile(
 		Phone:    user.Phone,
 	}, nil
 }
+
+// GetUserByPhoneE164 – tesdiqlenmis nomre uzre hesab.
+//
+// Yalniz `phone_verified` setirler axtarilir: kohne datada eyni nomre
+// onlarla setirde tekrarlanir (bax: miqrasiya 012). Tesdiqlenmis
+// setirler ise serti unikal indekslə qorunur.
+func (r *AuthRepository) GetUserByPhoneE164(
+	ctx context.Context,
+	phoneE164 string,
+) (*auth.User, error) {
+	query := `
+		SELECT id, email, full_name, phone, password_hash, role,
+		       business_id, avatar, is_active, is_owner, email_verified,
+		       created_at, updated_at
+		FROM users
+		WHERE phone_e164 = $1 AND phone_verified = TRUE
+		LIMIT 1
+	`
+
+	var user auth.User
+	err := r.db.GetContext(ctx, &user, query, phoneE164)
+
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user by phone: %w", err)
+	}
+
+	return &user, nil
+}
+
+// MarkPhoneVerified – hesabin nomresini tesdiqlenmis kimi qeyd edir.
+func (r *AuthRepository) MarkPhoneVerified(
+	ctx context.Context,
+	userID uuid.UUID,
+	phoneE164 string,
+) error {
+	_, err := r.db.ExecContext(
+		ctx,
+		`UPDATE users
+		 SET phone_e164 = $1, phone_verified = TRUE, updated_at = NOW()
+		 WHERE id = $2`,
+		phoneE164, userID,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to mark phone verified: %w", err)
+	}
+
+	return nil
+}

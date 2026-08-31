@@ -53,6 +53,25 @@ type AppConfig struct {
 
 	// WorkerPollInterval – worker-in outbox-i yoxlama tezliyi.
 	WorkerPollInterval time.Duration
+
+	// ---------- TELEFONLA GIRIS (OTP) ----------
+	//
+	// Hec biri mecburi deyil. Acarlar yoxdursa kod jurnala yazilir —
+	// inkisafda butun axini pulsuz yoxlamaq olur.
+
+	// WhatsApp Cloud API (Meta). Ucu de dolu olmalidir.
+	WhatsAppPhoneNumberID string
+	WhatsAppAccessToken   string
+	WhatsAppTemplateName  string
+	WhatsAppLanguageCode  string
+
+	// Umumi HTTP SMS provayderi.
+	//   APP_SMS_BODY_TEMPLATE numunesi:
+	//     {"to":"{phone}","text":"{message}","sender":"BOOKIFY"}
+	SMSEndpoint        string
+	SMSAuthHeader      string
+	SMSBodyTemplate    string
+	SMSMessageTemplate string
 }
 
 func Load() (*AppConfig, error) {
@@ -245,4 +264,22 @@ func LoadRealtimeConfig(cfg *AppConfig) {
 			cfg.WorkerPollInterval = time.Duration(seconds) * time.Second
 		}
 	}
+
+	loadOTPConfig(cfg)
+}
+
+// loadOTPConfig – telefon kodu kanallarinin acarlari.
+//
+// Bos qalarsa xidmet yene qalxir: kod jurnala dusur. Bu, qesdendir —
+// SMS provayderi olmadan da butun axin yoxlanila bilmelidir.
+func loadOTPConfig(cfg *AppConfig) {
+	cfg.WhatsAppPhoneNumberID = strings.TrimSpace(os.Getenv("APP_WHATSAPP_PHONE_NUMBER_ID"))
+	cfg.WhatsAppAccessToken = strings.TrimSpace(os.Getenv("APP_WHATSAPP_ACCESS_TOKEN"))
+	cfg.WhatsAppTemplateName = strings.TrimSpace(os.Getenv("APP_WHATSAPP_TEMPLATE"))
+	cfg.WhatsAppLanguageCode = strings.TrimSpace(os.Getenv("APP_WHATSAPP_LANGUAGE"))
+
+	cfg.SMSEndpoint = strings.TrimSpace(os.Getenv("APP_SMS_ENDPOINT"))
+	cfg.SMSAuthHeader = strings.TrimSpace(os.Getenv("APP_SMS_AUTH_HEADER"))
+	cfg.SMSBodyTemplate = strings.TrimSpace(os.Getenv("APP_SMS_BODY_TEMPLATE"))
+	cfg.SMSMessageTemplate = strings.TrimSpace(os.Getenv("APP_SMS_MESSAGE_TEMPLATE"))
 }

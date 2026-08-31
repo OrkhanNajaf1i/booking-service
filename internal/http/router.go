@@ -29,6 +29,7 @@ import (
 type Handlers struct {
 	Business     *businessHandler.BusinessHandler
 	Auth         *authHandler.Handler
+	PhoneAuth    *authHandler.PhoneAuthHandler
 	Location     locationHandler.Handler
 	Staff        staffHandler.Handler
 	Service      serviceHandler.Handler
@@ -46,6 +47,7 @@ func NewRouter(h Handlers, tokenManager authDomain.TokenManager) *http.ServeMux 
 	authMiddleware := middleware.AuthMiddleware(tokenManager)
 
 	routes.RegisterAuthRoutes(mux, h.Auth)
+	routes.RegisterPhoneAuthRoutes(mux, h.PhoneAuth)
 	routes.RegisterBusinessRoutes(mux, h.Business, authMiddleware)
 	routes.RegisterLocationRoutes(mux, h.Location, authMiddleware)
 	routes.RegisterStaffRoutes(mux, h.Staff, authMiddleware)
