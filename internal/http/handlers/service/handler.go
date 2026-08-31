@@ -26,8 +26,14 @@ func writeJSON(w http.ResponseWriter, status int, data interface{}) {
 }
 
 func writeJSONError(w http.ResponseWriter, status int, message string, details interface{}) {
+	// Domain xetalarinda `details` xeta kodudur; parse xetalarinda
+	// texniki metndir. Yalniz metn olanda `code`-a yazilir.
+	code, _ := details.(string)
+
 	resp := ErrorResponse{
 		Success: false,
+		Code:    code,
+		Message: message,
 		Error:   message,
 		Details: details,
 	}
@@ -366,4 +372,46 @@ func (h Handler) RemoveServiceFromStaff(w http.ResponseWriter, r *http.Request) 
 		Message: "Service removed from staff successfully",
 	}
 	writeJSON(w, http.StatusOK, resp)
+}
+
+// @Summary      Create Service
+// @Description  Yeni xidmet yaradir. Xidmet randevunun mueddetini (duration_minutes) ve gelirini (price) teyin edir.
+// @Tags         Service
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request body CreateServiceHTTPRequest true "Xidmet melumatlari"
+// @Success      201  {object}  SuccessResponse "Xidmet yaradildi"
+// @Failure      400  {object}  ErrorResponse "Validasiya xetasi"
+// @Failure      401  {object}  ErrorResponse "Unauthorized"
+// @Failure      500  {object}  ErrorResponse "Daxili xeta"
+// @Router       /api/v1/services [post]
+func (h Handler) CreateService(w http.ResponseWriter, r *http.Request) {
+	businessID, err := getBusinessIDFromContext(r)
+	if err != nil {
+		writeJSONError(w, http.StatusUnauthorized, "Unauthorized", err.Error())
+		return
+	}
+
+	var req CreateServiceHTTPRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeJSONError(w, http.StatusBadRequest, "Invalid request body", err.Error())
+		return
+	}
+
+	created, err := h.service.CreateService(r.Context(), businessID, req.ToDomain())
+	if err != nil {
+		// Domain validasiya xetalari istifadeciye aiddir, 500 deyil.
+		if domainErr, ok := err.(*domain.ServiceError); ok {
+			writeJSONError(w, http.StatusBadRequest, domainErr.Code, domainErr.Message)
+			return
+		}
+		writeJSONError(w, http.StatusInternalServerError, "Failed to create service", err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, SuccessResponse{
+		Success: true,
+		Data:    FromDomainService(created),
+	})
 }

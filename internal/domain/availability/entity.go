@@ -80,6 +80,22 @@ type ScheduleSettings struct {
 	// Provider musteriye alternativ vaxt teklif ede bilsin?
 	AllowRescheduleProposal bool `db:"allow_reschedule_proposal" json:"allow_reschedule_proposal"`
 
+	// ---------- RANDEVU SIYASETI ----------
+
+	// PendingExpiresMins – provider bu muddet erzinde cavab vermese bron
+	// avtomatik legv olunur ve slot azad olur. 0 = sondurulub.
+	PendingExpiresMins int `db:"pending_expires_mins" json:"pending_expires_mins"`
+
+	// CancellationWindowMins – randevuya bu qeder vaxt qalanda musteri
+	// artiq legv ede bilmez. 0 = istenilen vaxt legv etmek olar.
+	CancellationWindowMins int `db:"cancellation_window_mins" json:"cancellation_window_mins"`
+
+	// AllowCustomerReschedule – musteri ozu vaxti deyise bilsin?
+	AllowCustomerReschedule bool `db:"allow_customer_reschedule" json:"allow_customer_reschedule"`
+
+	// RescheduleWindowMins – vaxt deyismek ucun son muddet.
+	RescheduleWindowMins int `db:"reschedule_window_mins" json:"reschedule_window_mins"`
+
 	CreatedAt time.Time `db:"created_at" json:"created_at"`
 	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`
 }
@@ -97,6 +113,12 @@ func DefaultSettings(businessID uuid.UUID) *ScheduleSettings {
 		MaxAdvanceDays:          30,
 		AutoConfirm:             false,
 		AllowRescheduleProposal: true,
+
+		// Sahe standarti (Booksy/Fresha): 24 saat.
+		PendingExpiresMins:      1440,
+		CancellationWindowMins:  1440,
+		AllowCustomerReschedule: true,
+		RescheduleWindowMins:    1440,
 	}
 }
 
@@ -231,6 +253,11 @@ type UpdateScheduleSettingsRequest struct {
 	MaxAdvanceDays          *int    `json:"max_advance_days,omitempty"`
 	AutoConfirm             *bool   `json:"auto_confirm,omitempty"`
 	AllowRescheduleProposal *bool   `json:"allow_reschedule_proposal,omitempty"`
+
+	PendingExpiresMins      *int  `json:"pending_expires_mins,omitempty"`
+	CancellationWindowMins  *int  `json:"cancellation_window_mins,omitempty"`
+	AllowCustomerReschedule *bool `json:"allow_customer_reschedule,omitempty"`
+	RescheduleWindowMins    *int  `json:"reschedule_window_mins,omitempty"`
 }
 
 // CreateTimeOffRequest – bloklanmis interval yaradir.

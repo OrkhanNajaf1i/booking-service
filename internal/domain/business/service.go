@@ -4,6 +4,9 @@ package business
 import (
 	"context"
 	"fmt"
+	"strings"
+
+	"github.com/OrkhanNajaf1i/booking-service/internal/domain/catalog"
 	"time"
 
 	"github.com/google/uuid"
@@ -51,6 +54,19 @@ func (service *BusinessService) CreateBusiness(
 		request.BusinessType,
 	)
 	business.OwnerID = ownerID
+
+	// Kateqoriya mecburidir ve sabit siyahidandir.
+	//
+	// Serbest metne guvenmek olmur: "berber"i sehv yazan, ya da
+	// tamamile basqa soz isleden biznes kesf ekraninda "Diger"e dusur
+	// ve musteri onu heç vaxt tapmir.
+	if !catalog.IsSelectable(request.CategorySlug) {
+		return nil, NewBusinessError(
+			"CATEGORY_REQUIRED",
+			"Kateqoriya secilmelidir",
+		)
+	}
+	business.CategorySlug = strings.ToLower(strings.TrimSpace(request.CategorySlug))
 
 	if err := service.validateBusiness(business); err != nil {
 		return nil, err
@@ -131,7 +147,7 @@ func (service *BusinessService) ListBusinesses(ctx context.Context) ([]*Business
 }
 
 // ListBookableBusinesses – musteri kesfi ucun; yalniz iscisi olan bizneslər.
-func (service *BusinessService) ListBookableBusinesses(ctx context.Context) ([]*Business, error) {
+func (service *BusinessService) ListBookableBusinesses(ctx context.Context) ([]*BookableBusiness, error) {
 	businesses, err := service.repository.ListBookable(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list bookable businesses: %w", err)

@@ -16,6 +16,7 @@ func RegisterServiceRoutes(
 		return authMiddleware(http.HandlerFunc(handlerFunc))
 	}
 
+	mux.Handle("POST /api/v1/services", protected(h.CreateService))
 	mux.Handle("GET /api/v1/services", protected(h.ListServices))
 	mux.Handle("GET /api/v1/services/{id}", protected(h.GetService))
 	mux.Handle("PUT /api/v1/services/{id}", protected(h.UpdateService))

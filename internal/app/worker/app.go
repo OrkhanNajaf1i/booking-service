@@ -2,8 +2,8 @@
 //
 // Worker iki isi gorur:
 //
-//	1) notification_outbox – novbedeki push bildirislerini gonderir
-//	2) reminder          – yaxinlasan randevular ucun xatirlatma yaradir
+//  1. notification_outbox – novbedeki push bildirislerini gonderir
+//  2. reminder          – yaxinlasan randevular ucun xatirlatma yaradir
 //
 // Her ikisi de eyni poll dovresinde islenir. Worker olmasa da sistem
 // isleyir: in-app bildiris ve WebSocket API prosesinde gonderilir,
@@ -28,6 +28,7 @@ type App struct {
 	db            *sqlx.DB
 	notifications notification.Service
 	reminders     *ReminderJob
+	expiry        *PendingExpiryJob
 	pollInterval  time.Duration
 }
 
@@ -46,6 +47,8 @@ func New(cfg *config.AppConfig, appLogger logger.Logger) (*App, error) {
 	}
 
 	notificationRepo := postgres.NewNotificationRepository(db)
+	bookingRepo := postgres.NewBookingRepository(db)
+	participantsRepo := postgres.NewParticipantsRepository(db)
 	pushSender := push.NewFCMAdapter(cfg.FCMCredentialsFile, cfg.FCMCredentialsJSON, appLogger)
 
 	// Worker-de realtime publisher yoxdur: WebSocket sessiyalari API
@@ -63,7 +66,10 @@ func New(cfg *config.AppConfig, appLogger logger.Logger) (*App, error) {
 		db:            db,
 		notifications: notificationSvc,
 		reminders:     NewReminderJob(db, notificationSvc, appLogger, cfg.DefaultTimezone),
-		pollInterval:  pollInterval,
+		expiry: NewPendingExpiryJob(
+			bookingRepo, participantsRepo, notificationSvc, appLogger, cfg.DefaultTimezone,
+		),
+		pollInterval: pollInterval,
 	}, nil
 }
 
@@ -108,6 +114,16 @@ func (a *App) tick(ctx context.Context) {
 		)
 	} else if created > 0 {
 		a.logger.Info("Xatirlatma yaradildi", logger.Field{Key: "count", Value: created})
+	}
+
+	// Cavabsiz qalmis bronlar slotu bloklamamalidir.
+	expired, err := a.expiry.Run(ctx)
+	if err != nil {
+		a.logger.Error("Cavabsiz bron emali ugursuz",
+			logger.Field{Key: "error", Value: err.Error()},
+		)
+	} else if expired > 0 {
+		a.logger.Info("Cavabsiz bron legv edildi", logger.Field{Key: "count", Value: expired})
 	}
 }
 

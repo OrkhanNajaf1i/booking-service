@@ -14,9 +14,14 @@ type Location struct {
 	Address    *string   `db:"address" json:"address,omitempty"`
 	City       *string   `db:"city" json:"city,omitempty"`
 	Phone      *string   `db:"phone" json:"phone,omitempty"`
-	IsActive   bool      `db:"is_active" json:"is_active"`
-	CreatedAt  time.Time `db:"created_at" json:"created_at"`
-	UpdatedAt  time.Time `db:"updated_at" json:"updated_at"`
+
+	// Koordinatlar – filial xerite uzerinde secilende doldurulur.
+	// Ikisi birlikde ya var, ya yoxdur (DB constraint bunu qorunur).
+	Latitude  *float64  `db:"latitude"  json:"latitude,omitempty"`
+	Longitude *float64  `db:"longitude" json:"longitude,omitempty"`
+	IsActive  bool      `db:"is_active" json:"is_active"`
+	CreatedAt time.Time `db:"created_at" json:"created_at"`
+	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`
 }
 
 func NewLocation(businessID uuid.UUID, name string) *Location {
@@ -36,6 +41,9 @@ type CreateLocationRequest struct {
 	Address *string `json:"address,omitempty"`
 	City    *string `json:"city,omitempty"`
 	Phone   *string `json:"phone,omitempty"`
+
+	Latitude  *float64 `json:"latitude,omitempty"`
+	Longitude *float64 `json:"longitude,omitempty"`
 }
 
 type UpdateLocationRequest struct {
@@ -43,6 +51,9 @@ type UpdateLocationRequest struct {
 	Address *string `json:"address,omitempty"`
 	City    *string `json:"city,omitempty"`
 	Phone   *string `json:"phone,omitempty"`
+
+	Latitude  *float64 `json:"latitude,omitempty"`
+	Longitude *float64 `json:"longitude,omitempty"`
 }
 
 type LocationError struct {

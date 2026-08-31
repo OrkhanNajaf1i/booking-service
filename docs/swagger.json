@@ -1210,6 +1210,61 @@
                         }
                     }
                 }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Yeni xidmet yaradir. Xidmet randevunun mueddetini (duration_minutes) ve gelirini (price) teyin edir.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Service"
+                ],
+                "summary": "Create Service",
+                "parameters": [
+                    {
+                        "description": "Xidmet melumatlari",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_service.CreateServiceHTTPRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Xidmet yaradildi",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_service.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Validasiya xetasi",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_service.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_service.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Daxili xeta",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http_handlers_service.ErrorResponse"
+                        }
+                    }
+                }
             }
         },
         "/api/v1/services/{id}": {
@@ -3409,6 +3464,9 @@
         "github_com_OrkhanNajaf1i_booking-service_internal_domain_availability.UpdateScheduleSettingsRequest": {
             "type": "object",
             "properties": {
+                "allow_customer_reschedule": {
+                    "type": "boolean"
+                },
                 "allow_reschedule_proposal": {
                     "type": "boolean"
                 },
@@ -3421,6 +3479,9 @@
                 "buffer_before_mins": {
                     "type": "integer"
                 },
+                "cancellation_window_mins": {
+                    "type": "integer"
+                },
                 "default_duration_mins": {
                     "type": "integer"
                 },
@@ -3428,6 +3489,12 @@
                     "type": "integer"
                 },
                 "min_notice_mins": {
+                    "type": "integer"
+                },
+                "pending_expires_mins": {
+                    "type": "integer"
+                },
+                "reschedule_window_mins": {
                     "type": "integer"
                 },
                 "slot_step_mins": {
@@ -4113,6 +4180,27 @@
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "internal_http_handlers_service.CreateServiceHTTPRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Kisi sac kesimi"
+                },
+                "duration_minutes": {
+                    "type": "integer",
+                    "example": 30
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Sac kesimi"
+                },
+                "price": {
+                    "type": "number",
+                    "example": 20
                 }
             }
         },
