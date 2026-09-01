@@ -300,7 +300,19 @@ func (service *BusinessService) UpdateBusiness(
 	business.Name = request.Name
 	business.Industry = request.Industry
 	business.Phone = request.Phone
-	// business.OwnerID = request.OwnerID
+
+	// Kateqoriya ve ixtisas da yenilenir. Evvel bu iki sahe yazilmirdi:
+	// ayarlarda pese deyisilir, "yadda saxlanildi" yazilirdi, amma
+	// kesf ekraninda biznes yene kohne bolmede qalirdi.
+	if strings.TrimSpace(request.CategorySlug) != "" {
+		slug := strings.ToLower(strings.TrimSpace(request.CategorySlug))
+		if !catalog.IsSelectable(slug) {
+			return NewBusinessError("CATEGORY_REQUIRED", "Kateqoriya secilmelidir")
+		}
+		business.CategorySlug = slug
+	}
+	business.ServiceCategory = strings.TrimSpace(request.ServiceCategory)
+
 	business.UpdatedAt = time.Now()
 
 	if err := service.validateBusiness(business); err != nil {

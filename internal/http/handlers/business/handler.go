@@ -245,12 +245,17 @@ func (handler *BusinessHandler) UpdateBusiness(writer http.ResponseWriter, reque
 	}
 
 	ctx := request.Context()
-	// businessID, err := handler.extractBusinessIDFromContext(ctx)
 
-	// if err != nil {
-	// 	handler.respondWithError(writer, http.StatusUnauthorized, "UNAUTHORIZED", err.Error())
-	// 	return
-	// }
+	// Biznes ID-si JWT-den goturulur. Evvel govdeden gozlenilirdi:
+	// panel onu gondermir ve her yadda saxlama "Business ID cannot be
+	// empty" verirdi. Ustelik govdeden gelen ID basqasinin biznesini
+	// gosteren deyer ola bilerdi — indi bele sual qalmir.
+	businessID, err := handler.extractBusinessIDFromContext(ctx)
+	if err != nil {
+		handler.respondWithError(writer, http.StatusUnauthorized, "UNAUTHORIZED", err.Error())
+		return
+	}
+
 	ownerID, err := handler.extractUserIDFromContext(ctx)
 	if err != nil {
 		handler.respondWithError(writer, http.StatusUnauthorized, "UNAUTHORIZED", err.Error())
@@ -266,7 +271,7 @@ func (handler *BusinessHandler) UpdateBusiness(writer http.ResponseWriter, reque
 
 	domainRequest := httpRequest.ToUpdateBusinessRequest()
 
-	if err := handler.businessService.UpdateBusiness(ctx, httpRequest.BusinessID, ownerID, domainRequest); err != nil {
+	if err := handler.businessService.UpdateBusiness(ctx, businessID, ownerID, domainRequest); err != nil {
 		handler.handleDomainError(writer, err)
 		return
 	}
