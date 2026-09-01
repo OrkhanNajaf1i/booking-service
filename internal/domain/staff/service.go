@@ -42,6 +42,20 @@ func (s *StaffService) CreateStaffProfile(
 		return nil, &StaffError{Code: "INVALID_REQUEST", Message: "Request cannot be nil"}
 	}
 
+	// Devet yalniz komanda rejiminde.
+	if s.owners != nil {
+		team, err := s.owners.IsTeamMode(ctx, businessID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read business mode: %w", err)
+		}
+		if !team {
+			return nil, &StaffError{
+				Code:    "TEAM_MODE_REQUIRED",
+				Message: "Bu hesab tek isci kimi qurulub. Evvelce komanda rejimine kecin.",
+			}
+		}
+	}
+
 	// Validation
 	if err := s.validateCreateRequest(req); err != nil {
 		return nil, err
@@ -234,6 +248,20 @@ func (s *StaffService) InviteStaff(
 	}
 	if req == nil {
 		return "", &StaffError{Code: "INVALID_REQUEST", Message: "Request cannot be nil"}
+	}
+
+	// Devet yalniz komanda rejiminde.
+	if s.owners != nil {
+		team, err := s.owners.IsTeamMode(ctx, businessID)
+		if err != nil {
+			return "", fmt.Errorf("failed to read business mode: %w", err)
+		}
+		if !team {
+			return "", &StaffError{
+				Code:    "TEAM_MODE_REQUIRED",
+				Message: "Bu hesab tek isci kimi qurulub. Evvelce komanda rejimine kecin.",
+			}
+		}
 	}
 
 	// Validation

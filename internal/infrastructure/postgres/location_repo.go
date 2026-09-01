@@ -5,7 +5,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 
+	"github.com/OrkhanNajaf1i/booking-service/internal/domain/business"
 	"github.com/OrkhanNajaf1i/booking-service/internal/domain/location"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -40,6 +42,29 @@ func (r *LocationRepository) Create(ctx context.Context, loc *location.Location)
 	}
 
 	return nil
+}
+
+// CreateFirstLocation – biznes yaradilanda ilk filial (business.LocationProvisioner).
+//
+// Ayrica metoddur, cunki business domeni location entity-sini
+// tanimir: ona yalniz "bu unvani yaz" demek lazimdir.
+func (r *LocationRepository) CreateFirstLocation(
+	ctx context.Context,
+	businessID uuid.UUID,
+	draft business.LocationDraft,
+) error {
+	loc := location.NewLocation(businessID, strings.TrimSpace(draft.Name))
+
+	if address := strings.TrimSpace(draft.Address); address != "" {
+		loc.Address = &address
+	}
+	if city := strings.TrimSpace(draft.City); city != "" {
+		loc.City = &city
+	}
+	loc.Latitude = draft.Latitude
+	loc.Longitude = draft.Longitude
+
+	return r.Create(ctx, loc)
 }
 
 func (r *LocationRepository) GetByID(ctx context.Context, id, businessID uuid.UUID) (*location.Location, error) {

@@ -16,6 +16,11 @@ type BusinessService struct {
 	repository Repository
 	owners     OwnerLinker
 	staff      StaffProvisioner
+	// schedules qurulmayibsa biznes yene yaranir, sadece baslangic
+	// qrafiki olmur — sahib onu ozu qurmalidir.
+	schedules ScheduleProvisioner
+	locations LocationProvisioner
+	staffs    StaffCounter
 }
 
 func NewService(
@@ -28,6 +33,24 @@ func NewService(
 		owners:     owners,
 		staff:      staff,
 	}
+}
+
+// WithSchedules – yeni biznese baslangic qrafiki qurulmasini aktivlesdirir.
+func (service *BusinessService) WithSchedules(schedules ScheduleProvisioner) *BusinessService {
+	service.schedules = schedules
+	return service
+}
+
+// WithLocations – ilk filialin yaradilmasini aktivlesdirir.
+func (service *BusinessService) WithLocations(locations LocationProvisioner) *BusinessService {
+	service.locations = locations
+	return service
+}
+
+// WithStaffCounter – rejim kecidinde isci sayini yoxlamaq ucun.
+func (service *BusinessService) WithStaffCounter(staffs StaffCounter) *BusinessService {
+	service.staffs = staffs
+	return service
 }
 
 func (service *BusinessService) CreateBusiness(
@@ -72,6 +95,12 @@ func (service *BusinessService) CreateBusiness(
 		return nil, err
 	}
 
+	// Filial melumati biznes setri yazilmazdan EVVEL yoxlanir: yarimciq
+	// yaradilmis biznes qalmasin.
+	if err := service.validateLocationDraft(request.Location); err != nil {
+		return nil, err
+	}
+
 	if err := service.repository.Create(ctx, business); err != nil {
 		return nil, fmt.Errorf("failed to create business: %w", err)
 	}
@@ -92,12 +121,91 @@ func (service *BusinessService) CreateBusiness(
 		if title == "" {
 			title = request.Industry
 		}
-		if err := service.staff.EnsureOwnerProfile(ctx, business.ID, ownerID, title); err != nil {
+		staffID, err := service.staff.EnsureOwnerProfile(ctx, business.ID, ownerID, title)
+		if err != nil {
 			return nil, fmt.Errorf("failed to create owner staff profile: %w", err)
+		}
+
+		// Baslangic qrafiki: Bazar ertesi–Cume 09:00–18:00.
+		//
+		// Qrafiksiz biznes musteri terefinde bos gorunur. Bron onsuz da
+		// TESDIQ teleb edir, ona gore defaultun bir qeder yanlis olmasi
+		// duzeldile bilen seydir; qrafiksiz elan ise oluler.
+		if service.schedules != nil {
+			if err := service.schedules.EnsureDefaultSchedule(ctx, business.ID, staffID); err != nil {
+				return nil, fmt.Errorf("failed to create default schedule: %w", err)
+			}
+		}
+	}
+
+	if service.locations != nil && request.Location != nil {
+		draft := *request.Location
+		if strings.TrimSpace(draft.Name) == "" {
+			draft.Name = defaultLocationName
+		}
+		if err := service.locations.CreateFirstLocation(ctx, business.ID, draft); err != nil {
+			return nil, fmt.Errorf("failed to create first location: %w", err)
 		}
 	}
 
 	return business, nil
+}
+
+// SwitchMode – tek isci ↔ komanda rejimi.
+//
+// Rejim yalniz etiket deyil: komanda rejimi isci devetini acir, tek
+// isci rejimi ise ekrani sadelesdirir. Ona gore kecid asikar
+// emeliyyatdir — sahib "komandaya kecirem" deyir, sistem ozbasina qerar
+// vermir.
+func (service *BusinessService) SwitchMode(
+	ctx context.Context,
+	businessID, ownerID uuid.UUID,
+	mode BusinessType,
+) (*Business, error) {
+	if businessID == uuid.Nil {
+		return nil, NewBusinessError("INVALID_BUSINESS_ID", "Business ID cannot be empty")
+	}
+	if !mode.IsValid() {
+		return nil, NewBusinessError("INVALID_BUSINESS_TYPE", "Rejim duzgun deyil")
+	}
+
+	current, err := service.repository.GetByID(ctx, businessID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get business: %w", err)
+	}
+	if current == nil {
+		return nil, NewBusinessError("BUSINESS_NOT_FOUND", "Business not found")
+	}
+	if current.OwnerID != ownerID {
+		return nil, NewBusinessError("UNAUTHORIZED", "Yalniz biznes sahibi rejimi deyise biler")
+	}
+	if current.BusinessType == mode {
+		return current, nil
+	}
+
+	// Komandadan tek isci rejimine qayidis yalniz sahib tek qalanda.
+	// Eks halda ekran "tek isleyirsiniz" yazardi, halbuki randevu
+	// qebul eden basqa isciler var.
+	if mode == BusinessTypeSolo && service.staffs != nil {
+		count, err := service.staffs.CountActiveStaff(ctx, businessID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to count staff: %w", err)
+		}
+		if count > 1 {
+			return nil, NewBusinessError(
+				"TEAM_HAS_STAFF",
+				"Komandada basqa isciler var. Evvelce onlari deaktiv edin.",
+			)
+		}
+	}
+
+	if err := service.repository.UpdateType(ctx, businessID, mode); err != nil {
+		return nil, fmt.Errorf("failed to update business type: %w", err)
+	}
+
+	current.BusinessType = mode
+	current.UpdatedAt = time.Now()
+	return current, nil
 }
 
 func (service *BusinessService) GetBusinessByID(ctx context.Context, id uuid.UUID) (*Business, error) {
@@ -192,7 +300,19 @@ func (service *BusinessService) UpdateBusiness(
 	business.Name = request.Name
 	business.Industry = request.Industry
 	business.Phone = request.Phone
-	// business.OwnerID = request.OwnerID
+
+	// Kateqoriya ve ixtisas da yenilenir. Evvel bu iki sahe yazilmirdi:
+	// ayarlarda pese deyisilir, "yadda saxlanildi" yazilirdi, amma
+	// kesf ekraninda biznes yene kohne bolmede qalirdi.
+	if strings.TrimSpace(request.CategorySlug) != "" {
+		slug := strings.ToLower(strings.TrimSpace(request.CategorySlug))
+		if !catalog.IsSelectable(slug) {
+			return NewBusinessError("CATEGORY_REQUIRED", "Kateqoriya secilmelidir")
+		}
+		business.CategorySlug = slug
+	}
+	business.ServiceCategory = strings.TrimSpace(request.ServiceCategory)
+
 	business.UpdatedAt = time.Now()
 
 	if err := service.validateBusiness(business); err != nil {

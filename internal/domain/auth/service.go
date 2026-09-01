@@ -20,6 +20,22 @@ type Service struct {
 	// phoneAccounts telefonla giris ucundur; qurulmayibsa hemin
 	// axin islemir, qalan giris yollari toxunulmaz qalir.
 	phoneAccounts PhoneAccountFinder
+
+	// normalizePhone – nomreni E.164-e salir. Qurulmayibsa nomre
+	// yazildigi kimi qalir (kohne davranis).
+	normalizePhone PhoneNormalizer
+}
+
+// PhoneNormalizer – nomreni E.164 formasina salir.
+//
+// Qayda `domain/otp`-da bir defe yazilib; auth onu tekrar yazmir ki,
+// eyni nomre iki yerde ferqli qebul edilmesin.
+type PhoneNormalizer func(raw string) (string, error)
+
+// WithPhoneNormalizer – qeydiyyatda nomrenin yoxlanmasini aktivlesdirir.
+func (s *Service) WithPhoneNormalizer(normalize PhoneNormalizer) *Service {
+	s.normalizePhone = normalize
+	return s
 }
 
 func NewAuthService(
@@ -46,6 +62,20 @@ func (s *Service) Register(ctx context.Context, req *RegisterRequest) (*AuthResp
 	if err := s.validateRegisterRequest(req); err != nil {
 		return nil, err
 	}
+	// Nomre musterinin esas elaqe yoludur: panelde uzerine klik
+	// edilende zeng gedir. Yoxlanmasa e-poct, ad, istenilen metn bu
+	// sahede qalir ve "zeng et" duymesi hec vaxt islemir.
+	if s.normalizePhone != nil {
+		normalized, err := s.normalizePhone(req.Phone)
+		if err != nil {
+			return nil, &RegistrationError{
+				Code:    "INVALID_PHONE_FORMAT",
+				Message: "Mobil nomre duzgun deyil",
+			}
+		}
+		req.Phone = normalized
+	}
+
 	exists, err := s.repo.EmailExists(ctx, req.Email)
 	if err != nil {
 		return nil, fmt.Errorf("email exists check failed: %w", err)

@@ -4,6 +4,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -248,19 +249,19 @@ func (r *StaffRepository) EnsureOwnerProfile(
 	ctx context.Context,
 	businessID, userID uuid.UUID,
 	title string,
-) error {
-	const existsQuery = `
-		SELECT EXISTS (
-			SELECT 1 FROM staff_profiles
-			WHERE business_id = $1 AND user_id = $2
-		)`
+) (uuid.UUID, error) {
+	const existingQuery = `
+		SELECT id FROM staff_profiles
+		WHERE business_id = $1 AND user_id = $2
+		LIMIT 1`
 
-	var exists bool
-	if err := r.db.GetContext(ctx, &exists, existsQuery, businessID, userID); err != nil {
-		return fmt.Errorf("postgres: owner staff profile check failed: %w", err)
+	var existing uuid.UUID
+	err := r.db.GetContext(ctx, &existing, existingQuery, businessID, userID)
+	if err == nil {
+		return existing, nil
 	}
-	if exists {
-		return nil
+	if !errors.Is(err, sql.ErrNoRows) {
+		return uuid.Nil, fmt.Errorf("postgres: owner staff profile check failed: %w", err)
 	}
 
 	if strings.TrimSpace(title) == "" {
@@ -273,8 +274,25 @@ func (r *StaffRepository) EnsureOwnerProfile(
 			joined_at, created_at, updated_at
 		) VALUES ($1, $2, $3, 'admin', $4, '', '', 'active', NOW(), NOW(), NOW())`
 
-	if _, err := r.db.ExecContext(ctx, insertQuery, uuid.New(), userID, businessID, title); err != nil {
-		return fmt.Errorf("postgres: create owner staff profile failed: %w", err)
+	staffID := uuid.New()
+	if _, err := r.db.ExecContext(ctx, insertQuery, staffID, userID, businessID, title); err != nil {
+		return uuid.Nil, fmt.Errorf("postgres: create owner staff profile failed: %w", err)
 	}
-	return nil
+
+	return staffID, nil
+}
+
+// CountActiveStaff – biznesdeki aktiv isci sayi (business.StaffCounter).
+func (r *StaffRepository) CountActiveStaff(ctx context.Context, businessID uuid.UUID) (int, error) {
+	const query = `
+		SELECT COUNT(*) FROM staff_profiles
+		WHERE business_id = $1 AND status = 'active'
+	`
+
+	var count int
+	if err := r.db.GetContext(ctx, &count, query, businessID); err != nil {
+		return 0, fmt.Errorf("postgres: failed to count active staff: %w", err)
+	}
+
+	return count, nil
 }

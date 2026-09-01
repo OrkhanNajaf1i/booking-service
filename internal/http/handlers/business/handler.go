@@ -245,12 +245,17 @@ func (handler *BusinessHandler) UpdateBusiness(writer http.ResponseWriter, reque
 	}
 
 	ctx := request.Context()
-	// businessID, err := handler.extractBusinessIDFromContext(ctx)
 
-	// if err != nil {
-	// 	handler.respondWithError(writer, http.StatusUnauthorized, "UNAUTHORIZED", err.Error())
-	// 	return
-	// }
+	// Biznes ID-si JWT-den goturulur. Evvel govdeden gozlenilirdi:
+	// panel onu gondermir ve her yadda saxlama "Business ID cannot be
+	// empty" verirdi. Ustelik govdeden gelen ID basqasinin biznesini
+	// gosteren deyer ola bilerdi — indi bele sual qalmir.
+	businessID, err := handler.extractBusinessIDFromContext(ctx)
+	if err != nil {
+		handler.respondWithError(writer, http.StatusUnauthorized, "UNAUTHORIZED", err.Error())
+		return
+	}
+
 	ownerID, err := handler.extractUserIDFromContext(ctx)
 	if err != nil {
 		handler.respondWithError(writer, http.StatusUnauthorized, "UNAUTHORIZED", err.Error())
@@ -266,7 +271,7 @@ func (handler *BusinessHandler) UpdateBusiness(writer http.ResponseWriter, reque
 
 	domainRequest := httpRequest.ToUpdateBusinessRequest()
 
-	if err := handler.businessService.UpdateBusiness(ctx, httpRequest.BusinessID, ownerID, domainRequest); err != nil {
+	if err := handler.businessService.UpdateBusiness(ctx, businessID, ownerID, domainRequest); err != nil {
 		handler.handleDomainError(writer, err)
 		return
 	}
@@ -275,6 +280,58 @@ func (handler *BusinessHandler) UpdateBusiness(writer http.ResponseWriter, reque
 		Success: true,
 		Message: "Business updated successfully",
 	})
+}
+
+// SwitchMode – tek isci ↔ komanda rejimi.
+//
+// @Summary      Switch business mode
+// @Description  Switches the business between solo practitioner and team mode.
+// @Tags         Business
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request body SwitchModeHTTPRequest true "Target mode"
+// @Success      200  {object}  BusinessHTTPResponse
+// @Failure      400  {object}  ErrorHTTPResponse
+// @Failure      401  {object}  ErrorHTTPResponse
+// @Failure      409  {object}  ErrorHTTPResponse
+// @Router       /api/v1/business/mode [post]
+func (handler *BusinessHandler) SwitchMode(writer http.ResponseWriter, request *http.Request) {
+	if request.Method != http.MethodPost {
+		handler.respondWithError(writer, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "Method not allowed")
+		return
+	}
+
+	ctx := request.Context()
+
+	ownerID, err := handler.extractUserIDFromContext(ctx)
+	if err != nil {
+		handler.respondWithError(writer, http.StatusUnauthorized, "UNAUTHORIZED", err.Error())
+		return
+	}
+
+	businessID, err := handler.extractBusinessIDFromContext(ctx)
+	if err != nil {
+		handler.respondWithError(writer, http.StatusUnauthorized, "UNAUTHORIZED", err.Error())
+		return
+	}
+
+	var httpRequest SwitchModeHTTPRequest
+	if err := json.NewDecoder(request.Body).Decode(&httpRequest); err != nil {
+		handler.respondWithError(writer, http.StatusBadRequest, "INVALID_REQUEST_BODY", "Invalid request body")
+		return
+	}
+	defer request.Body.Close()
+
+	updated, err := handler.businessService.SwitchMode(
+		ctx, businessID, ownerID, business.BusinessType(httpRequest.BusinessType),
+	)
+	if err != nil {
+		handler.handleDomainError(writer, err)
+		return
+	}
+
+	handler.respondWithJSON(writer, http.StatusOK, ToBusinessHTTPResponse(updated))
 }
 
 func (handler *BusinessHandler) extractIDFromPath(path, prefix string) string {
@@ -331,6 +388,17 @@ func (handler *BusinessHandler) mapErrorCodeToHTTPStatus(errorCode string) int {
 		"INVALID_BUSINESS_TYPE":      http.StatusBadRequest,
 		"BUSINESS_NOT_FOUND":         http.StatusNotFound,
 		"UNAUTHORIZED":               http.StatusUnauthorized,
+
+		// Filial biznesle birlikde yaradilir.
+		"LOCATION_REQUIRED":             http.StatusBadRequest,
+		"LOCATION_ADDRESS_REQUIRED":     http.StatusBadRequest,
+		"LOCATION_COORDINATES_REQUIRED": http.StatusBadRequest,
+		"LOCATION_NAME_TOO_LONG":        http.StatusBadRequest,
+		"LATITUDE_OUT_OF_RANGE":         http.StatusBadRequest,
+		"LONGITUDE_OUT_OF_RANGE":        http.StatusBadRequest,
+
+		// Komandadan tek isci rejimine qayidis.
+		"TEAM_HAS_STAFF": http.StatusConflict,
 	}
 
 	if status, exists := errorStatusMap[errorCode]; exists {

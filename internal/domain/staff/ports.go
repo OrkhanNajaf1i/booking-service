@@ -31,6 +31,14 @@ type UserService interface {
 // domenini asili etmemek ucun yalniz bu kicik port goturulur.
 type BusinessOwnerLookup interface {
 	OwnerUserID(ctx context.Context, businessID uuid.UUID) (uuid.UUID, error)
+
+	// IsTeamMode – biznes komanda rejimindedirmi.
+	//
+	// Tek isci kimi qeydiyyatdan kecen sahib ucun "isci" anlayisi
+	// yoxdur: o, ozu xidmet gosterendir. Panel duymeni gizledir, amma
+	// qerar burada verilir — eks halda rejim yalniz etiket olardi ve
+	// "tek isleyirsiniz" yazan ekranda uc isci gorunerdi.
+	IsTeamMode(ctx context.Context, businessID uuid.UUID) (bool, error)
 }
 
 type Service interface {

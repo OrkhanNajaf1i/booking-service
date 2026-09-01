@@ -105,9 +105,13 @@ func New(cfg *config.AppConfig, appLogger logger.Logger) (*App, error) {
 	bookingPublisher := notify.NewBookingPublisher(notificationSvc, appLogger, cfg.DefaultTimezone)
 
 	// ---------- DOMAIN SERVIS-LERI ----------
-	businessSvc := business.NewService(businessRepo, authRepo, staffRepo)
+	businessSvc := business.NewService(businessRepo, authRepo, staffRepo).
+		WithSchedules(availabilityRepo).
+		WithLocations(locationRepo).
+		WithStaffCounter(staffRepo)
 	authSvc := auth.NewAuthService(authRepo, passwordHasher, emailService, tokenManager).
-		WithPhoneAccounts(authRepo)
+		WithPhoneAccounts(authRepo).
+		WithPhoneNormalizer(otp.NormalizePhone)
 
 	// Telefonla giris: kanal konfiqurasiyaya gore secilir.
 	//

@@ -21,4 +21,5 @@ func RegisterBusinessRoutes(
 	mux.Handle("GET /api/v1/businesses", protected(handler.GetBusinesses))
 	mux.Handle("GET /api/v1/businesses/{id}", protected(handler.GetBusinessByID))
 	mux.Handle("PUT /api/v1/business", protected(handler.UpdateBusiness))
+	mux.Handle("POST /api/v1/business/mode", protected(handler.SwitchMode))
 }

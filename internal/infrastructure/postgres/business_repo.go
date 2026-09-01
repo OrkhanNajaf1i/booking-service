@@ -299,3 +299,49 @@ func (repository *BusinessRepository) OwnerUserID(
 
 	return ownerID, nil
 }
+
+// UpdateType – solo ↔ komanda kecidi (business.Repository).
+func (repository *BusinessRepository) UpdateType(
+	ctx context.Context,
+	businessID uuid.UUID,
+	businessType business.BusinessType,
+) error {
+	const query = `
+		UPDATE businesses
+		SET business_type = $1, updated_at = NOW()
+		WHERE id = $2
+	`
+
+	result, err := repository.database.ExecContext(ctx, query, businessType, businessID)
+	if err != nil {
+		return fmt.Errorf("postgres: failed to update business type: %w", err)
+	}
+
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("postgres: failed to read affected rows: %w", err)
+	}
+	if affected == 0 {
+		return fmt.Errorf("postgres: business not found")
+	}
+
+	return nil
+}
+
+// IsTeamMode – biznes komanda rejimindedirmi (staff.BusinessLookup).
+//
+// Isci devetini yalniz komanda rejimi acir; qerar serverde verilir,
+// panelin duymeni gizletmesi kifayet deyil.
+func (repository *BusinessRepository) IsTeamMode(
+	ctx context.Context,
+	businessID uuid.UUID,
+) (bool, error) {
+	const query = `SELECT business_type FROM businesses WHERE id = $1`
+
+	var businessType string
+	if err := repository.database.GetContext(ctx, &businessType, query, businessID); err != nil {
+		return false, fmt.Errorf("postgres: failed to read business type: %w", err)
+	}
+
+	return business.BusinessType(businessType) == business.BusinessTypeMulti, nil
+}
